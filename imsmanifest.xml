@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest identifier="com.tabukpharma.webxr.induction" version="1.2"
+          xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2"
+          xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://www.imsproject.org/xsd/imscp_rootv1p1p2 imscp_rootv1p1p2.xsd
+                              http://www.imsglobal.org/xsd/imsmd_rootv1p2p1 imsmd_rootv1p2p1.xsd
+                              http://www.adlnet.org/xsd/adlcp_rootv1p2 adlcp_rootv1p2.xsd">
+  <metadata>
+    <schema>ADL SCORM</schema>
+    <schemaversion>1.2</schemaversion>
+  </metadata>
+  <organizations default="tabuk_pharma_org">
+    <organization identifier="tabuk_pharma_org">
+      <title>Tabuk Pharmaceuticals - WebXR Induction Experience</title>
+      <item identifier="item_tabuk_induction" identifierref="res_tabuk_induction">
+        <title>Tabuk Pharmaceuticals - WebXR Induction</title>
+        <adlcp:masteryscore>75</adlcp:masteryscore>
+      </item>
+    </organization>
+  </organizations>
+  <resources>
+    <resource identifier="res_tabuk_induction" type="web-content" adlcp:scormtype="sco" href="index.html">
+      <file href="index.html"/>
+      <file href="css/style.css"/>
+      <file href="js/scorm.js"/>
+      <file href="js/courseData.js"/>
+      <file href="js/viewer.js"/>
+      <file href="js/hotspots.js"/>
+      <file href="js/modal.js"/>
+      <file href="js/assessment.js"/>
+      <file href="js/app.js"/>
+      <file href="assets/lib/three.min.js"/>
+    </resource>
+  </resources>
+</manifest>
