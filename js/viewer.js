@@ -166,7 +166,10 @@ class PanoramaViewer {
         this.stopVideo();
 
         const video = document.createElement('video');
-        video.src = videoUrl;
+        const resolved = (window.app && window.app.assets)
+            ? window.app.assets.getUrl(videoUrl)
+            : videoUrl;
+        video.src = resolved;
         video.crossOrigin = 'anonymous';
         video.loop = true;
         video.muted = true;

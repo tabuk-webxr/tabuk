@@ -32,10 +32,9 @@ jobs:
           if [ -f imsmanifest.xml ]; then cp imsmanifest.xml _site/; fi
 
       - name: Configure Pages
-        uses: actions/configure-pages@v5
-        with:
-          # Auto-enable Pages + set build source to GitHub Actions
-          enablement: true
+        # Do not set enablement: true — GITHUB_TOKEN cannot create a Pages site.
+        # One-time setup: Settings → Pages → Source → GitHub Actions
+        uses: actions/configure-pages@v6
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
