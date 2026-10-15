@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TABUK PHARMACEUTICALS · Induction</title>
     <meta name="description" content="Interactive WebXR Employee Induction Experience for Tabuk Pharmaceuticals covering Riyadh HQ, Dammam Plant, Tabuk Campus, and Final Assessment.">
-    <link rel="stylesheet" href="css/style.css?v=18.4">
+    <link rel="stylesheet" href="css/style.css?v=19.3">
 </head>
 <body>
 
@@ -33,13 +33,26 @@
         </header>
     </div>
 
-    <!-- Reception scene glass tip — bottom-left slide-in -->
-    <aside id="reception-welcome-tip" class="reception-welcome-tip" aria-live="polite" hidden>
-        <p class="reception-tip-text">
-            Welcome to Tabuk Pharmaceuticals!<br>
-            Your journey starts here.
-        </p>
-    </aside>
+    <!-- Reception: large left avatar + tip window below (ref layout) -->
+    <div id="reception-welcome-stack" class="reception-welcome-stack" hidden>
+        <div id="reception-tip-avatar" class="reception-tip-avatar" hidden>
+            <canvas id="reception-tip-avatar-canvas" class="reception-tip-avatar-canvas" width="360" height="640" aria-hidden="true"></canvas>
+            <video
+                id="reception-tip-avatar-video"
+                class="reception-tip-avatar-video"
+                src="Videos/welcome_tip_avatar.mp4"
+                playsinline
+                preload="auto"
+                aria-hidden="true"
+            ></video>
+        </div>
+        <aside id="reception-welcome-tip" class="reception-welcome-tip" aria-live="polite">
+            <p class="reception-tip-text">
+                Welcome to Tabuk Pharmaceuticals!<br>
+                <em>Your journey starts here.</em>
+            </p>
+        </aside>
+    </div>
 
     <!-- Hidden stubs so existing app.js bindings do not error -->
     <div id="env-progress-badge" style="display: none;"></div>
@@ -185,11 +198,40 @@
         </label>
         <button type="button" id="dev-place-at-view" class="dev-secondary-btn">Place hotspot at view center</button>
 
+        <div class="dev-section-title">Tip Avatar Placement</div>
+        <label class="dev-orientation-label">
+            Left <strong id="dev-tip-left-val">20px</strong>
+            <input type="range" id="dev-tip-left" min="0" max="200" step="1" value="20">
+        </label>
+        <label class="dev-orientation-label">
+            Bottom <strong id="dev-tip-bottom-val">29px</strong>
+            <input type="range" id="dev-tip-bottom" min="0" max="200" step="1" value="29">
+        </label>
+        <label class="dev-orientation-label">
+            Avatar Width <strong id="dev-tip-width-val">348px</strong>
+            <input type="range" id="dev-tip-width" min="120" max="480" step="2" value="348">
+        </label>
+        <label class="dev-orientation-label">
+            Avatar Height <strong id="dev-tip-height-val">440px</strong>
+            <input type="range" id="dev-tip-height" min="200" max="800" step="4" value="440">
+        </label>
+        <label class="dev-orientation-label">
+            Tip Width <strong id="dev-tip-box-width-val">392px</strong>
+            <input type="range" id="dev-tip-box-width" min="180" max="480" step="2" value="392">
+        </label>
+        <label class="dev-orientation-label">
+            Video ↔ Tip Gap <strong id="dev-tip-gap-val">-1px</strong>
+            <input type="range" id="dev-tip-gap" min="-80" max="120" step="1" value="-1">
+        </label>
+        <button type="button" id="dev-tip-show" class="dev-secondary-btn">Show tip + avatar</button>
+        <button type="button" id="dev-tip-reset" class="dev-secondary-btn">Reset tip placement</button>
+
         <pre id="dev-orientation-values" class="dev-orientation-values">scene: —
 sphereYaw: 0
 initialPitch: 0
 initialYaw: 0
-hotspots: []</pre>
+hotspots: []
+tipAvatar: —</pre>
         <button type="button" id="dev-copy-orientation" class="dev-copy-btn">Copy values</button>
     </div>
 
@@ -210,7 +252,7 @@ hotspots: []</pre>
     <script src="js/hotspots.js?v=15.4"></script>
     <script src="js/modal.js?v=13.8"></script>
     <script src="js/assessment.js?v=12.6"></script>
-    <script src="js/app.js?v=16.5"></script>
+    <script src="js/app.js?v=17.2"></script>
 
 </body>
 </html>

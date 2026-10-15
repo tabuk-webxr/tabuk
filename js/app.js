@@ -18,6 +18,8 @@ class WebXRApp {
         this._chroIntroAudio = null;
         this._ceoIntroAudio = null;
         this._welcomeEnterAudio = null;
+        this._tipAvatarRaf = null;
+        this._tipAvatarKeying = false;
         
         // Sound effects synthesis via Web Audio API (zero external asset dependency)
         this.audioCtx = null;
@@ -165,6 +167,14 @@ class WebXRApp {
 
     bindDevOrientationPanel() {
         this.devPanelOpen = false;
+        this.tipPlacement = {
+            left: 20,
+            bottom: 29,
+            width: 348,
+            height: 440,
+            tipWidth: 392,
+            gap: -1
+        };
         const panel = document.getElementById('dev-orientation-panel');
         const sphereYaw = document.getElementById('dev-sphere-yaw');
         const camPitch = document.getElementById('dev-cam-pitch');
@@ -174,6 +184,14 @@ class WebXRApp {
         const hotYaw = document.getElementById('dev-hot-yaw');
         const placeBtn = document.getElementById('dev-place-at-view');
         const copyBtn = document.getElementById('dev-copy-orientation');
+        const tipLeft = document.getElementById('dev-tip-left');
+        const tipBottom = document.getElementById('dev-tip-bottom');
+        const tipWidth = document.getElementById('dev-tip-width');
+        const tipHeight = document.getElementById('dev-tip-height');
+        const tipBoxWidth = document.getElementById('dev-tip-box-width');
+        const tipGap = document.getElementById('dev-tip-gap');
+        const tipShowBtn = document.getElementById('dev-tip-show');
+        const tipResetBtn = document.getElementById('dev-tip-reset');
         if (!panel || !sphereYaw || !camPitch || !camYaw) return;
 
         const applyOrientation = () => {
@@ -193,11 +211,31 @@ class WebXRApp {
             this.updateDevOrientationReadout();
         };
 
+        const applyTipPlacement = () => {
+            if (!tipLeft || !tipBottom || !tipWidth || !tipHeight || !tipBoxWidth || !tipGap) return;
+            this.tipPlacement = {
+                left: Number(tipLeft.value),
+                bottom: Number(tipBottom.value),
+                width: Number(tipWidth.value),
+                height: Number(tipHeight.value),
+                tipWidth: Number(tipBoxWidth.value),
+                gap: Number(tipGap.value)
+            };
+            this.applyTipPlacementStyles();
+            this.updateDevOrientationReadout();
+        };
+
         sphereYaw.addEventListener('input', applyOrientation);
         camPitch.addEventListener('input', applyOrientation);
         camYaw.addEventListener('input', applyOrientation);
         if (hotPitch) hotPitch.addEventListener('input', applyHotspot);
         if (hotYaw) hotYaw.addEventListener('input', applyHotspot);
+        if (tipLeft) tipLeft.addEventListener('input', applyTipPlacement);
+        if (tipBottom) tipBottom.addEventListener('input', applyTipPlacement);
+        if (tipWidth) tipWidth.addEventListener('input', applyTipPlacement);
+        if (tipHeight) tipHeight.addEventListener('input', applyTipPlacement);
+        if (tipBoxWidth) tipBoxWidth.addEventListener('input', applyTipPlacement);
+        if (tipGap) tipGap.addEventListener('input', applyTipPlacement);
 
         if (hotSelect) {
             hotSelect.addEventListener('change', () => this.loadSelectedHotspotIntoDevSliders());
@@ -213,6 +251,32 @@ class WebXRApp {
                 this.hotspots.setHotspotCoords(hotSelect.value, pitch, yaw);
                 this.persistHotspotCoords(hotSelect.value, pitch, yaw);
                 this.loadSelectedHotspotIntoDevSliders();
+                this.updateDevOrientationReadout();
+            });
+        }
+
+        if (tipShowBtn) {
+            tipShowBtn.addEventListener('click', () => {
+                this.showReceptionTip(
+                    'Welcome to Tabuk Pharmaceuticals!<br><em>Your journey starts here.</em>',
+                    { animate: false, showAvatar: true }
+                );
+                this.applyTipPlacementStyles();
+            });
+        }
+
+        if (tipResetBtn) {
+            tipResetBtn.addEventListener('click', () => {
+                this.tipPlacement = {
+                    left: 20,
+                    bottom: 29,
+                    width: 348,
+                    height: 440,
+                    tipWidth: 392,
+                    gap: -1
+                };
+                this.syncDevTipPlacementSliders();
+                this.applyTipPlacementStyles();
                 this.updateDevOrientationReadout();
             });
         }
@@ -248,6 +312,75 @@ class WebXRApp {
                 }
             });
         }
+
+        this.syncDevTipPlacementSliders();
+        this.applyTipPlacementStyles();
+    }
+
+    syncDevTipPlacementSliders() {
+        const p = this.tipPlacement || {
+            left: 20, bottom: 29, width: 348, height: 440, tipWidth: 392, gap: -1
+        };
+        const tipLeft = document.getElementById('dev-tip-left');
+        const tipBottom = document.getElementById('dev-tip-bottom');
+        const tipWidth = document.getElementById('dev-tip-width');
+        const tipHeight = document.getElementById('dev-tip-height');
+        const tipBoxWidth = document.getElementById('dev-tip-box-width');
+        const tipGap = document.getElementById('dev-tip-gap');
+        if (tipLeft) tipLeft.value = String(p.left);
+        if (tipBottom) tipBottom.value = String(p.bottom);
+        if (tipWidth) tipWidth.value = String(p.width);
+        if (tipHeight) tipHeight.value = String(p.height);
+        if (tipBoxWidth) tipBoxWidth.value = String(p.tipWidth);
+        if (tipGap) tipGap.value = String(p.gap);
+        const leftVal = document.getElementById('dev-tip-left-val');
+        const bottomVal = document.getElementById('dev-tip-bottom-val');
+        const widthVal = document.getElementById('dev-tip-width-val');
+        const heightVal = document.getElementById('dev-tip-height-val');
+        const boxVal = document.getElementById('dev-tip-box-width-val');
+        const gapVal = document.getElementById('dev-tip-gap-val');
+        if (leftVal) leftVal.textContent = `${p.left}px`;
+        if (bottomVal) bottomVal.textContent = `${p.bottom}px`;
+        if (widthVal) widthVal.textContent = `${p.width}px`;
+        if (heightVal) heightVal.textContent = `${p.height}px`;
+        if (boxVal) boxVal.textContent = `${p.tipWidth}px`;
+        if (gapVal) gapVal.textContent = `${p.gap}px`;
+    }
+
+    applyTipPlacementStyles() {
+        const p = this.tipPlacement;
+        if (!p) return;
+        const stack = document.getElementById('reception-welcome-stack');
+        const avatar = document.getElementById('reception-tip-avatar');
+        const tip = document.getElementById('reception-welcome-tip');
+        const gap = typeof p.gap === 'number' ? p.gap : 10;
+        if (stack) {
+            stack.style.left = `${p.left}px`;
+            stack.style.bottom = `${p.bottom}px`;
+            stack.style.maxWidth = `${Math.max(p.width, p.tipWidth) + 24}px`;
+            // Positive = space; negative = tip overlaps up toward avatar
+            stack.style.gap = `${Math.max(0, gap)}px`;
+        }
+        if (avatar) {
+            avatar.style.width = `${p.width}px`;
+            avatar.style.height = `${p.height}px`;
+        }
+        if (tip) {
+            tip.style.width = `${p.tipWidth}px`;
+            tip.style.marginTop = gap < 0 ? `${gap}px` : '0px';
+        }
+        const leftVal = document.getElementById('dev-tip-left-val');
+        const bottomVal = document.getElementById('dev-tip-bottom-val');
+        const widthVal = document.getElementById('dev-tip-width-val');
+        const heightVal = document.getElementById('dev-tip-height-val');
+        const boxVal = document.getElementById('dev-tip-box-width-val');
+        const gapVal = document.getElementById('dev-tip-gap-val');
+        if (leftVal) leftVal.textContent = `${p.left}px`;
+        if (bottomVal) bottomVal.textContent = `${p.bottom}px`;
+        if (widthVal) widthVal.textContent = `${p.width}px`;
+        if (heightVal) heightVal.textContent = `${p.height}px`;
+        if (boxVal) boxVal.textContent = `${p.tipWidth}px`;
+        if (gapVal) gapVal.textContent = `${gap}px`;
     }
 
     toggleDevOrientationPanel(forceState) {
@@ -258,6 +391,8 @@ class WebXRApp {
         if (this.devPanelOpen) {
             this.refreshDevHotspotList();
             this.syncDevOrientationPanel();
+            this.syncDevTipPlacementSliders();
+            this.applyTipPlacementStyles();
         }
     }
 
@@ -349,12 +484,29 @@ class WebXRApp {
             const hotLines = hotspots.length
                 ? hotspots.map((h) => `  - ${h.id}: pitch ${h.pitch}, yaw ${h.yaw}`).join('\n')
                 : '  (none)';
+            const tip = this.tipPlacement || {
+                left: 20, bottom: 29, width: 348, height: 440, tipWidth: 392, gap: -1
+            };
+            const gapCss = tip.gap < 0
+                ? `gap: 0; /* tip margin-top: ${tip.gap}px */`
+                : `gap: ${tip.gap}px;`;
             pre.textContent =
                 `scene: ${sceneId}\n` +
                 `sphereYaw: ${o.sphereYaw}\n` +
                 `initialPitch: ${o.initialPitch}\n` +
                 `initialYaw: ${o.initialYaw}\n` +
-                `hotspots:\n${hotLines}`;
+                `hotspots:\n${hotLines}\n` +
+                `tipAvatar:\n` +
+                `  left: ${tip.left}px\n` +
+                `  bottom: ${tip.bottom}px\n` +
+                `  width: ${tip.width}px\n` +
+                `  height: ${tip.height}px\n` +
+                `  tipWidth: ${tip.tipWidth}px\n` +
+                `  gap: ${tip.gap}px\n` +
+                `/* CSS snippet */\n` +
+                `.reception-welcome-stack { left: ${tip.left}px; bottom: ${tip.bottom}px; ${gapCss} }\n` +
+                `.reception-tip-avatar { width: ${tip.width}px; height: ${tip.height}px; }\n` +
+                `.reception-welcome-tip { width: ${tip.tipWidth}px;${tip.gap < 0 ? ` margin-top: ${tip.gap}px;` : ''} }`;
         }
     }
 
@@ -442,9 +594,10 @@ class WebXRApp {
         this.startChroIntroSequence();
     }
 
-    showReceptionTip(html, { animate = true } = {}) {
+    showReceptionTip(html, { animate = true, showAvatar = false } = {}) {
+        const stack = document.getElementById('reception-welcome-stack');
         const tip = document.getElementById('reception-welcome-tip');
-        if (!tip) return;
+        if (!stack || !tip) return;
         const textEl = tip.querySelector('.reception-tip-text');
         if (textEl) textEl.innerHTML = html;
 
@@ -453,18 +606,169 @@ class WebXRApp {
             this._receptionTipTimer = null;
         }
 
-        tip.hidden = false;
-        tip.classList.remove('visible');
+        stack.hidden = false;
+        stack.classList.remove('visible');
+
+        if (showAvatar) {
+            this.startTipAvatar();
+        } else {
+            this.stopTipAvatar();
+        }
+
+        this.applyTipPlacementStyles();
+
         if (!animate) {
-            tip.classList.add('visible');
+            stack.classList.add('visible');
             return;
         }
         // Hide → slide in from bottom-left
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
-                tip.classList.add('visible');
+                stack.classList.add('visible');
             });
         });
+    }
+
+    hideReceptionTip() {
+        const stack = document.getElementById('reception-welcome-stack');
+        if (stack) {
+            stack.classList.remove('visible');
+            stack.hidden = true;
+        }
+        this.stopTipAvatar();
+    }
+
+    stopTipAvatar() {
+        this._tipAvatarKeying = false;
+        if (this._tipAvatarRaf) {
+            cancelAnimationFrame(this._tipAvatarRaf);
+            this._tipAvatarRaf = null;
+        }
+        const avatar = document.getElementById('reception-tip-avatar');
+        const video = document.getElementById('reception-tip-avatar-video');
+        if (avatar) avatar.hidden = true;
+        if (video) {
+            video.pause();
+            try { video.currentTime = 0; } catch (e) { /* ignore */ }
+        }
+    }
+
+    startTipAvatar() {
+        const avatar = document.getElementById('reception-tip-avatar');
+        const video = document.getElementById('reception-tip-avatar-video');
+        const canvas = document.getElementById('reception-tip-avatar-canvas');
+        if (!avatar || !video || !canvas) return;
+
+        this.stopTipAvatar();
+        avatar.hidden = false;
+        this._tipAvatarKeying = true;
+
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        const syncCanvasSize = () => {
+            const vw = video.videoWidth || 360;
+            const vh = video.videoHeight || 360;
+            // Cap processing size for performance while keeping aspect
+            const maxSide = 720;
+            const scale = Math.min(1, maxSide / Math.max(vw, vh));
+            const w = Math.max(2, Math.round(vw * scale));
+            const h = Math.max(2, Math.round(vh * scale));
+            if (canvas.width !== w || canvas.height !== h) {
+                canvas.width = w;
+                canvas.height = h;
+            }
+        };
+
+        const render = () => {
+            if (!this._tipAvatarKeying) return;
+            if (video.readyState >= 2) {
+                syncCanvasSize();
+                const w = canvas.width;
+                const h = canvas.height;
+                ctx.clearRect(0, 0, w, h);
+                ctx.drawImage(video, 0, 0, w, h);
+                this.keyGreenScreen(ctx, w, h);
+            }
+            this._tipAvatarRaf = requestAnimationFrame(render);
+        };
+
+        const begin = () => {
+            // Play green-screen video with its own audio (no separate CEO_Intro)
+            video.muted = false;
+            video.volume = 1;
+            video.playsInline = true;
+            try { video.currentTime = 0; } catch (e) { /* ignore */ }
+            syncCanvasSize();
+            video.play().catch(() => {
+                // If unmuted autoplay is blocked, keep video visuals muted-free retry after gesture
+            });
+            if (!this._tipAvatarRaf) render();
+        };
+
+        if (video.readyState >= 2) {
+            begin();
+        } else {
+            video.addEventListener('loadeddata', begin, { once: true });
+            video.load();
+        }
+    }
+
+    keyGreenScreen(ctx, w, h) {
+        let frame;
+        try {
+            frame = ctx.getImageData(0, 0, w, h);
+        } catch (err) {
+            console.warn('Green-screen key failed:', err);
+            return;
+        }
+
+        const data = frame.data;
+        // Sample key color from the four corners (solid InShot green)
+        const corners = [0, (w - 1) * 4, ((h - 1) * w) * 4, ((h - 1) * w + (w - 1)) * 4];
+        let kr = 0;
+        let kg = 0;
+        let kb = 0;
+        corners.forEach((idx) => {
+            kr += data[idx];
+            kg += data[idx + 1];
+            kb += data[idx + 2];
+        });
+        kr /= 4;
+        kg /= 4;
+        kb /= 4;
+
+        for (let i = 0; i < data.length; i += 4) {
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+            const maxRB = Math.max(r, b);
+            const greenDom = g - maxRB;
+            const dist = Math.hypot(r - kr, g - kg, b - kb);
+
+            // Strong key for solid green + similarity to corner color
+            const solidGreen = g > 55 && greenDom > 18;
+            const nearKey = dist < 95 && g > Math.max(r, b);
+
+            let alpha = data[i + 3] / 255;
+            if (solidGreen || nearKey) {
+                if (greenDom > 40 || dist < 55) {
+                    alpha = 0;
+                } else {
+                    const softA = solidGreen
+                        ? Math.max(0, 1 - (greenDom - 18) / 30)
+                        : Math.max(0, (dist - 55) / 40);
+                    alpha *= softA;
+                }
+            }
+
+            // Despill residual green fringe on edges
+            if (alpha > 0.02 && alpha < 0.98 && g > r + 8 && g > b + 8) {
+                data[i + 1] = Math.min(g, Math.round((r + b) * 0.55));
+            }
+
+            data[i + 3] = Math.round(Math.max(0, Math.min(1, alpha)) * 255);
+        }
+
+        ctx.putImageData(frame, 0, 0);
     }
 
     stopChroIntroAudio() {
@@ -508,22 +812,14 @@ class WebXRApp {
         }
     }
 
-    playCeoIntroAudio() {
-        this.stopCeoIntroAudio();
-        const audio = new Audio('Audios/CEO_Intro.mp3');
-        this._ceoIntroAudio = audio;
-        audio.preload = 'auto';
-        audio.play().catch(() => {
-            // Autoplay may be blocked until a further gesture
-        });
-    }
-
     startChroIntroSequence() {
         if (this.receptionChroUnlocked) return;
 
         // Tip + VO; reveal CHRO hotspot when intro audio ends
         this.stopCeoIntroAudio();
-        this.showReceptionTip('And now, a personal welcome from our CHRO.');
+        this.showReceptionTip('And now, a personal welcome from our CHRO.', {
+            showAvatar: false
+        });
         this.stopChroIntroAudio();
 
         const audio = new Audio('Audios/CHRO_Intro.mp3');
@@ -609,21 +905,17 @@ class WebXRApp {
         if (scene.id === 'reception') {
             if (!this.receptionChroUnlocked) {
                 this.showReceptionTip(
-                    'Welcome to Tabuk Pharmaceuticals!<br>Your journey starts here.'
+                    'Welcome to Tabuk Pharmaceuticals!<br><em>Your journey starts here.</em>',
+                    { showAvatar: true }
                 );
-                this.playCeoIntroAudio();
             } else {
                 this.showReceptionTip(
                     'And now, a personal welcome from our CHRO.',
-                    { animate: true }
+                    { animate: true, showAvatar: false }
                 );
             }
         } else {
-            const receptionTip = document.getElementById('reception-welcome-tip');
-            if (receptionTip) {
-                receptionTip.classList.remove('visible');
-                receptionTip.hidden = true;
-            }
+            this.hideReceptionTip();
             // Reset CHRO lock when leaving reception so revisit starts with CEO again
             this.receptionChroUnlocked = false;
         }
@@ -655,10 +947,11 @@ class WebXRApp {
         if (hotspot.type === 'portal') {
             this.goToScene(hotspot.targetScene);
         } else if (hotspot.type === 'modal') {
-            // Stop reception tip VO when opening CEO/CHRO video players
+            // Stop reception tip VO/avatar when opening CEO/CHRO video players
             if (hotspot.modalId === 'modal_video_welcome' || hotspot.modalId === 'modal_video_chro') {
                 this.stopCeoIntroAudio();
                 this.stopChroIntroAudio();
+                this.stopTipAvatar();
             }
             window.modalManager.showComplexModal(hotspot.modalId);
         } else if (hotspot.type === 'info') {
