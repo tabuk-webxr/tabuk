@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Tabuk Pharmaceuticals - WebXR Induction Experience</title>
     <meta name="description" content="Interactive WebXR Employee Induction Experience for Tabuk Pharmaceuticals covering Riyadh HQ, Dammam Plant, Tabuk Campus, and Final Assessment.">
-    <link rel="stylesheet" href="css/style.css?v=11.0">
+    <link rel="stylesheet" href="css/style.css?v=14.8">
 </head>
 <body>
 
@@ -66,22 +66,28 @@
         </footer>
     </div>
 
-    <!-- Welcome & Instructions Overlay (Storyboard Slide 1 & 2) -->
-    <div id="welcome-modal-overlay" class="modal-overlay">
-        <div class="welcome-card-box">
-            <h1 class="welcome-title">INDUCTION</h1>
-            <h2 class="welcome-subtitle">YOUR FIRST DAY AT TABUK</h2>
-            <p class="welcome-tagline">25 Years of Purpose. 2,400+ People. One Shared Mission.</p>
-            
-            <div class="welcome-instructions">
-                <strong>Instructions:</strong>
-                <p>You are about to explore Tabuk Pharmaceuticals across 4 distinct virtual environments. Drag to look around in 360°, find glowing interactive markers to explore company insights, and complete the end-of-module assessment.</p>
+    <!-- Welcome Overlay — blue panel centered over 360 video -->
+    <div id="welcome-modal-overlay" class="modal-overlay welcome-overlay">
+        <aside class="welcome-side-panel" role="dialog" aria-labelledby="welcome-side-title">
+            <div class="welcome-side-header">
+                <div class="welcome-side-heading">
+                    <h1 id="welcome-side-title" class="welcome-side-title">Your First Day at Tabuk</h1>
+                    <div class="welcome-side-rule" aria-hidden="true"></div>
+                </div>
+                <img class="welcome-side-logo" src="assets/images/tabuk_aperture_logo.png" alt="Tabuk logo" width="72" height="72">
             </div>
 
-            <button class="btn btn-primary" onclick="window.app.goToScene('riyadh_hq')">
-                BEGIN INDUCTION
+            <div class="welcome-side-body">
+                <p>Welcome to Tabuk Pharmaceuticals where your journey begins. Today marks more than just your first day — it's the start of your impact.</p>
+                <p>You'll move through three modules. Look for glowing markers and click them to explore the spaces around you.</p>
+                <p>It will take you about 30–35 minutes to complete this experience.</p>
+                <p class="welcome-side-closer">Your journey starts now.</p>
+            </div>
+
+            <button class="btn-enter-tabuk" onclick="window.app.goToScene('riyadh_hq')">
+                ENTER TABUK
             </button>
-        </div>
+        </aside>
     </div>
 
     <!-- General Info & Complex Modals Layer -->
@@ -113,6 +119,14 @@
         </div>
 
         <div class="scene-nav-list">
+            <div class="scene-nav-item" onclick="window.app.goToScene('approach')">
+                <span class="scene-nav-name">0. Approach Campus</span>
+                <span class="scene-nav-sub">Far from Building</span>
+            </div>
+            <div class="scene-nav-item" onclick="window.app.goToScene('welcome')">
+                <span class="scene-nav-name">0b. Welcome</span>
+                <span class="scene-nav-sub">Your First Day at Tabuk</span>
+            </div>
             <div class="scene-nav-item" onclick="window.app.goToScene('riyadh_hq')">
                 <span class="scene-nav-name">1. Riyadh HQ</span>
                 <span class="scene-nav-sub">Arrival & Welcome</span>
@@ -149,6 +163,51 @@
         </div>
     </div>
 
+    <!-- DEV ONLY: 360 alignment + hotspot placement (Space to toggle) -->
+    <div id="dev-orientation-panel" class="dev-orientation-panel" style="display: none;">
+        <div class="dev-orientation-header">
+            DEV — Align & Hotspots
+            <span class="dev-space-hint">Space to hide</span>
+        </div>
+        <div class="dev-scene-id" id="dev-scene-id">scene: —</div>
+
+        <div class="dev-section-title">360 Orientation</div>
+        <label class="dev-orientation-label">
+            Sphere Yaw <strong id="dev-sphere-yaw-val">0°</strong>
+            <input type="range" id="dev-sphere-yaw" min="0" max="360" step="1" value="0">
+        </label>
+        <label class="dev-orientation-label">
+            Camera Pitch <strong id="dev-cam-pitch-val">0°</strong>
+            <input type="range" id="dev-cam-pitch" min="-85" max="85" step="1" value="0">
+        </label>
+        <label class="dev-orientation-label">
+            Camera Yaw <strong id="dev-cam-yaw-val">0°</strong>
+            <input type="range" id="dev-cam-yaw" min="-180" max="180" step="1" value="0">
+        </label>
+
+        <div class="dev-section-title">Hotspot Placement</div>
+        <label class="dev-orientation-label">
+            Hotspot
+            <select id="dev-hotspot-select" class="dev-select"></select>
+        </label>
+        <label class="dev-orientation-label">
+            Hotspot Pitch <strong id="dev-hot-pitch-val">0°</strong>
+            <input type="range" id="dev-hot-pitch" min="-85" max="85" step="1" value="0">
+        </label>
+        <label class="dev-orientation-label">
+            Hotspot Yaw <strong id="dev-hot-yaw-val">0°</strong>
+            <input type="range" id="dev-hot-yaw" min="-180" max="180" step="1" value="0">
+        </label>
+        <button type="button" id="dev-place-at-view" class="dev-secondary-btn">Place hotspot at view center</button>
+
+        <pre id="dev-orientation-values" class="dev-orientation-values">scene: —
+sphereYaw: 0
+initialPitch: 0
+initialYaw: 0
+hotspots: []</pre>
+        <button type="button" id="dev-copy-orientation" class="dev-copy-btn">Copy values</button>
+    </div>
+
     <!-- SCORM 1.2 Diagnostic Console Panel -->
     <div id="scorm-diagnostics-panel" class="scorm-panel">
         <div class="scorm-panel-header">
@@ -160,13 +219,13 @@
 
     <!-- Application Scripts -->
     <script src="assets/lib/three.min.js"></script>
-    <script src="js/scorm.js?v=10.0"></script>
-    <script src="js/courseData.js?v=10.0"></script>
-    <script src="js/viewer.js?v=10.0"></script>
-    <script src="js/hotspots.js?v=10.0"></script>
-    <script src="js/modal.js?v=10.0"></script>
-    <script src="js/assessment.js?v=10.0"></script>
-    <script src="js/app.js?v=10.0"></script>
+    <script src="js/scorm.js?v=12.6"></script>
+    <script src="js/courseData.js?v=14.0"></script>
+    <script src="js/viewer.js?v=12.6"></script>
+    <script src="js/hotspots.js?v=14.8"></script>
+    <script src="js/modal.js?v=12.6"></script>
+    <script src="js/assessment.js?v=12.6"></script>
+    <script src="js/app.js?v=12.6"></script>
 
 </body>
 </html>

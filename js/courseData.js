@@ -12,14 +12,40 @@ window.COURSE_DATA = {
         version: "1.0.0"
     },
     scenes: {
+        "approach": {
+            id: "approach",
+            title: "Approaching Campus",
+            subtitle: "Far from Building",
+            envType: "intro",
+            bgVideo: "Videos/far_from_building_4k.mov",
+            bgImage: "assets/images/scene0_exterior.jpg",
+            initialPitch: 7,
+            initialYaw: 184,
+            sphereYaw: 0,
+            cardText: "Approach Campus\nFind the marker to enter",
+            hotspots: [
+                {
+                    id: "enter_welcome",
+                    type: "portal",
+                    icon: "arrow",
+                    label: "Enter Tabuk",
+                    pitch: -16,
+                    yaw: 186,
+                    arrowYaw: 0,
+                    targetScene: "welcome"
+                }
+            ]
+        },
         "welcome": {
             id: "welcome",
             title: "Induction Welcome",
             subtitle: "Your First Day at Tabuk",
             envType: "intro",
+            bgVideo: "Videos/welcome_360.mp4",
             bgImage: "assets/images/scene0_exterior.jpg",
-            initialPitch: 0,
-            initialYaw: 0,
+            initialPitch: 3,
+            initialYaw: 165,
+            sphereYaw: 0,
             cardText: "Arrival & Welcome\nRiyadh HQ",
             hotspots: []
         },

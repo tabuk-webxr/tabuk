@@ -199,12 +199,12 @@ html, body {
     transform: translateX(-50%) translateY(2px);
 }
 
-/* Storyboard 3D Floor Navigation Chevron */
+/* Solid closed floor chevrons — fixed design colors */
 .hotspot-portal {
-    width: 140px;
-    height: 80px;
-    margin-left: -70px;
-    margin-top: -40px;
+    width: 200px;
+    height: 180px;
+    margin-left: -100px;
+    margin-top: -95px;
     text-align: center;
 }
 
@@ -212,46 +212,94 @@ html, body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    animation: floatArrow 2.2s infinite ease-in-out;
-    filter: drop-shadow(0 8px 16px rgba(0, 49, 89, 0.45));
+    filter: drop-shadow(0 6px 12px rgba(0, 40, 80, 0.4));
+    animation: portalBob 2.6s ease-in-out infinite;
 }
 
 .portal-arrow-prompt {
     font-family: var(--font-body);
     font-size: 13px;
     font-weight: 700;
-    color: #ffffff;
-    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
-    margin-bottom: 2px;
+    color: #E9FCFF;
+    background: rgba(0, 40, 70, 0.72);
+    border: 1px solid rgba(126, 200, 240, 0.55);
+    padding: 3px 10px;
+    border-radius: 6px;
+    margin-top: 14px;
+    margin-bottom: 0;
+    letter-spacing: 0.1px;
+    white-space: nowrap;
 }
 
-.portal-chevron-svg svg {
-    filter: drop-shadow(0 4px 8px rgba(0, 114, 206, 0.5));
-    transition: transform 0.2s ease;
+.portal-arrow-stage {
+    perspective: 580px;
+    perspective-origin: 50% 88%;
+    width: 190px;
+    height: 168px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.hotspot-portal:hover .portal-chevron-svg svg {
-    transform: translateY(-4px) scale(1.08);
+.portal-arrow-3d {
+    position: relative;
+    width: 140px;
+    height: 168px;
+    transform-style: preserve-3d;
+    transform: rotateX(60deg) rotateZ(var(--arrow-yaw, 0deg));
 }
 
-.portal-label {
-    font-size: 12px;
-    font-weight: 700;
-    color: #00C0F3;
-    background: rgba(0, 35, 65, 0.88);
-    backdrop-filter: blur(6px);
-    padding: 3px 12px;
-    border-radius: 12px;
-    margin-top: 4px;
-    border: 1px solid rgba(0, 192, 243, 0.4);
+.portal-arrow-motion {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    animation: chevronMarch 1.35s ease-in-out infinite;
 }
 
-@keyframes floatArrow {
+.hotspot-portal:hover .portal-arrow-3d {
+    transform: rotateX(60deg) rotateZ(var(--arrow-yaw, 0deg)) scale(1.08);
+}
+
+.portal-chevron {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    transform-style: preserve-3d;
+}
+
+.portal-chevron svg {
+    display: block;
+    overflow: visible;
+}
+
+.portal-chevron-a {
+    top: 0;
+}
+
+.portal-chevron-b {
+    top: 50px;
+}
+
+.portal-chevron-c {
+    top: 100px;
+}
+
+@keyframes portalBob {
     0%, 100% {
         transform: translateY(0);
     }
     50% {
-        transform: translateY(-8px);
+        transform: translateY(-4px);
+    }
+}
+
+@keyframes chevronMarch {
+    0%, 100% {
+        transform: translateY(5px);
+    }
+    50% {
+        transform: translateY(-7px);
     }
 }
 
@@ -1070,16 +1118,142 @@ html, body {
     font-weight: 600;
 }
 
-/* ================= STORYBOARD WELCOME CARD ================= */
+/* ================= WELCOME LEFT PANEL (over clear 360 video) ================= */
+#welcome-modal-overlay.welcome-overlay,
+#welcome-modal-overlay {
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0;
+    pointer-events: none;
+    position: fixed;
+}
+
+/* Blue welcome panel — flush left, shorter so 360 shows above/below */
+.welcome-side-panel {
+    pointer-events: auto;
+    width: min(640px, 92vw);
+    max-height: min(72vh, 620px);
+    height: auto;
+    min-width: 0;
+    margin: 0;
+    background: linear-gradient(165deg, rgba(12, 52, 98, 0.94) 0%, rgba(6, 34, 68, 0.96) 100%);
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 0;
+    padding: 32px 40px 28px 36px;
+    text-align: left;
+    border-radius: 0 14px 14px 0;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-left: none;
+    box-shadow: 12px 0 40px rgba(0, 0, 0, 0.35);
+    overflow-y: auto;
+}
+
+.welcome-side-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    margin: 0 0 20px;
+    flex-shrink: 0;
+}
+
+.welcome-side-heading {
+    flex: 1;
+    min-width: 0;
+}
+
+.welcome-side-title {
+    font-family: var(--font-heading);
+    font-size: clamp(26px, 3vw, 34px);
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: 0.1px;
+    line-height: 1.2;
+    margin: 0;
+    text-align: left;
+}
+
+.welcome-side-rule {
+    width: 56px;
+    height: 3px;
+    margin-top: 12px;
+    border-radius: 2px;
+    background: #C9A227;
+}
+
+.welcome-side-logo {
+    flex-shrink: 0;
+    width: 72px;
+    height: 72px;
+    object-fit: contain;
+    background: transparent;
+}
+
+.welcome-side-body {
+    max-width: none;
+    font-size: 15px;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.92);
+    margin: 0 0 22px;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.welcome-side-body p {
+    margin: 0;
+}
+
+.welcome-side-closer {
+    font-weight: 700;
+    color: #ffffff;
+    margin-top: 2px;
+}
+
+.btn-enter-tabuk {
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: #0A2A4A;
+    background: #C9A227;
+    border: none;
+    border-radius: 6px;
+    padding: 15px 28px;
+    width: 100%;
+    margin-top: 0;
+    flex-shrink: 0;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28);
+    transition: transform 0.2s var(--transition-smooth), background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-enter-tabuk:hover {
+    background: #D4AF37;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.35);
+}
+
+.btn-enter-tabuk:active {
+    transform: translateY(0);
+}
+
+/* Legacy centered card helpers (kept for any residual references) */
 .welcome-card-box {
-    background: rgba(255, 255, 255, 0.94);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.9);
-    border-radius: 14px;
+    background: #ffffff;
+    border-radius: 16px;
     padding: 44px 36px;
     text-align: center;
-    max-width: 580px;
-    box-shadow: 0 20px 48px rgba(0, 40, 80, 0.25);
+    max-width: 560px;
     margin: 0 auto;
 }
 
@@ -1088,35 +1262,6 @@ html, body {
     font-size: 42px;
     font-weight: 800;
     color: #005696;
-    letter-spacing: 1.5px;
-    margin-bottom: 8px;
-}
-
-.welcome-subtitle {
-    font-family: var(--font-heading);
-    font-size: 20px;
-    font-weight: 700;
-    color: #2D3748;
-    letter-spacing: 0.5px;
-    margin-bottom: 14px;
-}
-
-.welcome-tagline {
-    font-size: 15px;
-    color: #64748B;
-    margin-bottom: 28px;
-}
-
-.welcome-instructions {
-    background: rgba(0, 168, 89, 0.08);
-    border-left: 4px solid var(--emerald-green);
-    padding: 12px 16px;
-    font-size: 14px;
-    color: #334155;
-    text-align: left;
-    margin-bottom: 30px;
-    line-height: 1.5;
-    border-radius: 0 8px 8px 0;
 }
 
 .btn {
@@ -1595,6 +1740,146 @@ html, body {
     right: 20px;
 }
 
+/* ================= DEV ONLY: 360 orientation + hotspot panel ================= */
+.dev-orientation-panel {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 40;
+    width: 300px;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+    padding: 14px 16px 16px;
+    background: rgba(15, 23, 42, 0.94);
+    color: #E2E8F0;
+    border: 1px solid rgba(251, 191, 36, 0.55);
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+    font-family: var(--font-body);
+    pointer-events: auto;
+}
+
+.dev-orientation-header {
+    font-family: var(--font-heading);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    color: #FBBF24;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.dev-space-hint {
+    font-size: 10px;
+    font-weight: 600;
+    color: #94A3B8;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.dev-scene-id {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: #93C5FD;
+    margin-bottom: 10px;
+}
+
+.dev-section-title {
+    font-size: 11px;
+    font-weight: 800;
+    color: #FDE68A;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    margin: 12px 0 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.dev-orientation-label {
+    display: block;
+    font-size: 12px;
+    margin-bottom: 10px;
+    color: #CBD5E1;
+}
+
+.dev-orientation-label strong {
+    float: right;
+    color: #F8FAFC;
+    font-variant-numeric: tabular-nums;
+}
+
+.dev-orientation-label input[type="range"] {
+    width: 100%;
+    margin-top: 6px;
+    accent-color: #FBBF24;
+    cursor: pointer;
+}
+
+.dev-select {
+    display: block;
+    width: 100%;
+    margin-top: 6px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    background: rgba(0, 0, 0, 0.35);
+    color: #F8FAFC;
+    font-size: 12px;
+}
+
+.dev-secondary-btn {
+    width: 100%;
+    border: 1px solid rgba(251, 191, 36, 0.55);
+    border-radius: 8px;
+    padding: 9px 12px;
+    margin-bottom: 8px;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 12px;
+    cursor: pointer;
+    color: #FDE68A;
+    background: rgba(251, 191, 36, 0.12);
+}
+
+.dev-secondary-btn:hover {
+    background: rgba(251, 191, 36, 0.22);
+}
+
+.dev-orientation-values {
+    margin: 8px 0 10px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: #A7F3D0;
+    white-space: pre-wrap;
+    line-height: 1.45;
+    max-height: 160px;
+    overflow-y: auto;
+}
+
+.dev-copy-btn {
+    width: 100%;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    color: #0F172A;
+    background: #FBBF24;
+}
+
+.dev-copy-btn:hover {
+    background: #F59E0B;
+}
+
 .scorm-panel-header {
     padding: 12px 16px;
     background: rgba(0, 168, 89, 0.15);
@@ -1645,12 +1930,37 @@ html, body {
     }
 }
 
+@media (max-width: 768px) {
+    .welcome-side-panel {
+        width: min(100%, 100vw);
+        max-height: 70vh;
+        padding: 24px 22px;
+        justify-content: flex-start;
+    }
+
+    .welcome-side-header {
+        margin-bottom: 20px;
+        gap: 12px;
+    }
+
+    .welcome-side-logo {
+        width: 58px;
+        height: 58px;
+    }
+
+    .welcome-side-body {
+        margin-bottom: 22px;
+        font-size: 14px;
+        gap: 14px;
+    }
+}
+
 @media (max-width: 600px) {
     .deck-leadership-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-    .welcome-title {
-        font-size: 30px;
+    .welcome-side-title {
+        font-size: 24px;
     }
     .scene-info-card {
         max-width: 240px;
