@@ -55,6 +55,7 @@ class HotspotManager {
 
             wrapper.innerHTML = `
                 <div class="portal-indicator" style="--arrow-yaw: ${yawRot}deg;">
+                    <div class="portal-arrow-prompt">Follow the arrow.</div>
                     <div class="portal-arrow-stage">
                         <div class="portal-arrow-3d">
                             <div class="portal-arrow-motion">
@@ -64,7 +65,6 @@ class HotspotManager {
                             </div>
                         </div>
                     </div>
-                    <div class="portal-arrow-prompt">Follow the arrow.</div>
                 </div>
             `;
         } else {

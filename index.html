@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tabuk Pharmaceuticals - WebXR Induction Experience</title>
+    <title>TABUK PHARMACEUTICALS · Induction</title>
     <meta name="description" content="Interactive WebXR Employee Induction Experience for Tabuk Pharmaceuticals covering Riyadh HQ, Dammam Plant, Tabuk Campus, and Final Assessment.">
-    <link rel="stylesheet" href="css/style.css?v=14.8">
+    <link rel="stylesheet" href="css/style.css?v=16.1">
 </head>
 <body>
 
@@ -15,72 +15,44 @@
     <!-- 3D Spatial Interactive Hotspots Layer -->
     <div id="hotspots-layer" aria-label="Interactive Markers" role="group"></div>
 
-    <!-- Heads-Up Display (HUD) Layer -->
+    <!-- Heads-Up Display — title + fullscreen only -->
     <div id="hud-layer">
         <header class="hud-top-bar">
             <div class="tabuk-brand-header">
-                <span class="brand-text-logo">tabuk</span>
-                <span class="brand-badge">INDUCTION</span>
-            </div>
-
-            <div id="env-progress-badge" class="env-progress-badge" style="display: none;">
-                Environment 1 of 4: Arrival & Welcome
+                <span class="brand-title-text">TABUK PHARMACEUTICALS · Induction</span>
             </div>
 
             <div class="hud-top-actions">
-                <button id="btn-toggle-gyro" class="icon-btn" title="Toggle Gyroscope / Motion Control" aria-label="Toggle Gyroscope">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"/>
-                    </svg>
-                </button>
                 <button id="btn-toggle-fullscreen" class="icon-btn" title="Toggle Fullscreen" aria-label="Toggle Fullscreen">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
                         <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
                     </svg>
                 </button>
-                <button id="btn-enter-xr" class="icon-btn active" title="Enter WebXR VR" aria-label="Enter WebXR VR" style="display: none;">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                        <path d="M21 7H3c-1.1 0-2 .9-2 2v6c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zm-14 8c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm10 0c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/>
-                    </svg>
-                </button>
             </div>
         </header>
-
-        <footer class="hud-bottom-bar">
-            <!-- Center Floating 3-Dots Action Button matching Storyboard -->
-            <div class="center-control-cluster">
-                <button id="menu-toggle-btn" class="btn-three-dots" title="Quick Menu & Jump" aria-label="Open Navigation Menu">
-                    <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-                        <circle cx="12" cy="5" r="2.2"/>
-                        <circle cx="12" cy="12" r="2.2"/>
-                        <circle cx="12" cy="19" r="2.2"/>
-                    </svg>
-                </button>
-            </div>
-
-            <!-- Storyboard Frosted Scene Title Card (Bottom Right) -->
-            <div id="scene-info-card" class="scene-info-card" style="display: none;">
-                <div class="card-headline">Arrival & Welcome</div>
-                <div class="card-subline">Riyadh HQ</div>
-            </div>
-        </footer>
     </div>
 
-    <!-- Welcome Overlay — blue panel centered over 360 video -->
+    <!-- Hidden stubs so existing app.js bindings do not error -->
+    <div id="env-progress-badge" style="display: none;"></div>
+    <div id="scene-info-card" style="display: none;"></div>
+    <button id="menu-toggle-btn" type="button" style="display: none;" aria-hidden="true"></button>
+    <button id="btn-toggle-gyro" type="button" style="display: none;" aria-hidden="true"></button>
+    <button id="btn-enter-xr" type="button" style="display: none;" aria-hidden="true"></button>
+
+    <!-- Welcome Overlay — left popup matching design mockup -->
     <div id="welcome-modal-overlay" class="modal-overlay welcome-overlay">
         <aside class="welcome-side-panel" role="dialog" aria-labelledby="welcome-side-title">
             <div class="welcome-side-header">
-                <div class="welcome-side-heading">
-                    <h1 id="welcome-side-title" class="welcome-side-title">Your First Day at Tabuk</h1>
-                    <div class="welcome-side-rule" aria-hidden="true"></div>
-                </div>
-                <img class="welcome-side-logo" src="assets/images/tabuk_aperture_logo.png" alt="Tabuk logo" width="72" height="72">
+                <h1 id="welcome-side-title" class="welcome-side-title">
+                    Your First Day<br>at Tabuk
+                </h1>
+                <img class="welcome-side-logo" src="assets/images/tabuk_aperture_logo.png" alt="Tabuk logo" width="70" height="70">
             </div>
 
             <div class="welcome-side-body">
                 <p>Welcome to Tabuk Pharmaceuticals where your journey begins. Today marks more than just your first day — it's the start of your impact.</p>
                 <p>You'll move through three modules. Look for glowing markers and click them to explore the spaces around you.</p>
-                <p>It will take you about 30–35 minutes to complete this experience.</p>
+                <p>It will take you about 30-35 minutes to complete this experience.</p>
                 <p class="welcome-side-closer">Your journey starts now.</p>
             </div>
 
@@ -220,12 +192,12 @@ hotspots: []</pre>
     <!-- Application Scripts -->
     <script src="assets/lib/three.min.js"></script>
     <script src="js/scorm.js?v=12.6"></script>
-    <script src="js/courseData.js?v=14.0"></script>
-    <script src="js/viewer.js?v=12.6"></script>
-    <script src="js/hotspots.js?v=14.8"></script>
+    <script src="js/courseData.js?v=15.5"></script>
+    <script src="js/viewer.js?v=15.4"></script>
+    <script src="js/hotspots.js?v=15.0"></script>
     <script src="js/modal.js?v=12.6"></script>
     <script src="js/assessment.js?v=12.6"></script>
-    <script src="js/app.js?v=12.6"></script>
+    <script src="js/app.js?v=15.6"></script>
 
 </body>
 </html>
