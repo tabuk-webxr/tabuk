@@ -22,21 +22,23 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Assemble site (web assets only)
         run: |
           mkdir -p _site
           cp index.html _site/
           cp -R css js assets Audios Videos _site/
-          # Keep SCORM manifest if present (harmless for Pages)
           if [ -f imsmanifest.xml ]; then cp imsmanifest.xml _site/; fi
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
+        with:
+          # Auto-enable Pages + set build source to GitHub Actions
+          enablement: true
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: _site
 
