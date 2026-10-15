@@ -47,7 +47,7 @@ class ModalManager {
                 label: 'CEO Welcome — tap to play',
                 speakerTitle: 'Ismail Shehada · Chief Executive Officer',
                 image: 'assets/images/video_chro_welcome.png',
-                audio: 'Audios/Welcome%20Notes.mp3',
+                audio: 'Audios/Welcome Notes.mp3',
                 duration: 43.47,
                 captions: null // use getCeoCaptionCues()
             },
@@ -402,7 +402,10 @@ class ModalManager {
             this.welcomeAudioSrc = null;
         }
 
-        const audio = new Audio(src);
+        const resolved = (window.app && window.app.assets)
+            ? window.app.assets.getUrl(src)
+            : src;
+        const audio = new Audio(resolved);
         audio.preload = 'auto';
         const onMeta = () => {
             if (audio !== this.welcomeAudio) return;

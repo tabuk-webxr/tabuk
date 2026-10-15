@@ -59,8 +59,108 @@ class WebXRApp {
         // 5. Bind UI Controls
         this.bindUI();
 
-        // 6. Launch with far-from-building approach, then welcome
-        this.goToScene('approach');
+        // 6. Preload all video/audio, then open first scene
+        this.assets = new window.AssetLoader();
+        this.bindAssetLoadingUI();
+        this.runAssetPreload();
+    }
+
+    bindAssetLoadingUI() {
+        const retryBtn = document.getElementById('asset-loading-retry');
+        if (retryBtn) {
+            retryBtn.addEventListener('click', () => {
+                this.runAssetPreload({ onlyFailed: true });
+            });
+        }
+    }
+
+    updateAssetLoadingUI(progress, { statusText = null, error = null } = {}) {
+        const fill = document.getElementById('asset-loading-bar-fill');
+        const percentEl = document.getElementById('asset-loading-percent');
+        const statusEl = document.getElementById('asset-loading-status');
+        const errorBox = document.getElementById('asset-loading-error');
+        const errorText = document.getElementById('asset-loading-error-text');
+        const screen = document.getElementById('asset-loading-screen');
+
+        const pct = Math.max(0, Math.min(100, progress.percent || 0));
+        if (fill) fill.style.width = `${pct}%`;
+        if (percentEl) percentEl.textContent = `${pct}%`;
+        if (statusEl) {
+            statusEl.textContent = statusText
+                || `Loading media ${progress.completed || 0} of ${progress.total || 0}`;
+        }
+
+        if (error) {
+            if (errorBox) errorBox.hidden = false;
+            if (errorText) errorText.textContent = error;
+            if (screen) screen.setAttribute('aria-busy', 'false');
+        } else {
+            if (errorBox) errorBox.hidden = true;
+            if (screen) screen.setAttribute('aria-busy', 'true');
+        }
+    }
+
+    hideAssetLoadingScreen() {
+        const screen = document.getElementById('asset-loading-screen');
+        if (!screen) return;
+        screen.classList.add('is-done');
+        screen.setAttribute('aria-busy', 'false');
+        screen.setAttribute('aria-hidden', 'true');
+        setTimeout(() => {
+            if (screen.parentNode) screen.hidden = true;
+        }, 500);
+    }
+
+    async runAssetPreload({ onlyFailed = false } = {}) {
+        if (!this.assets) return;
+
+        const screen = document.getElementById('asset-loading-screen');
+        if (screen) {
+            screen.hidden = false;
+            screen.classList.remove('is-done');
+            screen.setAttribute('aria-hidden', 'false');
+        }
+
+        this.updateAssetLoadingUI(this.assets.getProgress(), {
+            statusText: onlyFailed ? 'Retrying failed assets…' : 'Loading media assets…'
+        });
+
+        this.assets.onProgress((progress) => {
+            this.updateAssetLoadingUI(progress);
+        });
+
+        const result = await this.assets.preload({ onlyFailed });
+
+        if (!result.ok) {
+            const failed = result.failed || [];
+            const names = failed.map((f) => f.url.split('/').pop()).join(', ');
+            this.updateAssetLoadingUI(result.progress, {
+                statusText: 'Waiting for retry',
+                error: `Could not load: ${names || 'some media files'}. Check your connection and tap Retry.`
+            });
+            return;
+        }
+
+        // Point tip avatar video at cached blob for instant playback later
+        const tipVideo = document.getElementById('reception-tip-avatar-video');
+        if (tipVideo) {
+            tipVideo.src = this.assets.getUrl('Videos/welcome_tip_avatar.mp4');
+        }
+
+        this.updateAssetLoadingUI({ ...result.progress, percent: 100 }, {
+            statusText: 'Ready'
+        });
+        this.hideAssetLoadingScreen();
+
+        // First screen only after everything is ready
+        if (!this.currentSceneId) {
+            this.goToScene('approach');
+        }
+    }
+
+    resolveMediaUrl(url) {
+        if (this.assets) return this.assets.getUrl(url);
+        return url;
     }
 
     playTone(freq = 440, type = 'sine', duration = 0.15) {
@@ -795,7 +895,7 @@ class WebXRApp {
 
     playWelcomeEnterAudio() {
         this.stopWelcomeEnterAudio();
-        const audio = new Audio('Audios/Welcome_Enter.mp3');
+        const audio = new Audio(this.resolveMediaUrl('Audios/Welcome_Enter.mp3'));
         this._welcomeEnterAudio = audio;
         audio.preload = 'auto';
         audio.play().catch(() => {
@@ -822,7 +922,7 @@ class WebXRApp {
         });
         this.stopChroIntroAudio();
 
-        const audio = new Audio('Audios/CHRO_Intro.mp3');
+        const audio = new Audio(this.resolveMediaUrl('Audios/CHRO_Intro.mp3'));
         this._chroIntroAudio = audio;
         audio.preload = 'auto';
 

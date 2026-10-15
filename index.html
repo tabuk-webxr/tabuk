@@ -5,9 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TABUK PHARMACEUTICALS · Induction</title>
     <meta name="description" content="Interactive WebXR Employee Induction Experience for Tabuk Pharmaceuticals covering Riyadh HQ, Dammam Plant, Tabuk Campus, and Final Assessment.">
-    <link rel="stylesheet" href="css/style.css?v=19.3">
+    <link rel="stylesheet" href="css/style.css?v=19.4">
 </head>
 <body>
+
+    <!-- Launch loading screen — blocks until video/audio assets are ready -->
+    <div id="asset-loading-screen" class="asset-loading-screen" role="status" aria-live="polite" aria-busy="true">
+        <div class="asset-loading-card">
+            <img class="asset-loading-logo" src="assets/images/tabuk_aperture_logo.png" alt="Tabuk" width="64" height="64">
+            <h1 class="asset-loading-title">TABUK PHARMACEUTICALS</h1>
+            <p class="asset-loading-subtitle">Preparing your induction experience…</p>
+            <div class="asset-loading-bar-track" aria-hidden="true">
+                <div id="asset-loading-bar-fill" class="asset-loading-bar-fill"></div>
+            </div>
+            <p id="asset-loading-percent" class="asset-loading-percent">0%</p>
+            <p id="asset-loading-status" class="asset-loading-status">Loading media assets</p>
+            <div id="asset-loading-error" class="asset-loading-error" hidden>
+                <p id="asset-loading-error-text">Some assets failed to load.</p>
+                <button type="button" id="asset-loading-retry" class="asset-loading-retry">Retry</button>
+            </div>
+        </div>
+    </div>
 
     <!-- 360 WebGL / WebXR Viewport -->
     <div id="vr-viewport" aria-label="360 Interactive Viewport" role="region"></div>
@@ -248,11 +266,12 @@ tipAvatar: —</pre>
     <script src="assets/lib/three.min.js"></script>
     <script src="js/scorm.js?v=12.6"></script>
     <script src="js/courseData.js?v=16.3"></script>
-    <script src="js/viewer.js?v=15.4"></script>
+    <script src="js/assetLoader.js?v=1.0"></script>
+    <script src="js/viewer.js?v=15.5"></script>
     <script src="js/hotspots.js?v=15.4"></script>
-    <script src="js/modal.js?v=13.8"></script>
+    <script src="js/modal.js?v=13.9"></script>
     <script src="js/assessment.js?v=12.6"></script>
-    <script src="js/app.js?v=17.2"></script>
+    <script src="js/app.js?v=17.3"></script>
 
 </body>
 </html>
