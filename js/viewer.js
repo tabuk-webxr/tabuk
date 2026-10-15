@@ -25,6 +25,8 @@ class PanoramaViewer {
         this.yaw = 0;
         this.targetPitch = 0;
         this.targetYaw = 0;
+        this.minFov = 28;  // max zoom
+        this.maxFov = 95;
         this.fov = 75;
         this.targetFov = 75;
 
@@ -252,7 +254,7 @@ class PanoramaViewer {
     }
 
     onWheel(event) {
-        this.targetFov = Math.max(30, Math.min(95, this.camera.fov + event.deltaY * 0.05));
+        this.targetFov = Math.max(this.minFov, Math.min(this.maxFov, this.camera.fov + event.deltaY * 0.05));
     }
 
     onWindowResize() {
@@ -298,6 +300,24 @@ class PanoramaViewer {
         this.yaw = yaw;
         this.targetPitch = pitch;
         this.targetYaw = yaw;
+    }
+
+    setFov(fov, immediate = true) {
+        const next = Math.max(this.minFov, Math.min(this.maxFov, Number(fov)));
+        this.targetFov = next;
+        if (immediate) {
+            this.fov = next;
+            this.camera.fov = next;
+            this.camera.updateProjectionMatrix();
+        }
+    }
+
+    setMaxZoom() {
+        this.setFov(this.minFov, true);
+    }
+
+    setMinZoom() {
+        this.setFov(this.maxFov, true);
     }
 
     /**

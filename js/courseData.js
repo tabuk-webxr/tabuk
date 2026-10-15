@@ -5,7 +5,7 @@
 
 window.COURSE_DATA = {
     meta: {
-        title: "Tabuk Pharmaceuticals Induction",
+        title: "TABUK PHARMACEUTICALS · Induction",
         subtitle: "25 Years of Purpose. 2,400+ People. One Shared Mission.",
         author: "Tabuk Pharmaceuticals Learning & Development",
         passingScore: 75,
@@ -41,7 +41,7 @@ window.COURSE_DATA = {
             title: "Induction Welcome",
             subtitle: "Your First Day at Tabuk",
             envType: "intro",
-            bgVideo: "Videos/welcome_360.mp4",
+            bgVideo: "Videos/welcome_360_4k.mov",
             bgImage: "assets/images/scene0_exterior.jpg",
             initialPitch: 3,
             initialYaw: 165,

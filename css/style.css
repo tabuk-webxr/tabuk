@@ -201,10 +201,10 @@ html, body {
 
 /* Solid closed floor chevrons — fixed design colors */
 .hotspot-portal {
-    width: 200px;
-    height: 180px;
-    margin-left: -100px;
-    margin-top: -95px;
+    width: 180px;
+    height: 160px;
+    margin-left: -90px;
+    margin-top: -75px;
     text-align: center;
 }
 
@@ -213,7 +213,6 @@ html, body {
     flex-direction: column;
     align-items: center;
     filter: drop-shadow(0 6px 12px rgba(0, 40, 80, 0.4));
-    animation: portalBob 2.6s ease-in-out infinite;
 }
 
 .portal-arrow-prompt {
@@ -225,8 +224,7 @@ html, body {
     border: 1px solid rgba(126, 200, 240, 0.55);
     padding: 3px 10px;
     border-radius: 6px;
-    margin-top: 14px;
-    margin-bottom: 0;
+    margin: 0 0 4px;
     letter-spacing: 0.1px;
     white-space: nowrap;
 }
@@ -234,17 +232,18 @@ html, body {
 .portal-arrow-stage {
     perspective: 580px;
     perspective-origin: 50% 88%;
-    width: 190px;
-    height: 168px;
+    width: 170px;
+    height: 130px;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
+    overflow: visible;
 }
 
 .portal-arrow-3d {
     position: relative;
-    width: 140px;
-    height: 168px;
+    width: 130px;
+    height: 130px;
     transform-style: preserve-3d;
     transform: rotateX(60deg) rotateZ(var(--arrow-yaw, 0deg));
 }
@@ -254,18 +253,21 @@ html, body {
     height: 100%;
     position: relative;
     transform-style: preserve-3d;
-    animation: chevronMarch 1.35s ease-in-out infinite;
 }
 
 .hotspot-portal:hover .portal-arrow-3d {
-    transform: rotateX(60deg) rotateZ(var(--arrow-yaw, 0deg)) scale(1.08);
+    transform: rotateX(60deg) rotateZ(var(--arrow-yaw, 0deg)) scale(1.06);
 }
 
 .portal-chevron {
     position: absolute;
     left: 50%;
+    top: 40px;
     transform: translateX(-50%);
     transform-style: preserve-3d;
+    /* Seamless infinite forward loop — staggered so it never stops */
+    animation: chevronLoop 3.2s linear infinite;
+    will-change: transform, opacity;
 }
 
 .portal-chevron svg {
@@ -274,32 +276,32 @@ html, body {
 }
 
 .portal-chevron-a {
-    top: 0;
+    animation-delay: 0s;
 }
 
 .portal-chevron-b {
-    top: 50px;
+    animation-delay: -1.066s;
 }
 
 .portal-chevron-c {
-    top: 100px;
+    animation-delay: -2.133s;
 }
 
-@keyframes portalBob {
-    0%, 100% {
-        transform: translateY(0);
+/* One step = gap between chevrons → seamless loop */
+@keyframes chevronLoop {
+    0% {
+        transform: translateX(-50%) translateY(40px);
+        opacity: 0;
     }
-    50% {
-        transform: translateY(-4px);
+    18% {
+        opacity: 1;
     }
-}
-
-@keyframes chevronMarch {
-    0%, 100% {
-        transform: translateY(5px);
+    82% {
+        opacity: 1;
     }
-    50% {
-        transform: translateY(-7px);
+    100% {
+        transform: translateX(-50%) translateY(-40px);
+        opacity: 0;
     }
 }
 
@@ -343,6 +345,15 @@ html, body {
     font-size: 20px;
     color: var(--primary-navy);
     letter-spacing: -0.5px;
+}
+
+.brand-title-text {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--primary-navy);
+    letter-spacing: 0.4px;
+    white-space: nowrap;
 }
 
 .brand-badge {
@@ -1118,94 +1129,87 @@ html, body {
     font-weight: 600;
 }
 
-/* ================= WELCOME LEFT PANEL (over clear 360 video) ================= */
+/* ================= WELCOME POPUP (exact mockup spacing) ================= */
 #welcome-modal-overlay.welcome-overlay,
 #welcome-modal-overlay {
     background: transparent;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
-    align-items: center;
+    align-items: stretch;
     justify-content: flex-start;
-    padding: 0;
+    /* Top / bottom spacing so 360 shows above & below — edit separately */
+    padding-top: 16vh;
+    padding-bottom: 7.5vh;
+    padding-left: 0;
+    padding-right: 0;
     pointer-events: none;
     position: fixed;
 }
 
-/* Blue welcome panel — flush left, shorter so 360 shows above/below */
+/* Left popup — solid navy, sharp corners, clear space on the right */
 .welcome-side-panel {
     pointer-events: auto;
-    width: min(640px, 92vw);
-    max-height: min(72vh, 620px);
-    height: auto;
-    min-width: 0;
+    width: min(38vw, 480px);
+    height: 100%;
+    max-height: none;
+    min-width: 300px;
     margin: 0;
-    background: linear-gradient(165deg, rgba(12, 52, 98, 0.94) 0%, rgba(6, 34, 68, 0.96) 100%);
+    background: #163A6B;
     color: #ffffff;
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    justify-content: flex-start;
+    justify-content: center;
     gap: 0;
-    padding: 32px 40px 28px 36px;
-    text-align: left;
-    border-radius: 0 14px 14px 0;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-left: none;
-    box-shadow: 12px 0 40px rgba(0, 0, 0, 0.35);
+    padding: clamp(36px, 5vh, 56px) clamp(28px, 3vw, 44px);
+    text-align: center;
+    border-radius: 0;
+    border: none;
+    box-shadow: 8px 0 28px rgba(0, 0, 0, 0.28);
     overflow-y: auto;
 }
 
 .welcome-side-header {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 20px;
-    margin: 0 0 20px;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin: 0 0 clamp(28px, 4vh, 42px);
     flex-shrink: 0;
-}
-
-.welcome-side-heading {
-    flex: 1;
-    min-width: 0;
 }
 
 .welcome-side-title {
     font-family: var(--font-heading);
-    font-size: clamp(26px, 3vw, 34px);
+    font-size: clamp(28px, 3.2vw, 40px);
     font-weight: 800;
     color: #ffffff;
-    letter-spacing: 0.1px;
-    line-height: 1.2;
+    letter-spacing: 0;
+    line-height: 1.15;
     margin: 0;
-    text-align: left;
-}
-
-.welcome-side-rule {
-    width: 56px;
-    height: 3px;
-    margin-top: 12px;
-    border-radius: 2px;
-    background: #C9A227;
+    text-align: center;
+    flex: 0 1 auto;
+    min-width: 0;
 }
 
 .welcome-side-logo {
     flex-shrink: 0;
-    width: 72px;
-    height: 72px;
+    width: 70px;
+    height: 70px;
     object-fit: contain;
     background: transparent;
+    margin-top: 2px;
 }
 
 .welcome-side-body {
     max-width: none;
-    font-size: 15px;
-    line-height: 1.6;
-    color: rgba(255, 255, 255, 0.92);
-    margin: 0 0 22px;
-    text-align: left;
+    font-size: clamp(14px, 1.25vw, 16px);
+    line-height: 1.55;
+    color: #ffffff;
+    margin: 0 0 clamp(28px, 4vh, 40px);
+    text-align: center;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: clamp(18px, 2.4vh, 26px);
 }
 
 .welcome-side-body p {
@@ -1213,34 +1217,34 @@ html, body {
 }
 
 .welcome-side-closer {
-    font-weight: 700;
-    color: #ffffff;
-    margin-top: 2px;
+    margin-top: 8px;
+    font-weight: 600;
 }
 
 .btn-enter-tabuk {
     font-family: var(--font-heading);
     font-weight: 800;
-    font-size: 15px;
-    letter-spacing: 1.2px;
+    font-size: 14px;
+    letter-spacing: 1px;
     text-transform: uppercase;
-    color: #0A2A4A;
-    background: #C9A227;
+    color: #1A2B3C;
+    background: #C9A03C;
     border: none;
-    border-radius: 6px;
-    padding: 15px 28px;
-    width: 100%;
+    border-radius: 2px;
+    padding: 14px 28px;
+    width: auto;
+    align-self: center;
     margin-top: 0;
     flex-shrink: 0;
     cursor: pointer;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28);
-    transition: transform 0.2s var(--transition-smooth), background 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: none;
+    transition: background 0.2s ease, transform 0.2s var(--transition-smooth);
 }
 
 .btn-enter-tabuk:hover {
     background: #D4AF37;
-    transform: translateY(-2px);
-    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.35);
+    transform: translateY(-1px);
+    box-shadow: none;
 }
 
 .btn-enter-tabuk:active {
@@ -1931,27 +1935,34 @@ html, body {
 }
 
 @media (max-width: 768px) {
+    #welcome-modal-overlay.welcome-overlay {
+        padding-top: 3vh;
+        padding-bottom: 3vh;
+    }
+
     .welcome-side-panel {
-        width: min(100%, 100vw);
-        max-height: 70vh;
-        padding: 24px 22px;
+        width: min(92vw, 420px);
+        min-width: 0;
+        height: auto;
+        max-height: 94vh;
+        padding: 28px 22px;
         justify-content: flex-start;
     }
 
     .welcome-side-header {
-        margin-bottom: 20px;
+        margin-bottom: 22px;
         gap: 12px;
     }
 
     .welcome-side-logo {
-        width: 58px;
-        height: 58px;
+        width: 56px;
+        height: 56px;
     }
 
     .welcome-side-body {
         margin-bottom: 22px;
         font-size: 14px;
-        gap: 14px;
+        gap: 16px;
     }
 }
 

@@ -385,9 +385,18 @@ class WebXRApp {
         const onMediaReady = () => {
             this.viewer.setSphereRotationY(scene.sphereYaw || 0);
             this.viewer.setLookAt(scene.initialPitch || 0, scene.initialYaw || 0);
+            // 360 videos start at min zoom (widest view); stills use scene FOV or default
+            if (scene.bgVideo) {
+                this.viewer.setMinZoom();
+            } else if (typeof scene.initialFov === 'number') {
+                this.viewer.setFov(scene.initialFov, true);
+            } else {
+                this.viewer.setFov(75, true);
+            }
             this.syncDevOrientationPanel();
         };
         if (scene.bgVideo) {
+            this.viewer.setMinZoom();
             this.viewer.loadVideo(scene.bgVideo, onMediaReady);
         } else {
             this.viewer.loadTexture(scene.bgImage, onMediaReady);
@@ -420,8 +429,9 @@ class WebXRApp {
             envBadge.style.display = 'none';
         }
 
-        // Scene Card (frosted card in bottom right matching storyboard)
-        if (scene.cardText && scene.id !== 'welcome') {
+        // Scene Card (frosted card in bottom right) — hide on intro screens
+        const isIntroScene = scene.id === 'welcome' || scene.id === 'approach';
+        if (scene.cardText && !isIntroScene) {
             const lines = scene.cardText.split('\n');
             sceneCard.innerHTML = `
                 <div class="card-headline">${lines[0]}</div>
@@ -434,7 +444,8 @@ class WebXRApp {
 
         const hudLayer = document.getElementById('hud-layer');
         if (hudLayer) {
-            hudLayer.style.visibility = scene.id === 'welcome' ? 'hidden' : 'visible';
+            // Always show title + fullscreen (HUD stripped to those only)
+            hudLayer.style.visibility = 'visible';
         }
 
         // Keep DEV panel state across scenes; refresh hotspot list when open
