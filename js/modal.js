@@ -35,6 +35,45 @@ class ModalManager {
         ];
         this.activeLeaderId = 1;
         this.hoveredLeaderId = null;
+        this.activeVideoProfile = null;
+        this.welcomeAudio = null;
+        this.welcomeAudioSrc = null;
+        this.videoPlaybackEnded = false;
+        this.onWelcomeVideoClosed = null;
+
+        this.videoProfiles = {
+            modal_video_welcome: {
+                id: 'ceo',
+                label: 'CEO Welcome — tap to play',
+                speakerTitle: 'Ismail Shehada · Chief Executive Officer',
+                image: 'assets/images/video_chro_welcome.png',
+                audio: 'Audios/Welcome%20Notes.mp3',
+                duration: 43.47,
+                captions: null // use getCeoCaptionCues()
+            },
+            modal_video_chro: {
+                id: 'chro',
+                label: 'CHRO Welcome — Tap to play',
+                speakerTitle: 'Mohammad Al Fawazi · Chief Human Resources Officer',
+                image: 'assets/images/video_executive_welcome.png?v=8.0',
+                audio: 'Audios/CHRO_Notes.mp3',
+                duration: 45.95,
+                // Word-level timings from CHRO Notes_json.json (~45.8s)
+                captions: [
+                    { at: 0.00, text: 'Welcome to Tabuk Pharmaceuticals.' },
+                    { at: 2.56, text: 'I\'m glad you\'ve chosen to be part of our journey.' },
+                    { at: 5.52, text: 'At Tabuk, what we do is rooted in a simple purpose:' },
+                    { at: 9.60, text: 'improving patients\' lives through medicines people can trust.' },
+                    { at: 13.51, text: 'But what truly brings that purpose to life is our people.' },
+                    { at: 17.43, text: 'Every day, teams across our organization work with integrity, care, and a shared commitment to making a difference.' },
+                    { at: 25.11, text: 'Through this experience, you\'ll get a glimpse of how we work, what we value, and the impact we strive to create.' },
+                    { at: 32.20, text: 'As you step into your role, know that what you do matters,' },
+                    { at: 35.64, text: 'and the impact you make will reach far beyond your day to day work.' },
+                    { at: 39.72, text: 'Once again, welcome to Tabuk Pharmaceuticals.' },
+                    { at: 43.05, text: 'I look forward to seeing you grow and succeed with us.' }
+                ]
+            }
+        };
     }
 
     isOpen() {
@@ -42,6 +81,8 @@ class ModalManager {
     }
 
     close() {
+        const closedProfile = this.activeVideoProfile;
+        const ended = this.videoPlaybackEnded;
         this.stopVideoPlayback();
         if (this.overlay) {
             this.overlay.classList.remove('active');
@@ -49,6 +90,11 @@ class ModalManager {
         if (this.contentContainer) {
             this.contentContainer.innerHTML = '';
         }
+        this.activeVideoProfile = null;
+        if (typeof this.onWelcomeVideoClosed === 'function' && closedProfile) {
+            this.onWelcomeVideoClosed(closedProfile, ended);
+        }
+        this.videoPlaybackEnded = false;
     }
 
     getIconSvg(iconType) {
@@ -278,19 +324,24 @@ class ModalManager {
                     </div>
                 </div>
             `;
-        } else if (modalId === 'modal_video_welcome') {
-            // Slide 5 exact floating curved video player matching storyboard
+        } else if (modalId === 'modal_video_welcome' || modalId === 'modal_video_chro') {
+            const profile = this.videoProfiles[modalId];
+            this.activeVideoProfile = profile;
+            this.videoPlaybackEnded = false;
+            const firstCaption = (profile.captions && profile.captions[0])
+                ? profile.captions[0].text
+                : 'Welcome to Tabuk Pharmaceuticals.';
             innerHtml = `
                 <div class="deck-modal-video-player">
                     <button class="card-close-x video-close-btn" onclick="window.modalManager.closeVideoPlayer()" aria-label="Close Video">&times;</button>
                     <div class="deck-video-curved-viewport">
-                        <img src="assets/images/video_executive_welcome.png?v=8.0" alt="Executive Welcome Video" class="deck-video-visual" />
+                        <img src="${profile.image}" alt="${profile.label}" class="deck-video-visual" />
                         
                         <div class="deck-video-overlay-gradient"></div>
                         
                         <!-- Floating Closed Captions -->
                         <div class="deck-video-subtitles" id="video-subtitles-box">
-                            "Welcome to Tabuk Pharmaceuticals Headquarters in Riyadh. On behalf of leadership, we welcome you."
+                            ${firstCaption}
                         </div>
                         
                         <!-- Video Controls Bar matching Slide 5 -->
@@ -308,7 +359,7 @@ class ModalManager {
                                 </div>
                             </div>
                             
-                            <div id="video-timer-label" class="video-timer-label">00:00 / 00:35</div>
+                            <div id="video-timer-label" class="video-timer-label">00:00 / 00:00</div>
                             
                             <button id="video-audio-toggle" class="video-audio-btn" onclick="window.modalManager.toggleVideoAudio()" title="Audio Narration On/Off">
                                 <svg id="video-audio-icon" viewBox="0 0 24 24" width="20" height="20" fill="#ffffff">
@@ -316,6 +367,9 @@ class ModalManager {
                                 </svg>
                             </button>
                         </div>
+                    </div>
+                    <div class="deck-video-speaker-title" id="video-speaker-title">
+                        ${profile.speakerTitle || ''}
                     </div>
                 </div>
             `;
@@ -326,64 +380,129 @@ class ModalManager {
         this.overlay.classList.add('active');
     }
 
+    getActiveAudioDuration() {
+        const audio = this.welcomeAudio;
+        if (audio && isFinite(audio.duration) && audio.duration > 0) {
+            return audio.duration;
+        }
+        const fallback = this.activeVideoProfile && this.activeVideoProfile.duration;
+        return fallback || this.videoDuration || 0;
+    }
+
+    ensureWelcomeAudio() {
+        const src = this.activeVideoProfile && this.activeVideoProfile.audio;
+        if (!src) return null;
+        if (this.welcomeAudio && this.welcomeAudioSrc === src) return this.welcomeAudio;
+
+        if (this.welcomeAudio) {
+            this.welcomeAudio.pause();
+            this.welcomeAudio.removeAttribute('src');
+            this.welcomeAudio.load();
+            this.welcomeAudio = null;
+            this.welcomeAudioSrc = null;
+        }
+
+        const audio = new Audio(src);
+        audio.preload = 'auto';
+        const onMeta = () => {
+            if (audio !== this.welcomeAudio) return;
+            if (audio.duration && isFinite(audio.duration)) {
+                this.videoDuration = audio.duration;
+                this.updateVideoUI();
+            }
+        };
+        audio.addEventListener('loadedmetadata', onMeta);
+        audio.addEventListener('durationchange', onMeta);
+        audio.addEventListener('timeupdate', () => {
+            if (audio !== this.welcomeAudio) return;
+            this.videoCurrentTime = audio.currentTime;
+            this.videoDuration = this.getActiveAudioDuration();
+            this.updateVideoUI();
+        });
+        audio.addEventListener('ended', () => {
+            if (audio !== this.welcomeAudio) return;
+            this.isVideoPlaying = false;
+            this.videoPlaybackEnded = true;
+            this.videoDuration = this.getActiveAudioDuration();
+            this.videoCurrentTime = this.videoDuration;
+            this.updateVideoPlayIcon();
+            this.updateVideoUI();
+        });
+        this.welcomeAudio = audio;
+        this.welcomeAudioSrc = src;
+        return audio;
+    }
+
     startVideoPlayback() {
         this.stopVideoPlayback();
+        const audio = this.ensureWelcomeAudio();
         this.videoCurrentTime = 0;
-        this.videoDuration = 35;
-        this.isVideoPlaying = true;
+        this.videoDuration = this.getActiveAudioDuration();
+        this.isVideoPlaying = !!audio;
         this.isVideoMuted = false;
-
-        this.videoInterval = setInterval(() => {
-            if (!this.isVideoPlaying) return;
-            this.videoCurrentTime += 0.2;
-            if (this.videoCurrentTime >= this.videoDuration) {
-                this.videoCurrentTime = this.videoDuration;
-                this.isVideoPlaying = false;
-                this.updateVideoPlayIcon();
-            }
-            this.updateVideoUI();
-        }, 200);
-
-        this.speakVideoNarration();
+        if (audio) {
+            audio.muted = false;
+            try { audio.currentTime = 0; } catch (e) { /* ignore until seekable */ }
+            audio.play().catch(() => {});
+        }
+        this.updateVideoPlayIcon();
+        this.updateVideoUI();
     }
 
     toggleVideoPlay() {
+        const audio = this.ensureWelcomeAudio();
+        if (!audio) return;
+        this.videoDuration = this.getActiveAudioDuration();
         this.isVideoPlaying = !this.isVideoPlaying;
-        if (this.isVideoPlaying && this.videoCurrentTime >= this.videoDuration) {
-            this.videoCurrentTime = 0;
-            this.speakVideoNarration();
-        } else if (!this.isVideoPlaying) {
-            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        if (this.isVideoPlaying) {
+            if (this.videoDuration && this.videoCurrentTime >= this.videoDuration - 0.05) {
+                this.videoCurrentTime = 0;
+                try { audio.currentTime = 0; } catch (e) { /* ignore */ }
+            }
+            audio.play().catch(() => {});
         } else {
-            this.speakVideoNarration(this.videoCurrentTime);
+            audio.pause();
         }
         this.updateVideoPlayIcon();
     }
 
     seekVideo(event) {
+        const audio = this.ensureWelcomeAudio();
+        if (!audio) return;
+        const duration = this.getActiveAudioDuration();
+        if (!duration) return;
+        this.videoDuration = duration;
         const track = event.currentTarget.getBoundingClientRect();
         const clickX = event.clientX - track.left;
         const pct = Math.max(0, Math.min(1, clickX / track.width));
-        this.videoCurrentTime = pct * this.videoDuration;
-        this.updateVideoUI();
-        if (this.isVideoPlaying) {
-            this.speakVideoNarration(this.videoCurrentTime);
+        this.videoCurrentTime = pct * duration;
+        try {
+            audio.currentTime = this.videoCurrentTime;
+        } catch (e) {
+            // Not seekable yet — retry once metadata is ready
+            const retry = () => {
+                if (audio !== this.welcomeAudio) return;
+                try { audio.currentTime = this.videoCurrentTime; } catch (err) { /* ignore */ }
+                this.updateVideoUI();
+            };
+            audio.addEventListener('loadedmetadata', retry, { once: true });
+            audio.addEventListener('canplay', retry, { once: true });
         }
+        this.updateVideoUI();
     }
 
     toggleVideoAudio() {
+        const audio = this.ensureWelcomeAudio();
+        if (!audio) return;
         this.isVideoMuted = !this.isVideoMuted;
+        audio.muted = this.isVideoMuted;
         const icon = document.getElementById('video-audio-icon');
         if (this.isVideoMuted) {
-            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
             if (icon) {
                 icon.innerHTML = `<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>`;
             }
-        } else {
-            if (icon) {
-                icon.innerHTML = `<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>`;
-            }
-            if (this.isVideoPlaying) this.speakVideoNarration(this.videoCurrentTime);
+        } else if (icon) {
+            icon.innerHTML = `<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>`;
         }
     }
 
@@ -397,42 +516,60 @@ class ModalManager {
         }
     }
 
+    getCeoCaptionCues() {
+        // Word-level timings from ElevenLabs Welcome Notes transcript (~43.3s)
+        return [
+            { at: 0.00, text: 'Welcome to Tabuk Pharmaceuticals.' },
+            { at: 2.48, text: 'For over 30 years, this organisation has been built on a single belief' },
+            { at: 7.44, text: 'that every patient deserves access to medicines they can trust.' },
+            { at: 11.52, text: 'That belief is why we exist, and it is what drives every decision we make.' },
+            { at: 16.73, text: 'Today, you join a team of more than 2,400 people working across manufacturing, research, commercial and support functions,' },
+            { at: 26.01, text: 'each one contributing to that same purpose.' },
+            { at: 29.12, text: 'Your role, whatever it is, connects directly to a patient somewhere in our region.' },
+            { at: 34.38, text: 'We are growing.' },
+            { at: 35.58, text: 'We are investing.' },
+            { at: 36.78, text: 'And we are doing it because we believe the best is still ahead of us.' },
+            { at: 40.78, text: 'I\'m glad you\'re here.' },
+            { at: 42.22, text: 'Welcome to Tabuk.' }
+        ];
+    }
+
+    getWelcomeCaptionCues() {
+        if (this.activeVideoProfile && this.activeVideoProfile.captions) {
+            return this.activeVideoProfile.captions;
+        }
+        return this.getCeoCaptionCues();
+    }
+
     updateVideoUI() {
         const bar = document.getElementById('video-progress-bar');
         const timer = document.getElementById('video-timer-label');
         const subtitles = document.getElementById('video-subtitles-box');
 
-        const pct = Math.min(100, (this.videoCurrentTime / this.videoDuration) * 100);
+        const duration = this.videoDuration || 0;
+        const pct = duration ? Math.min(100, (this.videoCurrentTime / duration) * 100) : 0;
         if (bar) bar.style.width = `${pct}%`;
 
         if (timer) {
             const curM = String(Math.floor(this.videoCurrentTime / 60)).padStart(2, '0');
             const curS = String(Math.floor(this.videoCurrentTime % 60)).padStart(2, '0');
-            const totM = String(Math.floor(this.videoDuration / 60)).padStart(2, '0');
-            const totS = String(Math.floor(this.videoDuration % 60)).padStart(2, '0');
+            const totM = String(Math.floor(duration / 60)).padStart(2, '0');
+            const totS = String(Math.floor(duration % 60)).padStart(2, '0');
             timer.textContent = `${curM}:${curS} / ${totM}:${totS}`;
         }
 
         if (subtitles) {
-            if (this.videoCurrentTime < 11) {
-                subtitles.textContent = '"Welcome to Tabuk Pharmaceuticals Headquarters in Riyadh. On behalf of executive leadership and 2,400+ colleagues, we welcome you."';
-            } else if (this.videoCurrentTime < 24) {
-                subtitles.textContent = '"Our manufacturing plants in Tabuk, Dammam, Algeria, and Sudan supply trusted medicines across 17 MENA countries."';
-            } else {
-                subtitles.textContent = '"Driven by integrity, high quality, and respect, you are now part of our mission. Have an inspiring induction experience!"';
+            const cues = this.getWelcomeCaptionCues();
+            let caption = cues[0] ? cues[0].text : '';
+            for (let i = 0; i < cues.length; i++) {
+                if (this.videoCurrentTime >= cues[i].at) {
+                    caption = cues[i].text;
+                } else {
+                    break;
+                }
             }
+            subtitles.textContent = caption;
         }
-    }
-
-    speakVideoNarration(offsetSeconds = 0) {
-        if (!('speechSynthesis' in window) || this.isVideoMuted) return;
-        window.speechSynthesis.cancel();
-
-        let text = "Welcome to Tabuk Pharmaceuticals Headquarters in Riyadh. On behalf of executive leadership and over 2,400 colleagues, we welcome you to the company. Our manufacturing plants across Tabuk, Dammam, Algeria, and Sudan supply trusted medicines to millions of patients across 17 countries. We wish you an inspiring induction experience.";
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 0.95;
-        utterance.pitch = 1.0;
-        window.speechSynthesis.speak(utterance);
     }
 
     stopVideoPlayback() {
@@ -440,15 +577,33 @@ class ModalManager {
             clearInterval(this.videoInterval);
             this.videoInterval = null;
         }
+        if (this.welcomeAudio) {
+            this.welcomeAudio.pause();
+            try { this.welcomeAudio.currentTime = 0; } catch (e) { /* ignore */ }
+        }
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
         }
         this.isVideoPlaying = false;
+        this.videoCurrentTime = 0;
     }
 
     closeVideoPlayer() {
+        // Capture before teardown so the X button always unlocks CHRO after CEO
+        const closedProfile = this.activeVideoProfile;
+        const ended = this.videoPlaybackEnded;
         this.stopVideoPlayback();
-        this.close();
+        if (this.overlay) {
+            this.overlay.classList.remove('active');
+        }
+        if (this.contentContainer) {
+            this.contentContainer.innerHTML = '';
+        }
+        this.activeVideoProfile = null;
+        this.videoPlaybackEnded = false;
+        if (typeof this.onWelcomeVideoClosed === 'function' && closedProfile) {
+            this.onWelcomeVideoClosed(closedProfile, ended);
+        }
     }
 }
 

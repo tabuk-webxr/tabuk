@@ -80,21 +80,38 @@ html, body {
     outline: none;
 }
 
-/* Storyboard Concentric Pulsing Hotspot */
+/* Storyboard Concentric Pulsing Hotspot — one shared center stack */
 .hotspot-info {
-    width: 52px;
-    height: 52px;
-    margin-left: -26px;
-    margin-top: -26px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    position: relative;
+    width: 56px;
+    height: 56px;
+    margin-left: -28px;
+    margin-top: -28px;
+}
+
+.hotspot-marker {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 44px;
+    height: 44px;
+    transform: translate(-50%, -50%);
+}
+
+.hotspot-inner-circle,
+.hotspot-pulse-ring,
+.hotspot-pulse-ring-outer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    box-sizing: border-box;
 }
 
 .hotspot-inner-circle {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
+    z-index: 2;
     background: radial-gradient(circle at 35% 35%, #00C86E, #00A859 70%, #008746);
     border: 3px solid #ffffff;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), 0 0 18px var(--emerald-glow);
@@ -103,22 +120,25 @@ html, body {
     justify-content: center;
     color: #ffffff;
     transition: transform 0.25s var(--transition-smooth), box-shadow 0.25s var(--transition-smooth);
-    z-index: 2;
+    transform-origin: center center;
+}
+
+.hotspot-inner-circle svg {
+    display: block;
+    flex-shrink: 0;
 }
 
 .hotspot-info:hover .hotspot-inner-circle {
-    transform: scale(1.18);
+    transform: scale(1.12);
     box-shadow: 0 6px 22px rgba(0, 0, 0, 0.4), 0 0 28px rgba(0, 200, 110, 0.75);
 }
 
 .hotspot-pulse-ring,
 .hotspot-pulse-ring-outer {
-    position: absolute;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
+    z-index: 1;
     border: 2px solid rgba(255, 255, 255, 0.85);
     pointer-events: none;
+    transform-origin: center center;
     animation: ripplePulse 2.4s infinite ease-out;
 }
 
@@ -129,8 +149,8 @@ html, body {
 
 @keyframes ripplePulse {
     0% {
-        transform: scale(0.85);
-        opacity: 0.9;
+        transform: scale(1);
+        opacity: 0.85;
     }
     100% {
         transform: scale(2.2);
@@ -138,39 +158,45 @@ html, body {
     }
 }
 
-/* Play Hotspot Variant matching Slide 4 */
+/* Play Hotspot Variant — larger but same concentric stack */
 .hotspot-item[data-icon="play"] {
-    width: 64px;
-    height: 64px;
-    margin-left: -32px;
-    margin-top: -32px;
+    width: 68px;
+    height: 68px;
+    margin-left: -34px;
+    margin-top: -34px;
+}
+
+.hotspot-item[data-icon="play"] .hotspot-marker {
+    width: 52px;
+    height: 52px;
 }
 
 .hotspot-item[data-icon="play"] .hotspot-inner-circle {
-    width: 52px;
-    height: 52px;
     background: radial-gradient(circle at 35% 35%, #00B074, #007A3E);
     border: 3.5px solid #ffffff;
     box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4), 0 0 24px rgba(0, 168, 89, 0.8);
 }
 
+.hotspot-item[data-icon="play"] .hotspot-play-icon {
+    width: 20px;
+    height: 20px;
+    /* Optical balance for right-pointing triangle */
+    transform: translateX(1.5px);
+}
+
 .hotspot-item[data-icon="play"] .hotspot-pulse-ring {
-    width: 62px;
-    height: 62px;
     border-width: 2.5px;
     border-color: rgba(255, 255, 255, 0.95);
 }
 
 .hotspot-item[data-icon="play"] .hotspot-pulse-ring-outer {
-    width: 62px;
-    height: 62px;
     border-width: 2px;
     border-color: rgba(0, 176, 116, 0.85);
     animation-delay: 1.1s;
 }
 
 .hotspot-item[data-icon="play"]:hover .hotspot-inner-circle {
-    transform: scale(1.18);
+    transform: scale(1.12);
     box-shadow: 0 6px 26px rgba(0, 0, 0, 0.5), 0 0 32px rgba(0, 200, 110, 0.95);
 }
 
@@ -199,6 +225,17 @@ html, body {
     transform: translateX(-50%) translateY(2px);
 }
 
+/* CEO Welcome label always visible with the play button */
+.hotspot-item[data-icon="play"] .hotspot-tooltip {
+    bottom: -36px;
+    opacity: 1;
+    transform: translateX(-50%);
+    font-size: 12px;
+    padding: 6px 14px;
+    background: rgba(0, 49, 89, 0.96);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
 /* Solid closed floor chevrons — fixed design colors */
 .hotspot-portal {
     width: 180px;
@@ -206,6 +243,16 @@ html, body {
     margin-left: -90px;
     margin-top: -75px;
     text-align: center;
+}
+
+.hotspot-item.hotspot-locked {
+    cursor: default;
+    opacity: 0.72;
+    filter: grayscale(0.15);
+}
+
+.hotspot-item.hotspot-locked .portal-arrow-prompt {
+    opacity: 0.85;
 }
 
 .portal-indicator {
@@ -303,6 +350,52 @@ html, body {
         transform: translateX(-50%) translateY(-40px);
         opacity: 0;
     }
+}
+
+/* ================= RECEPTION WELCOME TIP (glass, bottom-left) ================= */
+.reception-welcome-tip {
+    position: fixed;
+    left: clamp(16px, 2.5vw, 28px);
+    bottom: clamp(18px, 3.5vh, 36px);
+    z-index: 6;
+    max-width: none;
+    width: max-content;
+    padding: 12px 16px;
+    border-radius: 14px;
+    background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.72) 45%, rgba(255, 255, 255, 0.82) 100%);
+    backdrop-filter: blur(20px) saturate(1.2);
+    -webkit-backdrop-filter: blur(20px) saturate(1.2);
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    box-shadow:
+        0 12px 32px rgba(0, 20, 50, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 1),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.06);
+    color: #0f172a;
+    pointer-events: none;
+    opacity: 0;
+    transform: translate3d(-28px, 36px, 0);
+    transition:
+        opacity 0.65s var(--transition-smooth),
+        transform 0.75s var(--transition-smooth);
+}
+
+.reception-welcome-tip.visible {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+}
+
+.reception-tip-text {
+    margin: 0;
+    font-family: var(--font-heading);
+    font-size: clamp(13px, 1.3vw, 15px);
+    font-weight: 700;
+    line-height: 1.55;
+    letter-spacing: 0.15px;
+    color: #0f172a;
+    text-shadow: none;
+    white-space: normal;
+    max-width: min(360px, calc(100vw - 48px));
 }
 
 /* ================= HEADS-UP DISPLAY (HUD) ================= */
@@ -934,7 +1027,7 @@ html, body {
     border-radius: 18px;
     box-shadow: 0 24px 64px rgba(0, 0, 0, 0.75), 0 0 40px rgba(0, 86, 150, 0.35);
     background: #000000;
-    overflow: hidden;
+    overflow: visible;
     border: 2px solid rgba(255, 255, 255, 0.22);
     animation: modalScaleIn 0.28s var(--transition-smooth);
 }
@@ -945,6 +1038,7 @@ html, body {
     aspect-ratio: 16 / 9;
     overflow: hidden;
     background: #000000;
+    border-radius: 16px;
 }
 
 .deck-video-visual {
@@ -976,7 +1070,8 @@ html, body {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    z-index: 20;
+    z-index: 30;
+    pointer-events: auto;
     transition: all 0.2s ease;
 }
 
@@ -985,25 +1080,65 @@ html, body {
     transform: rotate(90deg) scale(1.05);
 }
 
+/* Speaker title sits below the video player */
+.deck-video-speaker-title {
+    position: relative;
+    z-index: 11;
+    margin-top: 12px;
+    padding: 10px 16px;
+    background: rgba(0, 0, 0, 0.88);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 10px;
+    color: #ffffff;
+    font-family: var(--font-heading);
+    font-size: clamp(12px, 1.35vw, 14px);
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    line-height: 1.35;
+    text-align: center;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(12px);
+    animation: videoSpeakerSlideIn 0.55s var(--transition-smooth) 0.15s forwards;
+}
+
+@keyframes videoSpeakerSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .deck-video-subtitles {
     position: absolute;
     bottom: 58px;
     left: 20px;
     right: 20px;
     padding: 8px 16px;
-    background: rgba(0, 0, 0, 0.65);
-    backdrop-filter: blur(8px);
-    border-radius: 8px;
+    background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.04) 45%, rgba(255, 255, 255, 0.08) 100%),
+        rgba(8, 16, 28, 0.38);
+    backdrop-filter: blur(16px) saturate(1.25);
+    -webkit-backdrop-filter: blur(16px) saturate(1.25);
+    border-radius: 10px;
     color: #ffffff;
     font-family: var(--font-body);
     font-size: 13.5px;
     font-weight: 500;
     line-height: 1.4;
     text-align: center;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    box-shadow:
+        0 6px 20px rgba(0, 0, 0, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.28);
     pointer-events: none;
     transition: all 0.3s ease;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
 }
 
 .deck-video-controls {
@@ -1137,7 +1272,7 @@ html, body {
     font-weight: 600;
 }
 
-/* ================= WELCOME POPUP (exact mockup spacing) ================= */
+/* ================= WELCOME POPUP (glass + 3D depth) ================= */
 #welcome-modal-overlay.welcome-overlay,
 #welcome-modal-overlay {
     background: transparent;
@@ -1152,17 +1287,19 @@ html, body {
     padding-right: 0;
     pointer-events: none;
     position: fixed;
+    perspective: 1400px;
 }
 
-/* Left popup — solid navy, sharp corners, clear space on the right */
+/* Left popup — frosted glass navy with 3D depth */
 .welcome-side-panel {
     pointer-events: auto;
+    position: relative;
+    isolation: isolate;
     width: min(38vw, 480px);
     height: 100%;
     max-height: none;
     min-width: 300px;
     margin: 0;
-    background: #163A6B;
     color: #ffffff;
     display: flex;
     flex-direction: column;
@@ -1171,10 +1308,65 @@ html, body {
     gap: 0;
     padding: clamp(36px, 5vh, 56px) clamp(28px, 3vw, 44px);
     text-align: center;
-    border-radius: 0;
-    border: none;
-    box-shadow: 8px 0 28px rgba(0, 0, 0, 0.28);
-    overflow-y: auto;
+    border-radius: 0 22px 22px 0;
+    overflow: visible;
+    transform: translateZ(0) rotateY(4deg);
+    transform-origin: left center;
+    transform-style: preserve-3d;
+    background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.04) 38%, rgba(255, 255, 255, 0) 58%),
+        linear-gradient(180deg, rgba(30, 78, 140, 0.72) 0%, rgba(16, 48, 92, 0.78) 100%);
+    backdrop-filter: blur(22px) saturate(1.35);
+    -webkit-backdrop-filter: blur(22px) saturate(1.35);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-left: none;
+    box-shadow:
+        18px 0 48px rgba(0, 20, 50, 0.45),
+        8px 12px 32px rgba(0, 0, 0, 0.28),
+        inset 1px 1px 0 rgba(255, 255, 255, 0.35),
+        inset -1px -1px 0 rgba(0, 30, 70, 0.25),
+        inset 0 0 40px rgba(255, 255, 255, 0.06);
+    animation: welcomePanelIn 0.7s var(--transition-smooth) both;
+}
+
+.welcome-side-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 0;
+    background:
+        radial-gradient(ellipse 80% 50% at 18% 8%, rgba(255, 255, 255, 0.28), transparent 55%),
+        radial-gradient(ellipse 60% 40% at 88% 92%, rgba(0, 192, 243, 0.12), transparent 50%);
+}
+
+.welcome-side-panel::after {
+    content: '';
+    position: absolute;
+    top: 10%;
+    right: 0;
+    width: 1px;
+    height: 80%;
+    pointer-events: none;
+    z-index: 0;
+    background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+}
+
+.welcome-side-panel > * {
+    position: relative;
+    z-index: 1;
+}
+
+@keyframes welcomePanelIn {
+    from {
+        opacity: 0;
+        transform: translateX(-28px) translateZ(-40px) rotateY(10deg);
+    }
+    to {
+        opacity: 1;
+        transform: translateZ(0) rotateY(4deg);
+    }
 }
 
 .welcome-side-header {
@@ -1198,29 +1390,34 @@ html, body {
     text-align: center;
     flex: 0 1 auto;
     min-width: 0;
+    text-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.18),
+        0 8px 24px rgba(0, 20, 50, 0.35);
 }
 
 .welcome-side-logo {
     flex-shrink: 0;
-    width: 70px;
-    height: 70px;
+    width: 80px;
+    height: 80px;
     object-fit: contain;
     background: transparent;
     margin: 0;
     border-radius: 0;
-    box-shadow: none;
+    filter: drop-shadow(0 8px 16px rgba(0, 20, 50, 0.45)) drop-shadow(0 2px 4px rgba(255, 255, 255, 0.2));
+    transform: translateZ(24px);
 }
 
 .welcome-side-body {
     max-width: none;
     font-size: clamp(14px, 1.25vw, 16px);
     line-height: 1.55;
-    color: #ffffff;
+    color: rgba(255, 255, 255, 0.94);
     margin: 0 0 clamp(28px, 4vh, 40px);
     text-align: center;
     display: flex;
     flex-direction: column;
     gap: clamp(18px, 2.4vh, 26px);
+    text-shadow: 0 1px 8px rgba(0, 20, 50, 0.25);
 }
 
 .welcome-side-body p {
@@ -1233,33 +1430,76 @@ html, body {
 }
 
 .btn-enter-tabuk {
+    position: relative;
     font-family: var(--font-heading);
     font-weight: 800;
     font-size: 14px;
     letter-spacing: 1px;
     text-transform: uppercase;
     color: #1A2B3C;
-    background: #C9A03C;
-    border: none;
-    border-radius: 2px;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 42%),
+        linear-gradient(180deg, #D4AF4A 0%, #C9A03C 48%, #B08A2E 100%);
+    border: 1px solid rgba(255, 230, 160, 0.45);
+    border-radius: 10px;
     padding: 14px 28px;
     width: auto;
     align-self: center;
-    margin-top: 0;
+    margin: 14px 0 10px;
     flex-shrink: 0;
     cursor: pointer;
-    box-shadow: none;
-    transition: background 0.2s ease, transform 0.2s var(--transition-smooth);
+    /* Inset edge only — outer depth uses filter:drop-shadow (scales with breathe) */
+    box-shadow:
+        0 2px 0 rgba(255, 255, 255, 0.35) inset,
+        0 -2px 0 rgba(120, 80, 10, 0.25) inset;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transform: scale(1);
+    transform-origin: center center;
+    filter: drop-shadow(0 8px 14px rgba(0, 20, 50, 0.38));
+    animation: enterBtnBreathe 3.8s ease-in-out infinite;
+    transition:
+        background 0.2s ease,
+        transform 0.25s var(--transition-smooth),
+        filter 0.25s ease;
+}
+
+@keyframes enterBtnBreathe {
+    0%, 100% {
+        transform: scale(1);
+        filter:
+            drop-shadow(0 8px 14px rgba(0, 20, 50, 0.38))
+            drop-shadow(0 0 0 rgba(212, 175, 74, 0));
+    }
+    50% {
+        transform: scale(1.045);
+        filter:
+            drop-shadow(0 14px 24px rgba(0, 20, 50, 0.45))
+            drop-shadow(0 0 18px rgba(212, 175, 74, 0.55));
+    }
 }
 
 .btn-enter-tabuk:hover {
-    background: #D4AF37;
-    transform: translateY(-1px);
-    box-shadow: none;
+    animation: none;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0) 42%),
+        linear-gradient(180deg, #E0C05A 0%, #D4AF37 48%, #C9A03C 100%);
+    transform: translateY(-2px) scale(1.03);
+    filter:
+        drop-shadow(0 14px 24px rgba(0, 20, 50, 0.45))
+        drop-shadow(0 0 14px rgba(212, 175, 74, 0.4));
 }
 
 .btn-enter-tabuk:active {
-    transform: translateY(0);
+    animation: none;
+    transform: translateY(0) scale(0.98);
+    filter: drop-shadow(0 4px 10px rgba(0, 20, 50, 0.3));
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .btn-enter-tabuk {
+        animation: none;
+    }
 }
 
 /* Legacy centered card helpers (kept for any residual references) */
@@ -1978,6 +2218,23 @@ html, body {
         max-height: 94vh;
         padding: 28px 22px;
         justify-content: flex-start;
+        border-radius: 18px;
+        border-left: 1px solid rgba(255, 255, 255, 0.28);
+        transform: none;
+        overflow-x: hidden;
+        overflow-y: auto;
+        animation: welcomePanelInMobile 0.55s var(--transition-smooth) both;
+    }
+
+    @keyframes welcomePanelInMobile {
+        from {
+            opacity: 0;
+            transform: translateY(16px) scale(0.98);
+        }
+        to {
+            opacity: 1;
+            transform: none;
+        }
     }
 
     .welcome-side-header {

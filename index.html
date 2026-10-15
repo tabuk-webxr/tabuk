@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TABUK PHARMACEUTICALS · Induction</title>
     <meta name="description" content="Interactive WebXR Employee Induction Experience for Tabuk Pharmaceuticals covering Riyadh HQ, Dammam Plant, Tabuk Campus, and Final Assessment.">
-    <link rel="stylesheet" href="css/style.css?v=16.5">
+    <link rel="stylesheet" href="css/style.css?v=18.4">
 </head>
 <body>
 
@@ -33,6 +33,14 @@
         </header>
     </div>
 
+    <!-- Reception scene glass tip — bottom-left slide-in -->
+    <aside id="reception-welcome-tip" class="reception-welcome-tip" aria-live="polite" hidden>
+        <p class="reception-tip-text">
+            Welcome to Tabuk Pharmaceuticals!<br>
+            Your journey starts here.
+        </p>
+    </aside>
+
     <!-- Hidden stubs so existing app.js bindings do not error -->
     <div id="env-progress-badge" style="display: none;"></div>
     <div id="scene-info-card" style="display: none;"></div>
@@ -57,7 +65,7 @@
                 <p class="welcome-side-closer">Your journey starts now.</p>
             </div>
 
-            <button class="btn-enter-tabuk" onclick="window.app.goToScene('riyadh_hq')">
+            <button class="btn-enter-tabuk" onclick="window.app.goToScene('reception')">
                 ENTER TABUK
             </button>
         </aside>
@@ -99,6 +107,10 @@
             <div class="scene-nav-item" onclick="window.app.goToScene('welcome')">
                 <span class="scene-nav-name">0b. Welcome</span>
                 <span class="scene-nav-sub">Your First Day at Tabuk</span>
+            </div>
+            <div class="scene-nav-item" onclick="window.app.goToScene('reception')">
+                <span class="scene-nav-name">0c. Reception</span>
+                <span class="scene-nav-sub">Corporate Reception 360</span>
             </div>
             <div class="scene-nav-item" onclick="window.app.goToScene('riyadh_hq')">
                 <span class="scene-nav-name">1. Riyadh HQ</span>
@@ -193,12 +205,12 @@ hotspots: []</pre>
     <!-- Application Scripts -->
     <script src="assets/lib/three.min.js"></script>
     <script src="js/scorm.js?v=12.6"></script>
-    <script src="js/courseData.js?v=15.5"></script>
+    <script src="js/courseData.js?v=16.3"></script>
     <script src="js/viewer.js?v=15.4"></script>
-    <script src="js/hotspots.js?v=15.0"></script>
-    <script src="js/modal.js?v=12.6"></script>
+    <script src="js/hotspots.js?v=15.4"></script>
+    <script src="js/modal.js?v=13.8"></script>
     <script src="js/assessment.js?v=12.6"></script>
-    <script src="js/app.js?v=15.6"></script>
+    <script src="js/app.js?v=16.5"></script>
 
 </body>
 </html>
