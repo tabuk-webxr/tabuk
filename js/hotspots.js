@@ -39,17 +39,32 @@ class HotspotManager {
         wrapper.setAttribute('tabindex', '0');
 
         if (data.type === 'portal') {
-            // Directional floor arrow chevron matching storyboard
+            // 3 stacked 3D chevrons — angle via arrowYaw (0 = straight)
+            const yawRot = typeof data.arrowYaw === 'number' ? data.arrowYaw : 0;
+            // Solid closed chevron (reference shape) — fixed colors, no color picker
+            const chevronSvg = (key) => `
+                <div class="portal-chevron portal-chevron-${key}" aria-hidden="true">
+                    <svg viewBox="0 0 120 72" width="96" height="58">
+                        <path d="M8 60 L60 8 L112 60 L88 60 L60 32 L32 60 Z"
+                              fill="#2F8FD6"
+                              stroke="#7EC8F0"
+                              stroke-width="3"
+                              stroke-linejoin="round"/>
+                    </svg>
+                </div>`;
+
             wrapper.innerHTML = `
-                <div class="portal-indicator">
-                    <div class="portal-arrow-prompt">Follow the arrow</div>
-                    <div class="portal-chevron-svg">
-                        <svg viewBox="0 0 100 60" width="64" height="40">
-                            <polyline points="10,50 50,15 90,50" fill="none" stroke="#0072CE" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
-                            <polyline points="25,55 50,30 75,55" fill="none" stroke="#00A859" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
+                <div class="portal-indicator" style="--arrow-yaw: ${yawRot}deg;">
+                    <div class="portal-arrow-stage">
+                        <div class="portal-arrow-3d">
+                            <div class="portal-arrow-motion">
+                                ${chevronSvg('a')}
+                                ${chevronSvg('b')}
+                                ${chevronSvg('c')}
+                            </div>
+                        </div>
                     </div>
-                    <div class="portal-label">${data.label}</div>
+                    <div class="portal-arrow-prompt">Follow the arrow.</div>
                 </div>
             `;
         } else {
@@ -77,7 +92,8 @@ class HotspotManager {
         wrapper.addEventListener('pointerdown', (e) => e.stopPropagation());
         wrapper.addEventListener('click', handleTrigger);
         wrapper.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
+            // Space is reserved for DEV panel toggle — use Enter to activate
+            if (e.key === 'Enter') {
                 handleTrigger(e);
             }
         });
@@ -124,6 +140,28 @@ class HotspotManager {
                 el.style.display = 'none';
             }
         });
+    }
+
+    getHotspotById(id) {
+        return this.hotspots.find((h) => h.id === id) || null;
+    }
+
+    setHotspotCoords(id, pitch, yaw) {
+        const hotspot = this.getHotspotById(id);
+        if (!hotspot) return false;
+        hotspot.pitch = pitch;
+        hotspot.yaw = yaw;
+        this.updatePositions();
+        return true;
+    }
+
+    exportHotspotCoords() {
+        return this.hotspots.map((h) => ({
+            id: h.id,
+            label: h.label || h.id,
+            pitch: Math.round(h.pitch),
+            yaw: Math.round(h.yaw)
+        }));
     }
 }
 

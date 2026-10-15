@@ -17,6 +17,8 @@ class PanoramaViewer {
         this.renderer = null;
         this.sphere = null;
         this.textureLoader = new THREE.TextureLoader();
+        this.activeVideo = null;
+        this.activeVideoTexture = null;
         
         // Angles in degrees
         this.pitch = 0;
@@ -64,12 +66,17 @@ class PanoramaViewer {
         });
 
         this.sphere = new THREE.Mesh(geometry, material);
+        this.sphereRotationY = 0;
         this.scene.add(this.sphere);
 
-        // WebGL Renderer
+        // WebGL Renderer — original video colors, no tone-mapping darkening
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         this.renderer.setSize(width, height);
+        this.renderer.setClearColor(0x000000, 1);
+        if ('toneMapping' in this.renderer && THREE.NoToneMapping !== undefined) {
+            this.renderer.toneMapping = THREE.NoToneMapping;
+        }
         
         // WebXR support
         if ('xr' in navigator) {
@@ -86,31 +93,50 @@ class PanoramaViewer {
         this.renderer.setAnimationLoop(this.animate);
     }
 
+    stopVideo() {
+        if (this.activeVideo) {
+            this.activeVideo.pause();
+            this.activeVideo.removeAttribute('src');
+            this.activeVideo.load();
+            this.activeVideo = null;
+        }
+        if (this.activeVideoTexture) {
+            this.activeVideoTexture.dispose();
+            this.activeVideoTexture = null;
+        }
+    }
+
+    _fadeInMaterial(onComplete) {
+        let op = 0.4;
+        this.sphere.material.opacity = op;
+        const fadeIn = setInterval(() => {
+            op += 0.1;
+            if (op >= 1) {
+                this.sphere.material.opacity = 1;
+                clearInterval(fadeIn);
+                if (onComplete) onComplete();
+            } else {
+                this.sphere.material.opacity = op;
+            }
+        }, 20);
+    }
+
     loadTexture(imageUrl, onComplete) {
-        // Fade out slightly during load
+        this.stopVideo();
         this.sphere.material.opacity = 0.4;
-        
+
         this.textureLoader.load(
             imageUrl,
             (texture) => {
                 texture.minFilter = THREE.LinearFilter;
                 texture.generateMipmaps = false;
+                if (this.sphere.material.map && this.sphere.material.map !== this.activeVideoTexture) {
+                    this.sphere.material.map.dispose();
+                }
                 this.sphere.material.map = texture;
+                this.sphere.material.color.setHex(0xffffff);
                 this.sphere.material.needsUpdate = true;
-                
-                // Fade back in smoothly
-                let op = 0.4;
-                const fadeIn = setInterval(() => {
-                    op += 0.1;
-                    if (op >= 1) {
-                        this.sphere.material.opacity = 1;
-                        clearInterval(fadeIn);
-                    } else {
-                        this.sphere.material.opacity = op;
-                    }
-                }, 20);
-
-                if (onComplete) onComplete();
+                this._fadeInMaterial(onComplete);
             },
             undefined,
             (err) => {
@@ -119,6 +145,73 @@ class PanoramaViewer {
                 if (onComplete) onComplete();
             }
         );
+    }
+
+    setSphereRotationY(degrees) {
+        this.sphereRotationY = ((Number(degrees) % 360) + 360) % 360;
+        this.sphere.rotation.y = THREE.MathUtils.degToRad(this.sphereRotationY);
+    }
+
+    getOrientation() {
+        return {
+            sphereYaw: Math.round(this.sphereRotationY),
+            initialPitch: Math.round(this.targetPitch),
+            initialYaw: Math.round(this.targetYaw)
+        };
+    }
+
+    loadVideo(videoUrl, onComplete) {
+        this.stopVideo();
+
+        const video = document.createElement('video');
+        video.src = videoUrl;
+        video.crossOrigin = 'anonymous';
+        video.loop = true;
+        video.muted = true;
+        video.playsInline = true;
+        video.setAttribute('playsinline', '');
+        video.setAttribute('webkit-playsinline', '');
+        video.preload = 'auto';
+
+        const applyVideoTexture = () => {
+            if (this.sphere.material.map && this.sphere.material.map !== this.activeVideoTexture) {
+                this.sphere.material.map.dispose();
+            }
+
+            const texture = new THREE.VideoTexture(video);
+            texture.minFilter = THREE.LinearFilter;
+            texture.magFilter = THREE.LinearFilter;
+            texture.generateMipmaps = false;
+
+            this.activeVideo = video;
+            this.activeVideoTexture = texture;
+            this.sphere.material.map = texture;
+            // Full brightness — original video, no fade / tint
+            this.sphere.material.color.setHex(0xffffff);
+            this.sphere.material.transparent = false;
+            this.sphere.material.opacity = 1;
+            this.sphere.material.needsUpdate = true;
+
+            const playPromise = video.play();
+            if (playPromise && typeof playPromise.catch === 'function') {
+                playPromise.catch((err) => console.warn('360 video autoplay blocked:', err));
+            }
+
+            if (onComplete) onComplete();
+        };
+
+        const onReady = () => {
+            video.removeEventListener('loadeddata', onReady);
+            applyVideoTexture();
+        };
+
+        video.addEventListener('loadeddata', onReady);
+        video.addEventListener('error', () => {
+            console.error('Error loading 360 video:', videoUrl);
+            this.sphere.material.opacity = 1;
+            if (onComplete) onComplete();
+        });
+        video.load();
     }
 
     bindEvents() {

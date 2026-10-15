@@ -12,6 +12,7 @@ class WebXRApp {
         this.visitedScenes = new Set();
         this.visitedHotspots = new Set();
         this.isAudioMuted = false;
+        this.devPanelOpen = false;
         
         // Sound effects synthesis via Web Audio API (zero external asset dependency)
         this.audioCtx = null;
@@ -44,8 +45,8 @@ class WebXRApp {
         // 5. Bind UI Controls
         this.bindUI();
 
-        // 6. Launch Initial Scene (Welcome Exterior)
-        this.goToScene('welcome');
+        // 6. Launch with far-from-building approach, then welcome
+        this.goToScene('approach');
     }
 
     playTone(freq = 440, type = 'sine', duration = 0.15) {
@@ -133,6 +134,9 @@ class WebXRApp {
             scormClose.addEventListener('click', () => scormPanel.classList.remove('active'));
         }
 
+        // DEV ONLY — 360 orientation sliders
+        this.bindDevOrientationPanel();
+
         // WebXR VR Session button
         const xrBtn = document.getElementById('btn-enter-xr');
         if (xrBtn) {
@@ -144,6 +148,201 @@ class WebXRApp {
                     }
                 });
             }
+        }
+    }
+
+    bindDevOrientationPanel() {
+        this.devPanelOpen = false;
+        const panel = document.getElementById('dev-orientation-panel');
+        const sphereYaw = document.getElementById('dev-sphere-yaw');
+        const camPitch = document.getElementById('dev-cam-pitch');
+        const camYaw = document.getElementById('dev-cam-yaw');
+        const hotSelect = document.getElementById('dev-hotspot-select');
+        const hotPitch = document.getElementById('dev-hot-pitch');
+        const hotYaw = document.getElementById('dev-hot-yaw');
+        const placeBtn = document.getElementById('dev-place-at-view');
+        const copyBtn = document.getElementById('dev-copy-orientation');
+        if (!panel || !sphereYaw || !camPitch || !camYaw) return;
+
+        const applyOrientation = () => {
+            this.viewer.setSphereRotationY(Number(sphereYaw.value));
+            this.viewer.setLookAt(Number(camPitch.value), Number(camYaw.value));
+            this.updateDevOrientationReadout();
+        };
+
+        const applyHotspot = () => {
+            if (!hotSelect || !hotSelect.value) return;
+            const pitch = Number(hotPitch.value);
+            const yaw = Number(hotYaw.value);
+            this.hotspots.setHotspotCoords(hotSelect.value, pitch, yaw);
+            this.persistHotspotCoords(hotSelect.value, pitch, yaw);
+            document.getElementById('dev-hot-pitch-val').textContent = `${Math.round(pitch)}°`;
+            document.getElementById('dev-hot-yaw-val').textContent = `${Math.round(yaw)}°`;
+            this.updateDevOrientationReadout();
+        };
+
+        sphereYaw.addEventListener('input', applyOrientation);
+        camPitch.addEventListener('input', applyOrientation);
+        camYaw.addEventListener('input', applyOrientation);
+        if (hotPitch) hotPitch.addEventListener('input', applyHotspot);
+        if (hotYaw) hotYaw.addEventListener('input', applyHotspot);
+
+        if (hotSelect) {
+            hotSelect.addEventListener('change', () => this.loadSelectedHotspotIntoDevSliders());
+        }
+
+        if (placeBtn) {
+            placeBtn.addEventListener('click', () => {
+                if (!hotSelect || !hotSelect.value) return;
+                const pitch = Math.round(this.viewer.targetPitch);
+                const yaw = Math.round(this.viewer.targetYaw);
+                hotPitch.value = String(pitch);
+                hotYaw.value = String(yaw);
+                this.hotspots.setHotspotCoords(hotSelect.value, pitch, yaw);
+                this.persistHotspotCoords(hotSelect.value, pitch, yaw);
+                this.loadSelectedHotspotIntoDevSliders();
+                this.updateDevOrientationReadout();
+            });
+        }
+
+        // Space toggles DEV panel on every scene
+        window.addEventListener('keydown', (e) => {
+            if (e.code !== 'Space' && e.key !== ' ') return;
+            const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
+            if (tag === 'input' || tag === 'textarea' || tag === 'select' || (e.target && e.target.isContentEditable)) {
+                return;
+            }
+            e.preventDefault();
+            this.toggleDevOrientationPanel();
+        });
+
+        this.viewer.onSceneRendered = () => {
+            if (this.devPanelOpen) {
+                this.syncDevOrientationPanel(true);
+            }
+            if (this.hotspots) this.hotspots.updatePositions();
+        };
+
+        if (copyBtn) {
+            copyBtn.addEventListener('click', async () => {
+                const values = document.getElementById('dev-orientation-values');
+                const text = values ? values.textContent : '';
+                try {
+                    await navigator.clipboard.writeText(text);
+                    copyBtn.textContent = 'Copied!';
+                    setTimeout(() => { copyBtn.textContent = 'Copy values'; }, 1200);
+                } catch (err) {
+                    prompt('Copy these values:', text);
+                }
+            });
+        }
+    }
+
+    toggleDevOrientationPanel(forceState) {
+        const panel = document.getElementById('dev-orientation-panel');
+        if (!panel) return;
+        this.devPanelOpen = typeof forceState === 'boolean' ? forceState : !this.devPanelOpen;
+        panel.style.display = this.devPanelOpen ? 'block' : 'none';
+        if (this.devPanelOpen) {
+            this.refreshDevHotspotList();
+            this.syncDevOrientationPanel();
+        }
+    }
+
+    persistHotspotCoords(id, pitch, yaw) {
+        const scene = window.COURSE_DATA.scenes[this.currentSceneId];
+        if (!scene || !scene.hotspots) return;
+        const source = scene.hotspots.find((h) => h.id === id);
+        if (source) {
+            source.pitch = pitch;
+            source.yaw = yaw;
+        }
+    }
+
+    refreshDevHotspotList() {
+        const hotSelect = document.getElementById('dev-hotspot-select');
+        if (!hotSelect || !this.hotspots) return;
+        const list = this.hotspots.hotspots || [];
+        const prev = hotSelect.value;
+        hotSelect.innerHTML = '';
+
+        if (!list.length) {
+            const opt = document.createElement('option');
+            opt.value = '';
+            opt.textContent = '(no hotspots in this scene)';
+            hotSelect.appendChild(opt);
+            hotSelect.disabled = true;
+            return;
+        }
+
+        hotSelect.disabled = false;
+        list.forEach((h) => {
+            const opt = document.createElement('option');
+            opt.value = h.id;
+            opt.textContent = `${h.label || h.id} (${h.id})`;
+            hotSelect.appendChild(opt);
+        });
+        if (prev && list.some((h) => h.id === prev)) {
+            hotSelect.value = prev;
+        }
+        this.loadSelectedHotspotIntoDevSliders();
+    }
+
+    loadSelectedHotspotIntoDevSliders() {
+        const hotSelect = document.getElementById('dev-hotspot-select');
+        const hotPitch = document.getElementById('dev-hot-pitch');
+        const hotYaw = document.getElementById('dev-hot-yaw');
+        if (!hotSelect || !hotSelect.value || !hotPitch || !hotYaw) return;
+        const h = this.hotspots.getHotspotById(hotSelect.value);
+        if (!h) return;
+        hotPitch.value = String(Math.round(h.pitch));
+        hotYaw.value = String(Math.round(h.yaw));
+        document.getElementById('dev-hot-pitch-val').textContent = `${Math.round(h.pitch)}°`;
+        document.getElementById('dev-hot-yaw-val').textContent = `${Math.round(h.yaw)}°`;
+    }
+
+    syncDevOrientationPanel(fromCameraOnly = false) {
+        const sphereYaw = document.getElementById('dev-sphere-yaw');
+        const camPitch = document.getElementById('dev-cam-pitch');
+        const camYaw = document.getElementById('dev-cam-yaw');
+        if (!sphereYaw || !this.viewer || !this.devPanelOpen) return;
+
+        if (!fromCameraOnly) {
+            sphereYaw.value = String(Math.round(this.viewer.sphereRotationY || 0));
+        }
+        if (document.activeElement !== camPitch) {
+            camPitch.value = String(Math.round(this.viewer.targetPitch));
+        }
+        if (document.activeElement !== camYaw) {
+            camYaw.value = String(Math.round(this.viewer.targetYaw));
+        }
+        this.updateDevOrientationReadout();
+    }
+
+    updateDevOrientationReadout() {
+        const o = this.viewer.getOrientation();
+        const sceneId = this.currentSceneId || '—';
+        const sphereVal = document.getElementById('dev-sphere-yaw-val');
+        const pitchVal = document.getElementById('dev-cam-pitch-val');
+        const yawVal = document.getElementById('dev-cam-yaw-val');
+        const sceneLabel = document.getElementById('dev-scene-id');
+        const pre = document.getElementById('dev-orientation-values');
+        const hotspots = this.hotspots ? this.hotspots.exportHotspotCoords() : [];
+
+        if (sceneLabel) sceneLabel.textContent = `scene: ${sceneId}`;
+        if (sphereVal) sphereVal.textContent = `${o.sphereYaw}°`;
+        if (pitchVal) pitchVal.textContent = `${o.initialPitch}°`;
+        if (yawVal) yawVal.textContent = `${o.initialYaw}°`;
+        if (pre) {
+            const hotLines = hotspots.length
+                ? hotspots.map((h) => `  - ${h.id}: pitch ${h.pitch}, yaw ${h.yaw}`).join('\n')
+                : '  (none)';
+            pre.textContent =
+                `scene: ${sceneId}\n` +
+                `sphereYaw: ${o.sphereYaw}\n` +
+                `initialPitch: ${o.initialPitch}\n` +
+                `initialYaw: ${o.initialYaw}\n` +
+                `hotspots:\n${hotLines}`;
         }
     }
 
@@ -182,10 +381,17 @@ class WebXRApp {
         const drawer = document.getElementById('quick-menu-drawer');
         if (drawer) drawer.classList.remove('active');
 
-        // Load 360 texture
-        this.viewer.loadTexture(scene.bgImage, () => {
+        // Load 360 video or still panorama
+        const onMediaReady = () => {
+            this.viewer.setSphereRotationY(scene.sphereYaw || 0);
             this.viewer.setLookAt(scene.initialPitch || 0, scene.initialYaw || 0);
-        });
+            this.syncDevOrientationPanel();
+        };
+        if (scene.bgVideo) {
+            this.viewer.loadVideo(scene.bgVideo, onMediaReady);
+        } else {
+            this.viewer.loadTexture(scene.bgImage, onMediaReady);
+        }
 
         // Set hotspots
         this.hotspots.setHotspots(scene.hotspots || []);
@@ -215,7 +421,7 @@ class WebXRApp {
         }
 
         // Scene Card (frosted card in bottom right matching storyboard)
-        if (scene.cardText) {
+        if (scene.cardText && scene.id !== 'welcome') {
             const lines = scene.cardText.split('\n');
             sceneCard.innerHTML = `
                 <div class="card-headline">${lines[0]}</div>
@@ -224,6 +430,17 @@ class WebXRApp {
             sceneCard.style.display = 'block';
         } else {
             sceneCard.style.display = 'none';
+        }
+
+        const hudLayer = document.getElementById('hud-layer');
+        if (hudLayer) {
+            hudLayer.style.visibility = scene.id === 'welcome' ? 'hidden' : 'visible';
+        }
+
+        // Keep DEV panel state across scenes; refresh hotspot list when open
+        if (this.devPanelOpen) {
+            this.refreshDevHotspotList();
+            this.syncDevOrientationPanel();
         }
 
         // Specific scene states
