@@ -19,8 +19,8 @@ window.COURSE_DATA = {
             envType: "intro",
             bgVideo: "Videos/far_from_building_4k.mov",
             bgImage: "assets/images/scene0_exterior.jpg",
-            initialPitch: 7,
-            initialYaw: 184,
+            initialPitch: 0,
+            initialYaw: 186,
             sphereYaw: 0,
             cardText: "Approach Campus\nFind the marker to enter",
             hotspots: [
@@ -49,6 +49,48 @@ window.COURSE_DATA = {
             cardText: "Arrival & Welcome\nRiyadh HQ",
             hotspots: []
         },
+        "reception": {
+            id: "reception",
+            title: "Corporate Reception",
+            subtitle: "Riyadh HQ Arrival",
+            envType: "intro",
+            bgVideo: "Videos/51_D_4k.mov",
+            bgImage: "assets/images/scene0_exterior.jpg",
+            initialPitch: -1,
+            initialYaw: 173,
+            sphereYaw: 0,
+            cardText: "Corporate Reception\nFind the marker to continue",
+            hotspots: [
+                {
+                    id: "video_welcome",
+                    type: "modal",
+                    icon: "play",
+                    label: "CEO Welcome — tap to play",
+                    pitch: -8,
+                    yaw: 153,
+                    modalId: "modal_video_welcome"
+                },
+                {
+                    id: "video_chro_welcome",
+                    type: "modal",
+                    icon: "play",
+                    label: "CHRO Welcome — Tap to play",
+                    pitch: -3,
+                    yaw: 201,
+                    modalId: "modal_video_chro"
+                },
+                {
+                    id: "enter_hq",
+                    type: "portal",
+                    icon: "arrow",
+                    label: "Enter Headquarters",
+                    pitch: -22,
+                    yaw: 130,
+                    arrowYaw: 0,
+                    targetScene: "riyadh_hq"
+                }
+            ]
+        },
         "riyadh_hq": {
             id: "riyadh_hq",
             title: "Riyadh Headquarters",
@@ -63,7 +105,7 @@ window.COURSE_DATA = {
                     id: "video_welcome",
                     type: "modal",
                     icon: "play",
-                    label: "Executive Welcome Video",
+                    label: "CEO Welcome — tap to play",
                     pitch: -2,
                     yaw: 0,
                     modalId: "modal_video_welcome"

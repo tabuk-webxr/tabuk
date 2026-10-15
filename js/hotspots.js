@@ -32,11 +32,15 @@ class HotspotManager {
 
     createHotspotElement(data) {
         const wrapper = document.createElement('div');
-        wrapper.className = `hotspot-item ${data.type === 'portal' ? 'hotspot-portal' : 'hotspot-info'}`;
+        wrapper.className = `hotspot-item ${data.type === 'portal' ? 'hotspot-portal' : 'hotspot-info'}${data.locked ? ' hotspot-locked' : ''}`;
         wrapper.setAttribute('data-id', data.id);
         wrapper.setAttribute('data-icon', data.icon || '');
         wrapper.setAttribute('role', 'button');
-        wrapper.setAttribute('tabindex', '0');
+        wrapper.setAttribute('tabindex', data.locked ? '-1' : '0');
+        if (data.locked) {
+            wrapper.setAttribute('aria-disabled', 'true');
+            wrapper.title = 'Complete this step to continue';
+        }
 
         if (data.type === 'portal') {
             // 3 stacked 3D chevrons — angle via arrowYaw (0 = straight)
@@ -68,13 +72,15 @@ class HotspotManager {
                 </div>
             `;
         } else {
-            // Concentric pulsing circular marker matching storyboard
+            // Concentric pulsing circular marker — rings + icon share one center stack
             const iconSvg = this.getIconSvg(data.icon || 'info');
             wrapper.innerHTML = `
-                <div class="hotspot-pulse-ring"></div>
-                <div class="hotspot-pulse-ring-outer"></div>
-                <div class="hotspot-inner-circle">
-                    ${iconSvg}
+                <div class="hotspot-marker">
+                    <div class="hotspot-pulse-ring" aria-hidden="true"></div>
+                    <div class="hotspot-pulse-ring-outer" aria-hidden="true"></div>
+                    <div class="hotspot-inner-circle">
+                        ${iconSvg}
+                    </div>
                 </div>
                 <div class="hotspot-tooltip">
                     <span class="tooltip-title">${data.label}</span>
@@ -104,7 +110,7 @@ class HotspotManager {
     getIconSvg(type) {
         switch (type) {
             case 'play':
-                return `<svg viewBox="0 0 24 24" width="22" height="22" fill="#ffffff" style="margin-left: 2px;"><polygon points="6 4 20 12 6 20 6 4"/></svg>`;
+                return `<svg class="hotspot-play-icon" viewBox="0 0 24 24" width="20" height="20" fill="#ffffff" aria-hidden="true"><path d="M8.5 5.8v12.4L19 12 8.5 5.8z"/></svg>`;
             case 'info':
                 return `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>`;
             case 'eye':
@@ -133,13 +139,30 @@ class HotspotManager {
     updatePositions() {
         this.elements.forEach(({ data, el }) => {
             const screen = this.viewer.projectToScreen(data.pitch, data.yaw);
-            if (screen.visible) {
+            if (!data.hidden && screen.visible) {
                 el.style.display = 'block';
                 el.style.transform = `translate3d(${screen.x}px, ${screen.y}px, 0)`;
             } else {
                 el.style.display = 'none';
             }
         });
+    }
+
+    setHotspotHidden(id, hidden) {
+        const hotspot = this.getHotspotById(id);
+        const entry = this.elements.find((e) => e.data.id === id);
+        if (hotspot) hotspot.hidden = !!hidden;
+        if (entry) {
+            entry.data.hidden = !!hidden;
+            if (hidden) {
+                entry.el.style.display = 'none';
+                entry.el.setAttribute('aria-hidden', 'true');
+            } else {
+                entry.el.removeAttribute('aria-hidden');
+            }
+        }
+        this.updatePositions();
+        return !!(hotspot || entry);
     }
 
     getHotspotById(id) {

@@ -13,6 +13,11 @@ class WebXRApp {
         this.visitedHotspots = new Set();
         this.isAudioMuted = false;
         this.devPanelOpen = false;
+        this.receptionChroUnlocked = false;
+        this._receptionTipTimer = null;
+        this._chroIntroAudio = null;
+        this._ceoIntroAudio = null;
+        this._welcomeEnterAudio = null;
         
         // Sound effects synthesis via Web Audio API (zero external asset dependency)
         this.audioCtx = null;
@@ -41,6 +46,13 @@ class WebXRApp {
             console.log("Assessment completed with score:", score);
         });
         window.assessmentEngine = this.assessment;
+
+        // CEO welcome finished + closed → CHRO intro tip, then swap hotspots
+        if (window.modalManager) {
+            window.modalManager.onWelcomeVideoClosed = (profile, ended) => {
+                this.handleWelcomeVideoClosed(profile, ended);
+            };
+        }
 
         // 5. Bind UI Controls
         this.bindUI();
@@ -402,11 +414,148 @@ class WebXRApp {
             this.viewer.loadTexture(scene.bgImage, onMediaReady);
         }
 
-        // Set hotspots
-        this.hotspots.setHotspots(scene.hotspots || []);
+        // Set hotspots (reception: CHRO locked until CEO close; next arrow visible but inactive)
+        let hotspotList = scene.hotspots || [];
+        if (scene.id === 'reception') {
+            hotspotList = hotspotList.map((h) => {
+                if (h.id === 'video_chro_welcome') {
+                    return { ...h, hidden: !this.receptionChroUnlocked };
+                }
+                // Show next arrow as a cue, but block navigation for now
+                if (h.id === 'enter_hq') {
+                    return { ...h, hidden: false, locked: true };
+                }
+                return { ...h };
+            });
+        }
+        this.hotspots.setHotspots(hotspotList);
 
         // Update UI HUD Cards & Overlays
         this.updateHUD(scene);
+    }
+
+    handleWelcomeVideoClosed(profile, ended) {
+        if (this.currentSceneId !== 'reception') return;
+        if (!profile || profile.id !== 'ceo') return;
+        if (this.receptionChroUnlocked) return;
+        // Unlock CHRO on any CEO close (even before video ends)
+        this.startChroIntroSequence();
+    }
+
+    showReceptionTip(html, { animate = true } = {}) {
+        const tip = document.getElementById('reception-welcome-tip');
+        if (!tip) return;
+        const textEl = tip.querySelector('.reception-tip-text');
+        if (textEl) textEl.innerHTML = html;
+
+        if (this._receptionTipTimer) {
+            clearTimeout(this._receptionTipTimer);
+            this._receptionTipTimer = null;
+        }
+
+        tip.hidden = false;
+        tip.classList.remove('visible');
+        if (!animate) {
+            tip.classList.add('visible');
+            return;
+        }
+        // Hide → slide in from bottom-left
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                tip.classList.add('visible');
+            });
+        });
+    }
+
+    stopChroIntroAudio() {
+        if (this._chroIntroAudio) {
+            this._chroIntroAudio.pause();
+            this._chroIntroAudio.onended = null;
+            this._chroIntroAudio.onerror = null;
+            this._chroIntroAudio = null;
+        }
+        if (this._receptionTipTimer) {
+            clearTimeout(this._receptionTipTimer);
+            this._receptionTipTimer = null;
+        }
+    }
+
+    stopWelcomeEnterAudio() {
+        if (this._welcomeEnterAudio) {
+            this._welcomeEnterAudio.pause();
+            this._welcomeEnterAudio.onended = null;
+            this._welcomeEnterAudio.onerror = null;
+            this._welcomeEnterAudio = null;
+        }
+    }
+
+    playWelcomeEnterAudio() {
+        this.stopWelcomeEnterAudio();
+        const audio = new Audio('Audios/Welcome_Enter.mp3');
+        this._welcomeEnterAudio = audio;
+        audio.preload = 'auto';
+        audio.play().catch(() => {
+            // Autoplay may be blocked until a further gesture
+        });
+    }
+
+    stopCeoIntroAudio() {
+        if (this._ceoIntroAudio) {
+            this._ceoIntroAudio.pause();
+            this._ceoIntroAudio.onended = null;
+            this._ceoIntroAudio.onerror = null;
+            this._ceoIntroAudio = null;
+        }
+    }
+
+    playCeoIntroAudio() {
+        this.stopCeoIntroAudio();
+        const audio = new Audio('Audios/CEO_Intro.mp3');
+        this._ceoIntroAudio = audio;
+        audio.preload = 'auto';
+        audio.play().catch(() => {
+            // Autoplay may be blocked until a further gesture
+        });
+    }
+
+    startChroIntroSequence() {
+        if (this.receptionChroUnlocked) return;
+
+        // Tip + VO; reveal CHRO hotspot when intro audio ends
+        this.stopCeoIntroAudio();
+        this.showReceptionTip('And now, a personal welcome from our CHRO.');
+        this.stopChroIntroAudio();
+
+        const audio = new Audio('Audios/CHRO_Intro.mp3');
+        this._chroIntroAudio = audio;
+        audio.preload = 'auto';
+
+        const finish = () => {
+            if (this._chroIntroAudio !== audio) return;
+            this._chroIntroAudio = null;
+            this.unlockChroHotspot();
+        };
+
+        audio.addEventListener('ended', finish);
+        audio.addEventListener('error', finish);
+        audio.play().catch(() => {
+            // If autoplay fails, still unlock after tip is shown briefly
+            this._receptionTipTimer = setTimeout(finish, 4000);
+        });
+    }
+
+    unlockChroHotspot() {
+        if (this.receptionChroUnlocked) return;
+        this.receptionChroUnlocked = true;
+        this.stopChroIntroAudio();
+        if (this.currentSceneId !== 'reception' || !this.hotspots) return;
+
+        // Keep CEO visible; reveal CHRO after the intro tip
+        this.hotspots.setHotspotHidden('video_welcome', false);
+        this.hotspots.setHotspotHidden('video_chro_welcome', false);
+        if (this.devPanelOpen) {
+            this.refreshDevHotspotList();
+        }
     }
 
     updateHUD(scene) {
@@ -430,7 +579,7 @@ class WebXRApp {
         }
 
         // Scene Card (frosted card in bottom right) — hide on intro screens
-        const isIntroScene = scene.id === 'welcome' || scene.id === 'approach';
+        const isIntroScene = scene.id === 'welcome' || scene.id === 'approach' || scene.id === 'reception';
         if (scene.cardText && !isIntroScene) {
             const lines = scene.cardText.split('\n');
             sceneCard.innerHTML = `
@@ -454,9 +603,36 @@ class WebXRApp {
             this.syncDevOrientationPanel();
         }
 
-        // Specific scene states
+        // Reception welcome glass tip (third screen)
+        this.stopChroIntroAudio();
+        this.stopCeoIntroAudio();
+        if (scene.id === 'reception') {
+            if (!this.receptionChroUnlocked) {
+                this.showReceptionTip(
+                    'Welcome to Tabuk Pharmaceuticals!<br>Your journey starts here.'
+                );
+                this.playCeoIntroAudio();
+            } else {
+                this.showReceptionTip(
+                    'And now, a personal welcome from our CHRO.',
+                    { animate: true }
+                );
+            }
+        } else {
+            const receptionTip = document.getElementById('reception-welcome-tip');
+            if (receptionTip) {
+                receptionTip.classList.remove('visible');
+                receptionTip.hidden = true;
+            }
+            // Reset CHRO lock when leaving reception so revisit starts with CEO again
+            this.receptionChroUnlocked = false;
+        }
+
+        // Welcome / ENTER TABUK screen narration
+        this.stopWelcomeEnterAudio();
         if (scene.id === 'welcome') {
             welcomeOverlay.classList.add('active');
+            this.playWelcomeEnterAudio();
         } else if (scene.isAssessment) {
             assessmentOverlay.classList.add('active');
             this.assessment.start();
@@ -467,12 +643,23 @@ class WebXRApp {
     }
 
     handleHotspotClick(hotspot) {
+        // Locked portals stay visible but do not navigate
+        if (hotspot.locked) {
+            this.playTone(220, 'sine', 0.08);
+            return;
+        }
+
         this.playTone(660, 'sine', 0.15);
         this.visitedHotspots.add(hotspot.id);
 
         if (hotspot.type === 'portal') {
             this.goToScene(hotspot.targetScene);
         } else if (hotspot.type === 'modal') {
+            // Stop reception tip VO when opening CEO/CHRO video players
+            if (hotspot.modalId === 'modal_video_welcome' || hotspot.modalId === 'modal_video_chro') {
+                this.stopCeoIntroAudio();
+                this.stopChroIntroAudio();
+            }
             window.modalManager.showComplexModal(hotspot.modalId);
         } else if (hotspot.type === 'info') {
             window.modalManager.showInfo(hotspot.title, hotspot.text, hotspot.icon || 'building', hotspot.bullets || null);
