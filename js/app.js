@@ -488,8 +488,11 @@ class WebXRApp {
         container.innerHTML = `
             <div class="completion-card">
                 <div class="completion-logo">
-                    <span class="tabuk-brand">tabuk</span>
-                    <span class="pharma-text">pharmaceuticals</span>
+                    <img class="completion-aperture-logo" src="assets/images/tabuk_aperture_logo.png" alt="Tabuk" width="56" height="56">
+                    <div class="completion-brand-text">
+                        <span class="tabuk-brand">tabuk</span>
+                        <span class="pharma-text">pharmaceuticals</span>
+                    </div>
                 </div>
                 <h1 class="completion-title">Welcome to the Team!</h1>
                 <p class="completion-subtitle">You have successfully completed the Tabuk WebXR Induction Experience.</p>

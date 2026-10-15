@@ -339,6 +339,14 @@ html, body {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
+.brand-aperture-logo {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
 .brand-text-logo {
     font-family: var(--font-heading);
     font-weight: 800;
@@ -1171,6 +1179,7 @@ html, body {
 
 .welcome-side-header {
     display: flex;
+    flex-direction: row;
     align-items: center;
     justify-content: center;
     gap: 16px;
@@ -1197,7 +1206,9 @@ html, body {
     height: 70px;
     object-fit: contain;
     background: transparent;
-    margin-top: 2px;
+    margin: 0;
+    border-radius: 0;
+    box-shadow: none;
 }
 
 .welcome-side-body {
@@ -1521,6 +1532,26 @@ html, body {
     border-radius: 18px;
     padding: 32px 28px;
     box-shadow: var(--card-shadow);
+}
+
+.completion-logo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.completion-aperture-logo {
+    width: 56px;
+    height: 56px;
+    object-fit: contain;
+    border-radius: 50%;
+}
+
+.completion-brand-text {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
 }
 
 .tabuk-brand {
