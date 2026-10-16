@@ -5,7 +5,7 @@
 
 window.COURSE_DATA = {
     meta: {
-        title: "TABUK PHARMACEUTICALS · Induction",
+        title: "TABUK PHARMACEUTICALS · INDUCTION",
         subtitle: "25 Years of Purpose. 2,400+ People. One Shared Mission.",
         author: "Tabuk Pharmaceuticals Learning & Development",
         passingScore: 75,
@@ -19,8 +19,8 @@ window.COURSE_DATA = {
             envType: "intro",
             bgVideo: "Videos/far_from_building_4k.mov",
             bgImage: "assets/images/scene0_exterior.jpg",
-            initialPitch: 0,
-            initialYaw: 186,
+            initialPitch: 1,
+            initialYaw: 188,
             sphereYaw: 0,
             cardText: "Approach Campus\nFind the marker to enter",
             hotspots: [
@@ -29,8 +29,8 @@ window.COURSE_DATA = {
                     type: "portal",
                     icon: "arrow",
                     label: "Enter Tabuk",
-                    pitch: -16,
-                    yaw: 186,
+                    pitch: -10,
+                    yaw: 184,
                     arrowYaw: 0,
                     targetScene: "welcome"
                 }
@@ -47,7 +47,18 @@ window.COURSE_DATA = {
             initialYaw: 165,
             sphereYaw: 0,
             cardText: "Arrival & Welcome\nRiyadh HQ",
-            hotspots: []
+            hotspots: [
+                {
+                    id: "enter_reception",
+                    type: "portal",
+                    icon: "arrow",
+                    label: "Enter Reception",
+                    pitch: -10,
+                    yaw: 165,
+                    arrowYaw: 0,
+                    targetScene: "reception"
+                }
+            ]
         },
         "reception": {
             id: "reception",
@@ -56,11 +67,24 @@ window.COURSE_DATA = {
             envType: "intro",
             bgVideo: "Videos/51_D_4k.mov",
             bgImage: "assets/images/scene0_exterior.jpg",
-            initialPitch: -1,
-            initialYaw: 173,
+            initialPitch: 0,
+            initialYaw: 178,
             sphereYaw: 0,
             cardText: "Corporate Reception\nFind the marker to continue",
             hotspots: [
+                {
+                    id: "welcome_guide",
+                    type: "avatar",
+                    image: "assets/images/welcome_tip_avatar.png",
+                    label: "Welcome Guide",
+                    // Glued to 360 sphere at pitch/yaw (3D plane — sticks like gum)
+                    pitch: -31,
+                    yaw: 123,
+                    interactive: false,
+                    radius: 400,
+                    worldHeight: 222,
+                    worldWidth: 56
+                },
                 {
                     id: "video_welcome",
                     type: "modal",
