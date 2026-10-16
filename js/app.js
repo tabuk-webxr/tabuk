@@ -291,6 +291,20 @@ class WebXRApp {
         const avatarHeight = document.getElementById('dev-avatar-height');
         const avatarWidth = document.getElementById('dev-avatar-width');
         const avatarRadius = document.getElementById('dev-avatar-radius');
+        const avatarRot = document.getElementById('dev-avatar-rot');
+        const namePitch = document.getElementById('dev-name-pitch');
+        const nameYaw = document.getElementById('dev-name-yaw');
+        const nameRot = document.getElementById('dev-name-rot');
+        const placeNameBtn = document.getElementById('dev-place-name-at-view');
+        const screenSelect = document.getElementById('dev-screen-select');
+        const screenCorner = document.getElementById('dev-screen-corner');
+        const screenPitch = document.getElementById('dev-screen-pitch');
+        const screenYaw = document.getElementById('dev-screen-yaw');
+        const screenRadius = document.getElementById('dev-screen-radius');
+        const placeScreenCornerBtn = document.getElementById('dev-place-screen-corner');
+        const labelY = document.getElementById('dev-label-y');
+        const labelX = document.getElementById('dev-label-x');
+        const playY = document.getElementById('dev-play-y');
         if (!panel || !sphereYaw || !camPitch || !camYaw) return;
 
         const applyOrientation = () => {
@@ -317,14 +331,56 @@ class WebXRApp {
             const worldHeight = Number(avatarHeight.value);
             const worldWidth = Number(avatarWidth.value);
             const radius = Number(avatarRadius.value);
-            this.viewer.setSceneAvatarSize(id, { worldHeight, worldWidth, radius });
-            this.persistAvatarImageSettings(id, { worldHeight, worldWidth, radius });
+            const worldRot = avatarRot ? Number(avatarRot.value) : 0;
+            this.viewer.setSceneAvatarSize(id, { worldHeight, worldWidth, radius, worldRot });
+            this.persistAvatarImageSettings(id, { worldHeight, worldWidth, radius, worldRot });
             const hVal = document.getElementById('dev-avatar-height-val');
             const wVal = document.getElementById('dev-avatar-width-val');
             const rVal = document.getElementById('dev-avatar-radius-val');
+            const rotVal = document.getElementById('dev-avatar-rot-val');
             if (hVal) hVal.textContent = String(Math.round(worldHeight));
             if (wVal) wVal.textContent = String(Math.round(worldWidth));
             if (rVal) rVal.textContent = String(Math.round(radius));
+            if (rotVal) rotVal.textContent = `${Math.round(worldRot)}°`;
+            this.updateDevOrientationReadout();
+        };
+
+        const applyNameTag = () => {
+            const id = this.getNameTagHotspotId();
+            if (!id || !namePitch || !nameYaw) return;
+            const pitch = Number(namePitch.value);
+            let yaw = Number(nameYaw.value);
+            yaw = ((yaw % 360) + 360) % 360;
+            const rot = nameRot ? Number(nameRot.value) : 0;
+            this.hotspots.setHotspotCoords(id, pitch, yaw);
+            this.hotspots.setNametagRot(id, rot);
+            this.persistAvatarNameTagSettings(id, { pitch, yaw, rot });
+            const pVal = document.getElementById('dev-name-pitch-val');
+            const yVal = document.getElementById('dev-name-yaw-val');
+            const rVal = document.getElementById('dev-name-rot-val');
+            if (pVal) pVal.textContent = `${Math.round(pitch)}°`;
+            if (yVal) yVal.textContent = `${Math.round(yaw)}°`;
+            if (rVal) rVal.textContent = `${Math.round(rot)}°`;
+            this.updateDevOrientationReadout();
+        };
+
+        const applyScreenOverlay = () => {
+            if (!screenSelect || !screenSelect.value || !screenCorner || !screenPitch || !screenYaw) return;
+            const id = screenSelect.value;
+            const corner = screenCorner.value;
+            const pitch = this._round1(Number(screenPitch.value));
+            let yaw = this._round1(Number(screenYaw.value));
+            yaw = this._round1(((yaw % 360) + 360) % 360);
+            const radius = this._round1(screenRadius ? Number(screenRadius.value) : 480);
+            this.viewer.setScreenOverlayCorner(id, corner, pitch, yaw);
+            this.viewer.setScreenOverlayRadius(id, radius);
+            this.persistScreenOverlaySettings(id);
+            const pVal = document.getElementById('dev-screen-pitch-val');
+            const yVal = document.getElementById('dev-screen-yaw-val');
+            const rVal = document.getElementById('dev-screen-radius-val');
+            if (pVal) pVal.textContent = `${pitch.toFixed(1)}°`;
+            if (yVal) yVal.textContent = `${yaw.toFixed(1)}°`;
+            if (rVal) rVal.textContent = radius.toFixed(1);
             this.updateDevOrientationReadout();
         };
 
@@ -342,6 +398,25 @@ class WebXRApp {
             this.updateDevOrientationReadout();
         };
 
+        const applyTabletLabelOffset = () => {
+            if (!hotSelect || !hotSelect.value || !labelY || !labelX) return;
+            const id = hotSelect.value;
+            const h = this.hotspots.getHotspotById(id);
+            if (!h || !(h.icon === 'monitor' || h.icon === 'ipad' || h.glue)) return;
+            const labelOffsetY = Number(labelY.value);
+            const labelOffsetX = Number(labelX.value);
+            const playOffsetY = playY ? Number(playY.value) : -48;
+            this.hotspots.setLabelOffset(id, { labelOffsetY, labelOffsetX, playOffsetY });
+            this.persistTabletLabelOffset(id, { labelOffsetY, labelOffsetX, playOffsetY });
+            const yVal = document.getElementById('dev-label-y-val');
+            const xVal = document.getElementById('dev-label-x-val');
+            const pVal = document.getElementById('dev-play-y-val');
+            if (yVal) yVal.textContent = `${Math.round(labelOffsetY)}px`;
+            if (xVal) xVal.textContent = `${Math.round(labelOffsetX)}px`;
+            if (pVal) pVal.textContent = `${Math.round(playOffsetY)}px`;
+            this.updateDevOrientationReadout();
+        };
+
         sphereYaw.addEventListener('input', applyOrientation);
         camPitch.addEventListener('input', applyOrientation);
         camYaw.addEventListener('input', applyOrientation);
@@ -350,17 +425,35 @@ class WebXRApp {
         if (avatarHeight) avatarHeight.addEventListener('input', applySceneAvatarImage);
         if (avatarWidth) avatarWidth.addEventListener('input', applySceneAvatarImage);
         if (avatarRadius) avatarRadius.addEventListener('input', applySceneAvatarImage);
+        if (avatarRot) avatarRot.addEventListener('input', applySceneAvatarImage);
+        if (namePitch) namePitch.addEventListener('input', applyNameTag);
+        if (nameYaw) nameYaw.addEventListener('input', applyNameTag);
+        if (nameRot) nameRot.addEventListener('input', applyNameTag);
+        if (screenPitch) screenPitch.addEventListener('input', applyScreenOverlay);
+        if (screenYaw) screenYaw.addEventListener('input', applyScreenOverlay);
+        if (screenRadius) screenRadius.addEventListener('input', applyScreenOverlay);
+        if (screenSelect) {
+            screenSelect.addEventListener('change', () => this.loadScreenOverlayIntoDevSliders());
+        }
+        if (screenCorner) {
+            screenCorner.addEventListener('change', () => this.loadScreenOverlayIntoDevSliders());
+        }
         if (tipLeft) tipLeft.addEventListener('input', applyTipPlacement);
         if (tipBottom) tipBottom.addEventListener('input', applyTipPlacement);
         if (tipWidth) tipWidth.addEventListener('input', applyTipPlacement);
         if (tipHeight) tipHeight.addEventListener('input', applyTipPlacement);
         if (tipBoxWidth) tipBoxWidth.addEventListener('input', applyTipPlacement);
         if (tipGap) tipGap.addEventListener('input', applyTipPlacement);
+        if (labelY) labelY.addEventListener('input', applyTabletLabelOffset);
+        if (labelX) labelX.addEventListener('input', applyTabletLabelOffset);
+        if (playY) playY.addEventListener('input', applyTabletLabelOffset);
 
         if (hotSelect) {
             hotSelect.addEventListener('change', () => {
                 this.loadSelectedHotspotIntoDevSliders();
                 this.loadAvatarImageSettingsIntoDevSliders();
+                this.loadNameTagSettingsIntoDevSliders();
+                this.loadTabletLabelOffsetIntoDevSliders();
             });
         }
 
@@ -375,6 +468,39 @@ class WebXRApp {
                 this.hotspots.setHotspotCoords(hotSelect.value, pitch, yaw);
                 this.persistHotspotCoords(hotSelect.value, pitch, yaw);
                 this.loadSelectedHotspotIntoDevSliders();
+                this.updateDevOrientationReadout();
+            });
+        }
+
+        if (placeNameBtn) {
+            placeNameBtn.addEventListener('click', () => {
+                const id = this.getNameTagHotspotId();
+                if (!id || !namePitch || !nameYaw) return;
+                const pitch = Math.round(this.viewer.targetPitch);
+                let yaw = Math.round(this.viewer.targetYaw);
+                yaw = ((yaw % 360) + 360) % 360;
+                const rot = nameRot ? Number(nameRot.value) : 0;
+                namePitch.value = String(pitch);
+                nameYaw.value = String(yaw);
+                this.hotspots.setHotspotCoords(id, pitch, yaw);
+                this.hotspots.setNametagRot(id, rot);
+                this.persistAvatarNameTagSettings(id, { pitch, yaw, rot });
+                this.loadNameTagSettingsIntoDevSliders();
+                this.updateDevOrientationReadout();
+            });
+        }
+
+        if (placeScreenCornerBtn) {
+            placeScreenCornerBtn.addEventListener('click', () => {
+                if (!screenSelect || !screenSelect.value || !screenCorner || !screenPitch || !screenYaw) return;
+                const pitch = this._round1(this.viewer.targetPitch);
+                let yaw = this._round1(this.viewer.targetYaw);
+                yaw = this._round1(((yaw % 360) + 360) % 360);
+                screenPitch.value = String(pitch);
+                screenYaw.value = String(yaw);
+                this.viewer.setScreenOverlayCorner(screenSelect.value, screenCorner.value, pitch, yaw);
+                this.persistScreenOverlaySettings(screenSelect.value);
+                this.loadScreenOverlayIntoDevSliders();
                 this.updateDevOrientationReadout();
             });
         }
@@ -530,7 +656,7 @@ class WebXRApp {
         }
     }
 
-    persistAvatarImageSettings(id, { worldHeight, worldWidth, radius }) {
+    persistAvatarImageSettings(id, { worldHeight, worldWidth, radius, worldRot }) {
         const scene = window.COURSE_DATA.scenes[this.currentSceneId];
         if (!scene || !scene.hotspots) return;
         const source = scene.hotspots.find((h) => h.id === id);
@@ -540,17 +666,74 @@ class WebXRApp {
             if (typeof worldHeight === 'number') h.worldHeight = worldHeight;
             if (typeof worldWidth === 'number') h.worldWidth = worldWidth;
             if (typeof radius === 'number') h.radius = radius;
+            if (typeof worldRot === 'number') h.worldRot = worldRot;
         });
+    }
+
+    persistTabletLabelOffset(id, { labelOffsetY, labelOffsetX, playOffsetY }) {
+        const scene = window.COURSE_DATA.scenes[this.currentSceneId];
+        if (!scene || !scene.hotspots) return;
+        const source = scene.hotspots.find((h) => h.id === id);
+        const live = this.hotspots ? this.hotspots.getHotspotById(id) : null;
+        [source, live].forEach((h) => {
+            if (!h) return;
+            if (typeof labelOffsetY === 'number') h.labelOffsetY = labelOffsetY;
+            if (typeof labelOffsetX === 'number') h.labelOffsetX = labelOffsetX;
+            if (typeof playOffsetY === 'number') h.playOffsetY = playOffsetY;
+        });
+    }
+
+    persistAvatarNameTagSettings(id, { pitch, yaw, rot }) {
+        const scene = window.COURSE_DATA.scenes[this.currentSceneId];
+        if (!scene || !scene.hotspots) return;
+        const source = scene.hotspots.find((h) => h.id === id);
+        const live = this.hotspots ? this.hotspots.getHotspotById(id) : null;
+        [source, live].forEach((h) => {
+            if (!h) return;
+            if (typeof pitch === 'number') h.pitch = pitch;
+            if (typeof yaw === 'number') h.yaw = yaw;
+            if (typeof rot === 'number') h.rot = rot;
+        });
+    }
+
+    _round1(n) {
+        return Math.round(Number(n) * 10) / 10;
+    }
+
+    persistScreenOverlaySettings(id) {
+        const scene = window.COURSE_DATA.scenes[this.currentSceneId];
+        if (!scene || !scene.screenOverlays) return;
+        const live = this.viewer.getScreenOverlaySettings(id);
+        if (!live) return;
+        const source = scene.screenOverlays.find((o) => o.id === id);
+        if (!source) return;
+        const roundCorner = (c) => ({
+            pitch: this._round1(c.pitch),
+            yaw: this._round1(c.yaw)
+        });
+        source.radius = this._round1(live.radius);
+        source.corners = {
+            tl: roundCorner(live.corners.tl),
+            tr: roundCorner(live.corners.tr),
+            br: roundCorner(live.corners.br),
+            bl: roundCorner(live.corners.bl)
+        };
     }
 
     getSelectedAvatarHotspotId() {
         const hotSelect = document.getElementById('dev-hotspot-select');
         if (!hotSelect || !hotSelect.value || !this.hotspots) return null;
         const h = this.hotspots.getHotspotById(hotSelect.value);
-        if (h && h.type === 'avatar') return h.id;
-        // Fallback: first avatar in scene
-        const avatar = (this.hotspots.hotspots || []).find((x) => x.type === 'avatar');
+        // Avatars + glued tablet/monitor props share the same size controls
+        if (h && (h.type === 'avatar' || h.glue)) return h.id;
+        const avatar = (this.hotspots.hotspots || []).find((x) => x.type === 'avatar' || x.glue);
         return avatar ? avatar.id : null;
+    }
+
+    getNameTagHotspotId() {
+        if (!this.hotspots) return null;
+        const named = (this.hotspots.hotspots || []).find((x) => x.type === 'nametag');
+        return named ? named.id : null;
     }
 
     refreshDevHotspotList() {
@@ -573,7 +756,13 @@ class WebXRApp {
         list.forEach((h) => {
             const opt = document.createElement('option');
             opt.value = h.id;
-            const kind = h.type === 'avatar' ? 'image' : (h.type || 'hotspot');
+            const kind = h.type === 'avatar'
+                ? 'image'
+                : h.type === 'nametag'
+                    ? 'name'
+                    : h.glue
+                        ? 'tablet'
+                        : (h.type || 'hotspot');
             opt.textContent = `${h.label || h.id} [${kind}]`;
             hotSelect.appendChild(opt);
         });
@@ -585,6 +774,67 @@ class WebXRApp {
         }
         this.loadSelectedHotspotIntoDevSliders();
         this.loadAvatarImageSettingsIntoDevSliders();
+        this.loadNameTagSettingsIntoDevSliders();
+        this.loadTabletLabelOffsetIntoDevSliders();
+        this.refreshDevScreenOverlayList();
+    }
+
+    refreshDevScreenOverlayList() {
+        const screenSelect = document.getElementById('dev-screen-select');
+        if (!screenSelect || !this.viewer) return;
+        const scene = window.COURSE_DATA.scenes[this.currentSceneId];
+        const list = (scene && scene.screenOverlays) || [];
+        const prev = screenSelect.value;
+        screenSelect.innerHTML = '';
+
+        if (!list.length) {
+            const opt = document.createElement('option');
+            opt.value = '';
+            opt.textContent = '(no TV overlay in this scene)';
+            screenSelect.appendChild(opt);
+            screenSelect.disabled = true;
+            return;
+        }
+
+        screenSelect.disabled = false;
+        list.forEach((o) => {
+            const opt = document.createElement('option');
+            opt.value = o.id;
+            opt.textContent = o.id;
+            screenSelect.appendChild(opt);
+        });
+        if (prev && list.some((o) => o.id === prev)) {
+            screenSelect.value = prev;
+        }
+        this.loadScreenOverlayIntoDevSliders();
+    }
+
+    loadScreenOverlayIntoDevSliders() {
+        const screenSelect = document.getElementById('dev-screen-select');
+        const screenCorner = document.getElementById('dev-screen-corner');
+        const screenPitch = document.getElementById('dev-screen-pitch');
+        const screenYaw = document.getElementById('dev-screen-yaw');
+        const screenRadius = document.getElementById('dev-screen-radius');
+        if (!screenSelect || !screenSelect.value || !screenCorner || !screenPitch || !screenYaw) return;
+
+        const live = this.viewer.getScreenOverlaySettings(screenSelect.value);
+        if (!live) return;
+        const corner = screenCorner.value || 'tl';
+        const c = live.corners[corner] || { pitch: 0, yaw: 0 };
+        const pitch = this._round1(c.pitch);
+        const yaw = this._round1(((c.yaw % 360) + 360) % 360);
+        const radius = this._round1(live.radius || 480);
+
+        screenPitch.value = String(pitch);
+        screenYaw.value = String(yaw);
+        if (screenRadius) screenRadius.value = String(radius);
+
+        const pVal = document.getElementById('dev-screen-pitch-val');
+        const yVal = document.getElementById('dev-screen-yaw-val');
+        const rVal = document.getElementById('dev-screen-radius-val');
+        if (pVal) pVal.textContent = `${pitch.toFixed(1)}°`;
+        if (yVal) yVal.textContent = `${yaw.toFixed(1)}°`;
+        if (rVal) rVal.textContent = radius.toFixed(1);
     }
 
     loadSelectedHotspotIntoDevSliders() {
@@ -599,6 +849,36 @@ class WebXRApp {
         hotYaw.value = String(yaw);
         document.getElementById('dev-hot-pitch-val').textContent = `${Math.round(h.pitch)}°`;
         document.getElementById('dev-hot-yaw-val').textContent = `${yaw}°`;
+        this.loadTabletLabelOffsetIntoDevSliders();
+    }
+
+    loadTabletLabelOffsetIntoDevSliders() {
+        const hotSelect = document.getElementById('dev-hotspot-select');
+        const labelY = document.getElementById('dev-label-y');
+        const labelX = document.getElementById('dev-label-x');
+        const playY = document.getElementById('dev-play-y');
+        const yVal = document.getElementById('dev-label-y-val');
+        const xVal = document.getElementById('dev-label-x-val');
+        const pVal = document.getElementById('dev-play-y-val');
+        if (!labelY || !labelX) return;
+
+        const h = hotSelect && hotSelect.value && this.hotspots
+            ? this.hotspots.getHotspotById(hotSelect.value)
+            : null;
+        const isTablet = !!(h && (h.icon === 'monitor' || h.icon === 'ipad' || h.glue));
+        labelY.disabled = !isTablet;
+        labelX.disabled = !isTablet;
+        if (playY) playY.disabled = !isTablet;
+
+        const labelOffsetY = isTablet && typeof h.labelOffsetY === 'number' ? h.labelOffsetY : -36;
+        const labelOffsetX = isTablet && typeof h.labelOffsetX === 'number' ? h.labelOffsetX : 0;
+        const playOffsetY = isTablet && typeof h.playOffsetY === 'number' ? h.playOffsetY : -48;
+        labelY.value = String(Math.round(labelOffsetY));
+        labelX.value = String(Math.round(labelOffsetX));
+        if (playY) playY.value = String(Math.round(playOffsetY));
+        if (yVal) yVal.textContent = `${Math.round(labelOffsetY)}px`;
+        if (xVal) xVal.textContent = `${Math.round(labelOffsetX)}px`;
+        if (pVal) pVal.textContent = `${Math.round(playOffsetY)}px`;
     }
 
     loadAvatarImageSettingsIntoDevSliders() {
@@ -606,6 +886,7 @@ class WebXRApp {
         const heightEl = document.getElementById('dev-avatar-height');
         const widthEl = document.getElementById('dev-avatar-width');
         const radiusEl = document.getElementById('dev-avatar-radius');
+        const rotEl = document.getElementById('dev-avatar-rot');
         if (!heightEl || !widthEl || !radiusEl) return;
 
         const h = id && this.hotspots ? this.hotspots.getHotspotById(id) : null;
@@ -613,16 +894,45 @@ class WebXRApp {
         const worldHeight = (live && live.worldHeight) || (h && h.worldHeight) || 150;
         const worldWidth = (live && live.worldWidth) || (h && h.worldWidth) || Math.round(worldHeight * 0.35);
         const radius = (live && live.radius) || (h && h.radius) || 430;
+        const worldRot = (live && typeof live.worldRot === 'number')
+            ? live.worldRot
+            : ((h && typeof h.worldRot === 'number') ? h.worldRot : 0);
 
         heightEl.value = String(Math.round(worldHeight));
         widthEl.value = String(Math.round(worldWidth));
         radiusEl.value = String(Math.round(radius));
+        if (rotEl) rotEl.value = String(Math.round(worldRot));
         const hVal = document.getElementById('dev-avatar-height-val');
         const wVal = document.getElementById('dev-avatar-width-val');
         const rVal = document.getElementById('dev-avatar-radius-val');
+        const rotVal = document.getElementById('dev-avatar-rot-val');
         if (hVal) hVal.textContent = String(Math.round(worldHeight));
         if (wVal) wVal.textContent = String(Math.round(worldWidth));
         if (rVal) rVal.textContent = String(Math.round(radius));
+        if (rotVal) rotVal.textContent = `${Math.round(worldRot)}°`;
+    }
+
+    loadNameTagSettingsIntoDevSliders() {
+        const id = this.getNameTagHotspotId();
+        const pitchEl = document.getElementById('dev-name-pitch');
+        const yawEl = document.getElementById('dev-name-yaw');
+        const rotEl = document.getElementById('dev-name-rot');
+        if (!pitchEl || !yawEl) return;
+
+        const h = id && this.hotspots ? this.hotspots.getHotspotById(id) : null;
+        const pitch = (h && typeof h.pitch === 'number') ? h.pitch : -18;
+        const yaw = ((Math.round((h && h.yaw) || 128) % 360) + 360) % 360;
+        const rot = (h && typeof h.rot === 'number') ? h.rot : 0;
+
+        pitchEl.value = String(Math.round(pitch));
+        yawEl.value = String(yaw);
+        if (rotEl) rotEl.value = String(Math.round(rot));
+        const pVal = document.getElementById('dev-name-pitch-val');
+        const yVal = document.getElementById('dev-name-yaw-val');
+        const rVal = document.getElementById('dev-name-rot-val');
+        if (pVal) pVal.textContent = `${Math.round(pitch)}°`;
+        if (yVal) yVal.textContent = `${yaw}°`;
+        if (rVal) rVal.textContent = `${Math.round(rot)}°`;
     }
 
     syncDevOrientationPanel(fromCameraOnly = false) {
@@ -667,12 +977,43 @@ class WebXRApp {
                             `  - ${h.id}: pitch ${h.pitch}, yaw ${h.yaw}` +
                             `, worldHeight ${Math.round(s.worldHeight || live.worldHeight || 150)}` +
                             `, worldWidth ${Math.round(s.worldWidth || live.worldWidth || 52)}` +
-                            `, radius ${Math.round(s.radius || live.radius || 430)}`
+                            `, radius ${Math.round(s.radius || live.radius || 430)}` +
+                            `, worldRot ${Math.round(typeof s.worldRot === 'number' ? s.worldRot : (live.worldRot || 0))}`
                         );
+                    }
+                    if (live && live.glue) {
+                        const s = this.viewer.getSceneAvatarSettings(h.id) || {};
+                        return (
+                            `  - ${h.id}: pitch ${h.pitch}, yaw ${h.yaw}` +
+                            `, worldHeight ${Math.round(s.worldHeight || live.worldHeight || 95)}` +
+                            `, worldWidth ${Math.round(s.worldWidth || live.worldWidth || 92)}` +
+                            `, radius ${Math.round(s.radius || live.radius || 355)}` +
+                            `, worldRot ${Math.round(typeof s.worldRot === 'number' ? s.worldRot : (live.worldRot || 0))}` +
+                            `, playOffsetY ${Math.round(typeof live.playOffsetY === 'number' ? live.playOffsetY : -48)}` +
+                            `, labelOffsetY ${Math.round(typeof live.labelOffsetY === 'number' ? live.labelOffsetY : -36)}` +
+                            `, labelOffsetX ${Math.round(typeof live.labelOffsetX === 'number' ? live.labelOffsetX : 0)}`
+                        );
+                    }
+                    if (live && live.type === 'nametag') {
+                        return `  - ${h.id}: pitch ${h.pitch}, yaw ${h.yaw}, rot ${Math.round(live.rot || 0)}`;
                     }
                     return `  - ${h.id}: pitch ${h.pitch}, yaw ${h.yaw}`;
                 }).join('\n')
                 : '  (none)';
+            const screenSelect = document.getElementById('dev-screen-select');
+            const screenId = screenSelect && screenSelect.value;
+            const screenLive = screenId ? this.viewer.getScreenOverlaySettings(screenId) : null;
+            const fmt1 = (n) => this._round1(n).toFixed(1);
+            const screenLines = screenLive
+                ? (
+                    `screenOverlays:\n` +
+                    `  - ${screenLive.id}: radius ${fmt1(screenLive.radius)}\n` +
+                    `    tl: pitch ${fmt1(screenLive.corners.tl.pitch)}, yaw ${fmt1(screenLive.corners.tl.yaw)}\n` +
+                    `    tr: pitch ${fmt1(screenLive.corners.tr.pitch)}, yaw ${fmt1(screenLive.corners.tr.yaw)}\n` +
+                    `    br: pitch ${fmt1(screenLive.corners.br.pitch)}, yaw ${fmt1(screenLive.corners.br.yaw)}\n` +
+                    `    bl: pitch ${fmt1(screenLive.corners.bl.pitch)}, yaw ${fmt1(screenLive.corners.bl.yaw)}\n`
+                )
+                : 'screenOverlays: (none)\n';
             const tip = this.tipPlacement || {
                 left: 20, bottom: 29, width: 348, height: 440, tipWidth: 392, gap: -1
             };
@@ -685,6 +1026,7 @@ class WebXRApp {
                 `initialPitch: ${o.initialPitch}\n` +
                 `initialYaw: ${o.initialYaw}\n` +
                 `hotspots:\n${hotLines}\n` +
+                screenLines +
                 `tipAvatar:\n` +
                 `  left: ${tip.left}px\n` +
                 `  bottom: ${tip.bottom}px\n` +
@@ -778,8 +1120,12 @@ class WebXRApp {
 
     _finishSceneUI(scene) {
         this.hotspots.setHotspots(this._buildHotspotList(scene));
+        if (this.viewer && typeof this.viewer.syncScreenOverlays === 'function') {
+            this.viewer.syncScreenOverlays(scene.screenOverlays || []);
+        }
         this.updateHUD(scene);
         this.syncDevOrientationPanel();
+        if (this.devPanelOpen) this.refreshDevScreenOverlayList();
     }
 
     goToScene(sceneId, options = {}) {

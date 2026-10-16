@@ -46,6 +46,7 @@ class PanoramaViewer {
         this._transitioning = false;
         this._cameraAnimRaf = null;
         this._sceneAvatars = [];
+        this._screenOverlays = [];
         this.init();
     }
 
@@ -642,7 +643,9 @@ class PanoramaViewer {
     syncSceneAvatars(hotspotList = []) {
         this.clearSceneAvatars();
         (hotspotList || []).forEach((h) => {
-            if (h && h.type === 'avatar' && !h.hidden) {
+            if (!h || h.hidden) return;
+            // Full-body guides + glued props (e.g. CEO/CHRO monitors)
+            if (h.type === 'avatar' || (h.glue && h.image)) {
                 this.addSceneAvatar(h);
             }
         });
@@ -655,9 +658,14 @@ class PanoramaViewer {
         const pitch = typeof data.pitch === 'number' ? data.pitch : 0;
         const yaw = typeof data.yaw === 'number' ? data.yaw : 0;
         const radius = typeof data.radius === 'number' ? data.radius : 430;
-        // Tall full-body plate; aspect ~516×1458
-        const height = typeof data.worldHeight === 'number' ? data.worldHeight : 150;
-        const width = typeof data.worldWidth === 'number' ? data.worldWidth : height * 0.35;
+        const isGluedProp = !!data.glue && data.type !== 'avatar';
+        // Tall full-body plate; aspect ~516×1458 — monitors use landscape worldWidth
+        const height = typeof data.worldHeight === 'number'
+            ? data.worldHeight
+            : (isGluedProp ? 72 : 150);
+        const width = typeof data.worldWidth === 'number'
+            ? data.worldWidth
+            : (isGluedProp ? height * 1.376 : height * 0.35);
 
         const geometry = new THREE.PlaneGeometry(width, height);
         const material = new THREE.MeshBasicMaterial({
@@ -671,7 +679,7 @@ class PanoramaViewer {
             opacity: 1
         });
         const mesh = new THREE.Mesh(geometry, material);
-        mesh.renderOrder = 10;
+        mesh.renderOrder = isGluedProp ? 9 : 10;
         mesh.frustumCulled = false;
         mesh.visible = !data.hidden;
         mesh.name = `scene-avatar-${data.id || 'unknown'}`;
@@ -683,6 +691,9 @@ class PanoramaViewer {
             radius,
             height,
             width,
+            // Monitors / props: center on pitch/yaw. Avatars: feet on mark.
+            anchor: data.anchor || (isGluedProp ? 'center' : 'feet'),
+            worldRot: typeof data.worldRot === 'number' ? data.worldRot : 0,
             mesh
         };
 
@@ -724,13 +735,20 @@ class PanoramaViewer {
         const scale = (entry.radius || 430) / 500;
         pos.multiplyScalar(scale);
 
-        // pitch/yaw = feet / standing mark — lift so the plate stands upright on that spot
-        pos.y += (entry.height || 150) * 0.48;
+        // Feet anchor: pitch/yaw = standing mark. Center anchor: pitch/yaw = plate center.
+        if (entry.anchor !== 'center') {
+            pos.y += (entry.height || 150) * 0.48;
+        }
 
         entry.mesh.position.copy(pos);
         // Face the camera at the origin (inside the panorama)
         entry.mesh.lookAt(0, 0, 0);
         entry.mesh.rotateY(Math.PI);
+        // Extra turn around vertical (DEV rotation) — 180 flips front/back
+        const rot = typeof entry.worldRot === 'number' ? entry.worldRot : 0;
+        if (rot) {
+            entry.mesh.rotateY(THREE.MathUtils.degToRad(rot));
+        }
         entry.mesh.updateMatrixWorld(true);
     }
 
@@ -743,7 +761,7 @@ class PanoramaViewer {
         return true;
     }
 
-    setSceneAvatarSize(id, { worldHeight, worldWidth, radius } = {}) {
+    setSceneAvatarSize(id, { worldHeight, worldWidth, radius, worldRot } = {}) {
         const entry = (this._sceneAvatars || []).find((a) => a.id === id);
         if (!entry || !entry.mesh) return false;
 
@@ -754,6 +772,7 @@ class PanoramaViewer {
         } else if (typeof worldHeight === 'number') {
             entry.width = worldHeight * 0.35;
         }
+        if (typeof worldRot === 'number') entry.worldRot = worldRot;
 
         const nextW = entry.width || entry.height * 0.35;
         const nextH = entry.height || 150;
@@ -761,6 +780,14 @@ class PanoramaViewer {
         entry.mesh.geometry = new THREE.PlaneGeometry(nextW, nextH);
         if (oldGeo) oldGeo.dispose();
 
+        this._placeSceneAvatar(entry);
+        return true;
+    }
+
+    setSceneAvatarRotation(id, worldRot) {
+        const entry = (this._sceneAvatars || []).find((a) => a.id === id);
+        if (!entry || !entry.mesh) return false;
+        entry.worldRot = typeof worldRot === 'number' ? worldRot : 0;
         this._placeSceneAvatar(entry);
         return true;
     }
@@ -774,7 +801,8 @@ class PanoramaViewer {
             yaw: entry.yaw,
             radius: entry.radius,
             worldHeight: entry.height,
-            worldWidth: entry.width || entry.height * 0.35
+            worldWidth: entry.width || entry.height * 0.35,
+            worldRot: typeof entry.worldRot === 'number' ? entry.worldRot : 0
         };
     }
 
@@ -783,6 +811,165 @@ class PanoramaViewer {
         if (!entry || !entry.mesh) return false;
         entry.mesh.visible = !hidden;
         return true;
+    }
+
+    /**
+     * Glue a flat image onto a TV / screen in the 360 by pinning four pitch/yaw corners.
+     * Corners: tl, tr, br, bl — each { pitch, yaw }.
+     */
+    clearScreenOverlays() {
+        if (!this._screenOverlays || !this._screenOverlays.length) {
+            this._screenOverlays = [];
+            return;
+        }
+        this._screenOverlays.forEach((entry) => {
+            if (entry.mesh && entry.mesh.parent) entry.mesh.parent.remove(entry.mesh);
+            if (entry.mesh) {
+                if (entry.mesh.geometry) entry.mesh.geometry.dispose();
+                if (entry.mesh.material) {
+                    if (entry.mesh.material.map) entry.mesh.material.map.dispose();
+                    entry.mesh.material.dispose();
+                }
+            }
+        });
+        this._screenOverlays = [];
+    }
+
+    syncScreenOverlays(overlayList = []) {
+        this.clearScreenOverlays();
+        (overlayList || []).forEach((data) => {
+            if (data && data.image) this.addScreenOverlay(data);
+        });
+    }
+
+    addScreenOverlay(data) {
+        if (!data || !this.scene || !window.THREE) return null;
+
+        const corners = {
+            tl: { ...(data.corners && data.corners.tl ? data.corners.tl : { pitch: 10, yaw: 0 }) },
+            tr: { ...(data.corners && data.corners.tr ? data.corners.tr : { pitch: 10, yaw: 14 }) },
+            br: { ...(data.corners && data.corners.br ? data.corners.br : { pitch: 2, yaw: 14 }) },
+            bl: { ...(data.corners && data.corners.bl ? data.corners.bl : { pitch: 2, yaw: 0 }) }
+        };
+        const radius = typeof data.radius === 'number' ? data.radius : 480;
+
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(12);
+        const uvs = new Float32Array([
+            0, 1, // tl
+            1, 1, // tr
+            1, 0, // br
+            0, 0  // bl
+        ]);
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+        geometry.setIndex([0, 1, 2, 0, 2, 3]);
+
+        const material = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            map: null,
+            transparent: true,
+            depthWrite: false,
+            depthTest: false,
+            side: THREE.DoubleSide,
+            opacity: 1
+        });
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.renderOrder = 8;
+        mesh.frustumCulled = false;
+        mesh.visible = !data.hidden;
+        mesh.name = `screen-overlay-${data.id || 'unknown'}`;
+
+        const entry = {
+            id: data.id || 'screen',
+            image: data.image,
+            corners,
+            radius,
+            mesh
+        };
+
+        this.scene.add(mesh);
+        this._updateScreenOverlayGeometry(entry);
+        this._screenOverlays.push(entry);
+
+        this.textureLoader.load(
+            data.image,
+            (texture) => {
+                texture.minFilter = THREE.LinearFilter;
+                texture.magFilter = THREE.LinearFilter;
+                texture.generateMipmaps = false;
+                if (THREE.LinearEncoding !== undefined) {
+                    texture.encoding = THREE.LinearEncoding;
+                }
+                if ('colorSpace' in texture && THREE.NoColorSpace !== undefined) {
+                    texture.colorSpace = THREE.NoColorSpace;
+                } else if ('colorSpace' in texture && THREE.LinearSRGBColorSpace !== undefined) {
+                    texture.colorSpace = THREE.LinearSRGBColorSpace;
+                }
+                material.map = texture;
+                material.needsUpdate = true;
+                mesh.visible = !data.hidden;
+            },
+            undefined,
+            (err) => console.warn('Screen overlay texture failed:', data.image, err)
+        );
+
+        return entry;
+    }
+
+    _updateScreenOverlayGeometry(entry) {
+        if (!entry || !entry.mesh || !entry.mesh.geometry) return;
+        const scale = (entry.radius || 480) / 500;
+        const order = ['tl', 'tr', 'br', 'bl'];
+        const posAttr = entry.mesh.geometry.attributes.position;
+        order.forEach((key, i) => {
+            const c = entry.corners[key] || { pitch: 0, yaw: 0 };
+            const v = this.coordsToVector3(c.pitch, c.yaw);
+            v.multiplyScalar(scale);
+            posAttr.setXYZ(i, v.x, v.y, v.z);
+        });
+        posAttr.needsUpdate = true;
+        entry.mesh.geometry.computeBoundingSphere();
+    }
+
+    setScreenOverlayCorner(id, cornerKey, pitch, yaw) {
+        const entry = (this._screenOverlays || []).find((o) => o.id === id);
+        if (!entry || !entry.corners[cornerKey]) return false;
+        const round1 = (n) => Math.round(Number(n) * 10) / 10;
+        entry.corners[cornerKey] = {
+            pitch: round1(pitch),
+            yaw: round1(((yaw % 360) + 360) % 360)
+        };
+        this._updateScreenOverlayGeometry(entry);
+        return true;
+    }
+
+    setScreenOverlayRadius(id, radius) {
+        const entry = (this._screenOverlays || []).find((o) => o.id === id);
+        if (!entry) return false;
+        entry.radius = Math.round(Number(radius) * 10) / 10;
+        this._updateScreenOverlayGeometry(entry);
+        return true;
+    }
+
+    getScreenOverlaySettings(id) {
+        const entry = (this._screenOverlays || []).find((o) => o.id === id);
+        if (!entry) return null;
+        return {
+            id: entry.id,
+            image: entry.image,
+            radius: entry.radius,
+            corners: {
+                tl: { ...entry.corners.tl },
+                tr: { ...entry.corners.tr },
+                br: { ...entry.corners.br },
+                bl: { ...entry.corners.bl }
+            }
+        };
+    }
+
+    listScreenOverlays() {
+        return (this._screenOverlays || []).map((o) => o.id);
     }
 
     getOrientation() {
