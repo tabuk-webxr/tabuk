@@ -67,40 +67,84 @@ window.COURSE_DATA = {
             envType: "intro",
             bgVideo: "Videos/51_D_4k.mov",
             bgImage: "assets/images/scene0_exterior.jpg",
-            initialPitch: 0,
+            initialPitch: 1,
             initialYaw: 178,
             sphereYaw: 0,
             cardText: "Corporate Reception\nFind the marker to continue",
+            // Glue Who We Are onto the TV in the 360 video — pin 4 corners in DEV
+            screenOverlays: [
+                {
+                    id: "who_we_are_tv",
+                    image: "assets/images/modal_who_we_are.jpg",
+                    radius: 370.0,
+                    corners: {
+                        tl: { pitch: 2.2, yaw: 207.0 },
+                        tr: { pitch: 2.1, yaw: 216.2 },
+                        br: { pitch: -3.9, yaw: 216.3 },
+                        bl: { pitch: -4.6, yaw: 207.0 }
+                    }
+                }
+            ],
             hotspots: [
                 {
                     id: "welcome_guide",
                     type: "avatar",
-                    image: "assets/images/welcome_tip_avatar.png",
+                    image: "assets/images/welcome_tip_avatar.png?v=4",
                     label: "Welcome Guide",
                     // Glued to 360 sphere at pitch/yaw (3D plane — sticks like gum)
-                    pitch: -31,
-                    yaw: 123,
+                    pitch: -28,
+                    yaw: 118,
                     interactive: false,
-                    radius: 400,
-                    worldHeight: 222,
-                    worldWidth: 56
+                    radius: 345,
+                    worldHeight: 162,
+                    worldWidth: 58,
+                    worldRot: -6
+                },
+                {
+                    id: "welcome_guide_name",
+                    type: "nametag",
+                    label: "Tariq",
+                    // Floating HTML name pill — follows look L/R like hotspots
+                    pitch: -18,
+                    yaw: 124,
+                    rot: 0,
+                    interactive: false
                 },
                 {
                     id: "video_welcome",
                     type: "modal",
-                    icon: "play",
+                    icon: "monitor",
                     label: "CEO Welcome — tap to play",
-                    pitch: -8,
+                    image: "assets/images/tablet_ceo.png?v=4",
+                    glue: true,
+                    pitch: -23,
                     yaw: 153,
+                    radius: 355,
+                    worldHeight: 95,
+                    worldWidth: 92,
+                    worldRot: 0,
+                    playOffsetY: -48,
+                    labelOffsetY: -36,
+                    labelOffsetX: 0,
                     modalId: "modal_video_welcome"
                 },
                 {
                     id: "video_chro_welcome",
                     type: "modal",
-                    icon: "play",
-                    label: "CHRO Welcome — Tap to play",
-                    pitch: -3,
-                    yaw: 201,
+                    icon: "monitor",
+                    label: "CHRO Welcome — tap to play",
+                    image: "assets/images/tablet_chro.png?v=4",
+                    glue: true,
+                    pitch: -23,
+                    yaw: 199,
+                    radius: 355,
+                    worldHeight: 95,
+                    worldWidth: 92,
+                    worldRot: 0,
+                    // Same play + label offsets as CEO
+                    playOffsetY: -48,
+                    labelOffsetY: -36,
+                    labelOffsetX: 0,
                     modalId: "modal_video_chro"
                 },
                 {
@@ -108,8 +152,8 @@ window.COURSE_DATA = {
                     type: "portal",
                     icon: "arrow",
                     label: "Enter Headquarters",
-                    pitch: -22,
-                    yaw: 130,
+                    pitch: -17,
+                    yaw: 132,
                     arrowYaw: 0,
                     targetScene: "riyadh_hq"
                 }
@@ -124,14 +168,37 @@ window.COURSE_DATA = {
             initialPitch: -2,
             initialYaw: 0,
             cardText: "Arrival & Welcome\nRiyadh HQ",
+            // Glue image onto the TV / screen in the 360 — pin all 4 corners (DEV)
+            screenOverlays: [
+                {
+                    id: "who_we_are_tv",
+                    image: "assets/images/modal_who_we_are.jpg",
+                    radius: 480,
+                    corners: {
+                        tl: { pitch: 12, yaw: 0 },
+                        tr: { pitch: 12, yaw: 14 },
+                        br: { pitch: 2, yaw: 14 },
+                        bl: { pitch: 2, yaw: 0 }
+                    }
+                }
+            ],
             hotspots: [
                 {
                     id: "video_welcome",
                     type: "modal",
-                    icon: "play",
+                    icon: "monitor",
                     label: "CEO Welcome — tap to play",
+                    image: "assets/images/tablet_ceo.png?v=4",
+                    glue: true,
                     pitch: -2,
                     yaw: 0,
+                    radius: 355,
+                    worldHeight: 95,
+                    worldWidth: 92,
+                    worldRot: 0,
+                    playOffsetY: -48,
+                    labelOffsetY: -36,
+                    labelOffsetX: 0,
                     modalId: "modal_video_welcome"
                 },
                 {

@@ -40,15 +40,18 @@ class HotspotManager {
     createHotspotElement(data) {
         const wrapper = document.createElement('div');
         const isAvatar = data.type === 'avatar';
+        const isNametag = data.type === 'nametag';
         const typeClass = data.type === 'portal'
             ? 'hotspot-portal'
             : isAvatar
                 ? 'hotspot-avatar'
-                : 'hotspot-info';
+                : isNametag
+                    ? 'hotspot-nametag'
+                    : 'hotspot-info';
         wrapper.className = `hotspot-item ${typeClass}${data.locked ? ' hotspot-locked' : ''}`;
         wrapper.setAttribute('data-id', data.id);
         wrapper.setAttribute('data-icon', data.icon || '');
-        if (isAvatar || data.interactive === false) {
+        if (isAvatar || isNametag || data.interactive === false) {
             // Decorative 360 UI only — not clickable
             wrapper.setAttribute('aria-hidden', 'true');
             wrapper.removeAttribute('role');
@@ -63,7 +66,13 @@ class HotspotManager {
             }
         }
 
-        if (data.type === 'portal') {
+        if (data.type === 'nametag') {
+            const rot = typeof data.rot === 'number' ? data.rot : 0;
+            wrapper.style.setProperty('--name-rot', `${rot}deg`);
+            wrapper.innerHTML = `
+                <div class="hotspot-nametag-pill">${data.label || ''}</div>
+            `;
+        } else if (data.type === 'portal') {
             // 3 stacked 3D chevrons — angle via arrowYaw (0 = straight)
             const yawRot = typeof data.arrowYaw === 'number' ? data.arrowYaw : 0;
             // Solid closed chevron (reference shape) — fixed colors, no color picker
@@ -92,6 +101,26 @@ class HotspotManager {
                     </div>
                 </div>
             `;
+        } else if (data.icon === 'monitor' || data.icon === 'ipad') {
+            // Glued 3D tablet — play on screen + name box above (offsets from courseData / DEV)
+            const labelY = typeof data.labelOffsetY === 'number' ? data.labelOffsetY : -36;
+            const labelX = typeof data.labelOffsetX === 'number' ? data.labelOffsetX : 0;
+            const playY = typeof data.playOffsetY === 'number' ? data.playOffsetY : -48;
+            wrapper.style.setProperty('--label-offset-y', `${labelY}px`);
+            wrapper.style.setProperty('--label-offset-x', `${labelX}px`);
+            wrapper.style.setProperty('--play-offset-y', `${playY}px`);
+            wrapper.innerHTML = `
+                <div class="hotspot-monitor-hit" aria-hidden="true">
+                    <div class="hotspot-monitor-play">
+                        <svg class="hotspot-play-icon" viewBox="0 0 24 24" width="28" height="28" fill="#ffffff" aria-hidden="true">
+                            <path d="M8.5 5.8v12.4L19 12 8.5 5.8z"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="hotspot-tooltip">
+                    <span class="tooltip-title">${data.label}</span>
+                </div>
+            `;
         } else {
             // Concentric pulsing circular marker — rings + icon share one center stack
             const iconSvg = this.getIconSvg(data.icon || 'info');
@@ -109,7 +138,7 @@ class HotspotManager {
             `;
         }
 
-        if (data.interactive !== false) {
+        if (!isNametag && data.interactive !== false) {
             const handleTrigger = (e) => {
                 e.stopPropagation();
                 if (this.onHotspotClick) {
@@ -164,11 +193,54 @@ class HotspotManager {
             const screen = this.viewer.projectToScreen(data.pitch, data.yaw);
             if (!data.hidden && screen.visible) {
                 el.style.display = 'block';
-                el.style.transform = `translate3d(${screen.x}px, ${screen.y}px, 0)`;
+                if (data.type === 'nametag') {
+                    const rot = typeof data.rot === 'number' ? data.rot : 0;
+                    el.style.transform =
+                        `translate3d(${screen.x}px, ${screen.y}px, 0) translate(-50%, -50%) rotate(${rot}deg)`;
+                } else {
+                    el.style.transform = `translate3d(${screen.x}px, ${screen.y}px, 0)`;
+                }
             } else {
                 el.style.display = 'none';
             }
         });
+    }
+
+    setNametagRot(id, rot) {
+        const hotspot = this.getHotspotById(id);
+        const entry = this.elements.find((e) => e.data.id === id);
+        if (!hotspot || hotspot.type !== 'nametag') return false;
+        hotspot.rot = rot;
+        if (entry) {
+            entry.data.rot = rot;
+            entry.el.style.setProperty('--name-rot', `${rot}deg`);
+        }
+        this.updatePositions();
+        return true;
+    }
+
+    setLabelOffset(id, { labelOffsetY, labelOffsetX, playOffsetY } = {}) {
+        const hotspot = this.getHotspotById(id);
+        const entry = this.elements.find((e) => e.data.id === id);
+        if (!hotspot) return false;
+        if (typeof labelOffsetY === 'number') hotspot.labelOffsetY = labelOffsetY;
+        if (typeof labelOffsetX === 'number') hotspot.labelOffsetX = labelOffsetX;
+        if (typeof playOffsetY === 'number') hotspot.playOffsetY = playOffsetY;
+        if (entry) {
+            if (typeof labelOffsetY === 'number') {
+                entry.data.labelOffsetY = labelOffsetY;
+                entry.el.style.setProperty('--label-offset-y', `${labelOffsetY}px`);
+            }
+            if (typeof labelOffsetX === 'number') {
+                entry.data.labelOffsetX = labelOffsetX;
+                entry.el.style.setProperty('--label-offset-x', `${labelOffsetX}px`);
+            }
+            if (typeof playOffsetY === 'number') {
+                entry.data.playOffsetY = playOffsetY;
+                entry.el.style.setProperty('--play-offset-y', `${playOffsetY}px`);
+            }
+        }
+        return true;
     }
 
     setHotspotHidden(id, hidden) {
@@ -184,8 +256,13 @@ class HotspotManager {
                 entry.el.removeAttribute('aria-hidden');
             }
         }
-        if (hotspot && hotspot.type === 'avatar' && this.viewer) {
-            this.viewer.setSceneAvatarHidden(id, !!hidden);
+        if (hotspot && this.viewer && (hotspot.type === 'avatar' || hotspot.glue)) {
+            if (!hidden && !this.viewer.getSceneAvatarSettings(id)) {
+                // CHRO unlock etc. — mesh was skipped while hidden; create now
+                this.viewer.addSceneAvatar(hotspot);
+            } else {
+                this.viewer.setSceneAvatarHidden(id, !!hidden);
+            }
         }
         this.updatePositions();
         return !!(hotspot || entry);
@@ -200,7 +277,7 @@ class HotspotManager {
         if (!hotspot) return false;
         hotspot.pitch = pitch;
         hotspot.yaw = yaw;
-        if (hotspot.type === 'avatar' && this.viewer) {
+        if ((hotspot.type === 'avatar' || hotspot.glue) && this.viewer) {
             // Ensure 3D image exists (e.g. after scene load) then move it
             if (!this.viewer.getSceneAvatarSettings(id)) {
                 this.viewer.addSceneAvatar(hotspot);
@@ -213,12 +290,18 @@ class HotspotManager {
     }
 
     exportHotspotCoords() {
-        return this.hotspots.map((h) => ({
-            id: h.id,
-            label: h.label || h.id,
-            pitch: Math.round(h.pitch),
-            yaw: Math.round(h.yaw)
-        }));
+        return this.hotspots.map((h) => {
+            const row = {
+                id: h.id,
+                label: h.label || h.id,
+                pitch: Math.round(h.pitch),
+                yaw: Math.round(h.yaw)
+            };
+            if (h.type === 'nametag') {
+                row.rot = Math.round(h.rot || 0);
+            }
+            return row;
+        });
     }
 }
 

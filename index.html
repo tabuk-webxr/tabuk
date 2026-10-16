@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TABUK PHARMACEUTICALS · INDUCTION</title>
     <meta name="description" content="Interactive WebXR Employee Induction Experience for Tabuk Pharmaceuticals covering Riyadh HQ, Dammam Plant, Tabuk Campus, and Final Assessment.">
-    <link rel="stylesheet" href="css/style.css?v=20.4">
+    <link rel="stylesheet" href="css/style.css?v=20.14">
 </head>
 <body>
 
@@ -58,7 +58,7 @@
             <img
                 id="reception-tip-avatar-img"
                 class="reception-tip-avatar-img"
-                src="assets/images/welcome_tip_avatar.png"
+                src="assets/images/welcome_tip_avatar.png?v=4"
                 alt=""
                 decoding="async"
                 aria-hidden="true"
@@ -216,6 +216,21 @@
         </label>
         <button type="button" id="dev-place-at-view" class="dev-secondary-btn">Place hotspot at view center</button>
 
+        <div class="dev-section-title">Tablet Name Box</div>
+        <p class="dev-space-hint" style="margin:0 0 8px;opacity:0.75;">Select CEO/CHRO tablet — play on screen, label above</p>
+        <label class="dev-orientation-label">
+            Play Offset Y <strong id="dev-play-y-val">-48px</strong>
+            <input type="range" id="dev-play-y" min="-120" max="20" step="1" value="-48">
+        </label>
+        <label class="dev-orientation-label">
+            Label Offset Y <strong id="dev-label-y-val">-36px</strong>
+            <input type="range" id="dev-label-y" min="-160" max="40" step="1" value="-36">
+        </label>
+        <label class="dev-orientation-label">
+            Label Offset X <strong id="dev-label-x-val">0px</strong>
+            <input type="range" id="dev-label-x" min="-120" max="120" step="1" value="0">
+        </label>
+
         <div class="dev-section-title">Scene Avatar Image</div>
         <p class="dev-space-hint" style="margin:0 0 8px;opacity:0.75;">Select Welcome Guide hotspot, then size it</p>
         <label class="dev-orientation-label">
@@ -230,6 +245,55 @@
             Distance <strong id="dev-avatar-radius-val">430</strong>
             <input type="range" id="dev-avatar-radius" min="200" max="490" step="5" value="430">
         </label>
+        <label class="dev-orientation-label">
+            Rotation <strong id="dev-avatar-rot-val">0°</strong>
+            <input type="range" id="dev-avatar-rot" min="-180" max="180" step="1" value="0">
+        </label>
+
+        <div class="dev-section-title">Name Tag (Tariq)</div>
+        <p class="dev-space-hint" style="margin:0 0 8px;opacity:0.75;">Floating — pitch/yaw/rotation like a hotspot</p>
+        <label class="dev-orientation-label">
+            Name Pitch <strong id="dev-name-pitch-val">-18°</strong>
+            <input type="range" id="dev-name-pitch" min="-85" max="85" step="1" value="-18">
+        </label>
+        <label class="dev-orientation-label">
+            Name Yaw <strong id="dev-name-yaw-val">128°</strong>
+            <input type="range" id="dev-name-yaw" min="0" max="360" step="1" value="128">
+        </label>
+        <label class="dev-orientation-label">
+            Name Rotation <strong id="dev-name-rot-val">0°</strong>
+            <input type="range" id="dev-name-rot" min="-180" max="180" step="1" value="0">
+        </label>
+        <button type="button" id="dev-place-name-at-view" class="dev-secondary-btn">Place name tag at view center</button>
+
+        <div class="dev-section-title">TV Screen Overlay (4 corners)</div>
+        <p class="dev-space-hint" style="margin:0 0 8px;opacity:0.75;">Pin Who We Are onto the TV — aim view, place each corner</p>
+        <label class="dev-orientation-label">
+            Overlay
+            <select id="dev-screen-select" class="dev-select"></select>
+        </label>
+        <label class="dev-orientation-label">
+            Corner
+            <select id="dev-screen-corner" class="dev-select">
+                <option value="tl">Top Left</option>
+                <option value="tr">Top Right</option>
+                <option value="br">Bottom Right</option>
+                <option value="bl">Bottom Left</option>
+            </select>
+        </label>
+        <label class="dev-orientation-label">
+            Corner Pitch <strong id="dev-screen-pitch-val">0.0°</strong>
+            <input type="range" id="dev-screen-pitch" min="-85" max="85" step="0.1" value="0">
+        </label>
+        <label class="dev-orientation-label">
+            Corner Yaw <strong id="dev-screen-yaw-val">0.0°</strong>
+            <input type="range" id="dev-screen-yaw" min="0" max="360" step="0.1" value="0">
+        </label>
+        <label class="dev-orientation-label">
+            Screen Distance <strong id="dev-screen-radius-val">480.0</strong>
+            <input type="range" id="dev-screen-radius" min="200" max="495" step="0.5" value="480">
+        </label>
+        <button type="button" id="dev-place-screen-corner" class="dev-secondary-btn">Place selected corner at view center</button>
 
         <div class="dev-section-title">Tip Avatar Placement</div>
         <label class="dev-orientation-label">
@@ -280,13 +344,13 @@ tipAvatar: —</pre>
     <!-- Application Scripts -->
     <script src="assets/lib/three.min.js"></script>
     <script src="js/scorm.js?v=12.6"></script>
-    <script src="js/courseData.js?v=20.3"></script>
+    <script src="js/courseData.js?v=20.24"></script>
     <script src="js/assetLoader.js?v=20.1"></script>
-    <script src="js/viewer.js?v=20.6"></script>
-    <script src="js/hotspots.js?v=20.2"></script>
+    <script src="js/viewer.js?v=20.23"></script>
+    <script src="js/hotspots.js?v=20.14"></script>
     <script src="js/modal.js?v=13.9"></script>
     <script src="js/assessment.js?v=12.6"></script>
-    <script src="js/app.js?v=20.2"></script>
+    <script src="js/app.js?v=20.23"></script>
 
 </body>
 </html>
