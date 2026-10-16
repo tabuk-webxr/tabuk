@@ -112,7 +112,7 @@ class HotspotManager {
             wrapper.innerHTML = `
                 <div class="hotspot-monitor-hit" aria-hidden="true">
                     <div class="hotspot-monitor-play">
-                        <svg class="hotspot-play-icon" viewBox="0 0 24 24" width="28" height="28" fill="#ffffff" aria-hidden="true">
+                        <svg class="hotspot-play-icon" viewBox="0 0 24 24" width="14" height="14" fill="#ffffff" aria-hidden="true">
                             <path d="M8.5 5.8v12.4L19 12 8.5 5.8z"/>
                         </svg>
                     </div>

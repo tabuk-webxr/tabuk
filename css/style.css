@@ -364,12 +364,12 @@ html, body {
 }
 
 .hotspot-monitor-play {
-    width: 42px;
-    height: 42px;
+    width: 21px;
+    height: 21px;
     border-radius: 50%;
     background: radial-gradient(circle at 35% 35%, #00B074, #007A3E);
-    border: 2.5px solid rgba(255, 255, 255, 0.95);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45), 0 0 16px rgba(0, 168, 89, 0.75);
+    border: 1.5px solid rgba(255, 255, 255, 0.95);
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.45), 0 0 10px rgba(0, 168, 89, 0.75);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -378,19 +378,19 @@ html, body {
 }
 
 .hotspot-monitor-play .hotspot-play-icon {
-    width: 18px;
-    height: 18px;
-    transform: translateX(1px);
+    width: 9px;
+    height: 9px;
+    transform: translateX(0.5px);
 }
 
 @keyframes monitorPlayPulse {
     0%, 100% {
         transform: scale(1);
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45), 0 0 16px rgba(0, 168, 89, 0.75);
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.45), 0 0 10px rgba(0, 168, 89, 0.75);
     }
     50% {
         transform: scale(1.08);
-        box-shadow: 0 3px 14px rgba(0, 0, 0, 0.5), 0 0 24px rgba(0, 200, 110, 0.95);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 0 0 14px rgba(0, 200, 110, 0.95);
     }
 }
 
@@ -398,7 +398,7 @@ html, body {
 .hotspot-item[data-icon="ipad"]:hover .hotspot-monitor-play {
     animation: none;
     transform: scale(1.12);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), 0 0 28px rgba(0, 200, 110, 1);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5), 0 0 16px rgba(0, 200, 110, 1);
 }
 
 .hotspot-tooltip {
