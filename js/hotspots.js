@@ -16,12 +16,19 @@ class HotspotManager {
     }
 
     setHotspots(hotspotDataList) {
-        // Clean up previous elements
+        // Clean up previous DOM markers + 3D gum-stuck avatars
         this.container.innerHTML = '';
         this.elements = [];
         this.hotspots = hotspotDataList || [];
 
+        if (this.viewer && typeof this.viewer.syncSceneAvatars === 'function') {
+            this.viewer.syncSceneAvatars(this.hotspots);
+        }
+
         this.hotspots.forEach(data => {
+            // Avatars live as 3D planes on the sphere — no floating HTML billboard
+            if (data.type === 'avatar') return;
+
             const el = this.createHotspotElement(data);
             this.container.appendChild(el);
             this.elements.push({ data, el });
@@ -32,14 +39,28 @@ class HotspotManager {
 
     createHotspotElement(data) {
         const wrapper = document.createElement('div');
-        wrapper.className = `hotspot-item ${data.type === 'portal' ? 'hotspot-portal' : 'hotspot-info'}${data.locked ? ' hotspot-locked' : ''}`;
+        const isAvatar = data.type === 'avatar';
+        const typeClass = data.type === 'portal'
+            ? 'hotspot-portal'
+            : isAvatar
+                ? 'hotspot-avatar'
+                : 'hotspot-info';
+        wrapper.className = `hotspot-item ${typeClass}${data.locked ? ' hotspot-locked' : ''}`;
         wrapper.setAttribute('data-id', data.id);
         wrapper.setAttribute('data-icon', data.icon || '');
-        wrapper.setAttribute('role', 'button');
-        wrapper.setAttribute('tabindex', data.locked ? '-1' : '0');
-        if (data.locked) {
-            wrapper.setAttribute('aria-disabled', 'true');
-            wrapper.title = 'Complete this step to continue';
+        if (isAvatar || data.interactive === false) {
+            // Decorative 360 UI only — not clickable
+            wrapper.setAttribute('aria-hidden', 'true');
+            wrapper.removeAttribute('role');
+            wrapper.tabIndex = -1;
+            wrapper.style.pointerEvents = 'none';
+        } else {
+            wrapper.setAttribute('role', 'button');
+            wrapper.setAttribute('tabindex', data.locked ? '-1' : '0');
+            if (data.locked) {
+                wrapper.setAttribute('aria-disabled', 'true');
+                wrapper.title = 'Complete this step to continue';
+            }
         }
 
         if (data.type === 'portal') {
@@ -59,7 +80,7 @@ class HotspotManager {
 
             wrapper.innerHTML = `
                 <div class="portal-indicator" style="--arrow-yaw: ${yawRot}deg;">
-                    <div class="portal-arrow-prompt">Follow the arrow.</div>
+                    <div class="portal-arrow-prompt">Follow the arrow</div>
                     <div class="portal-arrow-stage">
                         <div class="portal-arrow-3d">
                             <div class="portal-arrow-motion">
@@ -88,21 +109,23 @@ class HotspotManager {
             `;
         }
 
-        const handleTrigger = (e) => {
-            e.stopPropagation();
-            if (this.onHotspotClick) {
-                this.onHotspotClick(data);
-            }
-        };
+        if (data.interactive !== false) {
+            const handleTrigger = (e) => {
+                e.stopPropagation();
+                if (this.onHotspotClick) {
+                    this.onHotspotClick(data);
+                }
+            };
 
-        wrapper.addEventListener('pointerdown', (e) => e.stopPropagation());
-        wrapper.addEventListener('click', handleTrigger);
-        wrapper.addEventListener('keydown', (e) => {
-            // Space is reserved for DEV panel toggle — use Enter to activate
-            if (e.key === 'Enter') {
-                handleTrigger(e);
-            }
-        });
+            wrapper.addEventListener('pointerdown', (e) => e.stopPropagation());
+            wrapper.addEventListener('click', handleTrigger);
+            wrapper.addEventListener('keydown', (e) => {
+                // Space is reserved for DEV panel toggle — use Enter to activate
+                if (e.key === 'Enter') {
+                    handleTrigger(e);
+                }
+            });
+        }
 
         return wrapper;
     }
@@ -161,6 +184,9 @@ class HotspotManager {
                 entry.el.removeAttribute('aria-hidden');
             }
         }
+        if (hotspot && hotspot.type === 'avatar' && this.viewer) {
+            this.viewer.setSceneAvatarHidden(id, !!hidden);
+        }
         this.updatePositions();
         return !!(hotspot || entry);
     }
@@ -174,6 +200,14 @@ class HotspotManager {
         if (!hotspot) return false;
         hotspot.pitch = pitch;
         hotspot.yaw = yaw;
+        if (hotspot.type === 'avatar' && this.viewer) {
+            // Ensure 3D image exists (e.g. after scene load) then move it
+            if (!this.viewer.getSceneAvatarSettings(id)) {
+                this.viewer.addSceneAvatar(hotspot);
+            } else {
+                this.viewer.setSceneAvatarCoords(id, pitch, yaw);
+            }
+        }
         this.updatePositions();
         return true;
     }

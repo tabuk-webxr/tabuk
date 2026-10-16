@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TABUK PHARMACEUTICALS · Induction</title>
+    <title>TABUK PHARMACEUTICALS · INDUCTION</title>
     <meta name="description" content="Interactive WebXR Employee Induction Experience for Tabuk Pharmaceuticals covering Riyadh HQ, Dammam Plant, Tabuk Campus, and Final Assessment.">
-    <link rel="stylesheet" href="css/style.css?v=19.4">
+    <link rel="stylesheet" href="css/style.css?v=20.4">
 </head>
 <body>
 
@@ -38,7 +38,7 @@
         <header class="hud-top-bar">
             <div class="tabuk-brand-header">
                 <img class="brand-aperture-logo" src="assets/images/tabuk_aperture_logo.png" alt="Tabuk" width="28" height="28">
-                <span class="brand-title-text">TABUK PHARMACEUTICALS · Induction</span>
+                <span class="brand-title-text">TABUK PHARMACEUTICALS · INDUCTION</span>
             </div>
 
             <div class="hud-top-actions">
@@ -55,14 +55,14 @@
     <div id="reception-welcome-stack" class="reception-welcome-stack" hidden>
         <div id="reception-tip-avatar" class="reception-tip-avatar" hidden>
             <canvas id="reception-tip-avatar-canvas" class="reception-tip-avatar-canvas" width="360" height="640" aria-hidden="true"></canvas>
-            <video
-                id="reception-tip-avatar-video"
-                class="reception-tip-avatar-video"
-                src="Videos/welcome_tip_avatar.mp4"
-                playsinline
-                preload="auto"
+            <img
+                id="reception-tip-avatar-img"
+                class="reception-tip-avatar-img"
+                src="assets/images/welcome_tip_avatar.png"
+                alt=""
+                decoding="async"
                 aria-hidden="true"
-            ></video>
+            >
         </div>
         <aside id="reception-welcome-tip" class="reception-welcome-tip" aria-live="polite">
             <p class="reception-tip-text">
@@ -96,7 +96,7 @@
                 <p class="welcome-side-closer">Your journey starts now.</p>
             </div>
 
-            <button class="btn-enter-tabuk" onclick="window.app.goToScene('reception')">
+            <button class="btn-enter-tabuk" type="button" onclick="window.app.dismissWelcomeIntro()">
                 ENTER TABUK
             </button>
         </aside>
@@ -212,9 +212,24 @@
         </label>
         <label class="dev-orientation-label">
             Hotspot Yaw <strong id="dev-hot-yaw-val">0°</strong>
-            <input type="range" id="dev-hot-yaw" min="-180" max="180" step="1" value="0">
+            <input type="range" id="dev-hot-yaw" min="0" max="360" step="1" value="0">
         </label>
         <button type="button" id="dev-place-at-view" class="dev-secondary-btn">Place hotspot at view center</button>
+
+        <div class="dev-section-title">Scene Avatar Image</div>
+        <p class="dev-space-hint" style="margin:0 0 8px;opacity:0.75;">Select Welcome Guide hotspot, then size it</p>
+        <label class="dev-orientation-label">
+            Image Height <strong id="dev-avatar-height-val">150</strong>
+            <input type="range" id="dev-avatar-height" min="40" max="320" step="2" value="150">
+        </label>
+        <label class="dev-orientation-label">
+            Image Width <strong id="dev-avatar-width-val">52</strong>
+            <input type="range" id="dev-avatar-width" min="20" max="200" step="2" value="52">
+        </label>
+        <label class="dev-orientation-label">
+            Distance <strong id="dev-avatar-radius-val">430</strong>
+            <input type="range" id="dev-avatar-radius" min="200" max="490" step="5" value="430">
+        </label>
 
         <div class="dev-section-title">Tip Avatar Placement</div>
         <label class="dev-orientation-label">
@@ -265,13 +280,13 @@ tipAvatar: —</pre>
     <!-- Application Scripts -->
     <script src="assets/lib/three.min.js"></script>
     <script src="js/scorm.js?v=12.6"></script>
-    <script src="js/courseData.js?v=16.3"></script>
-    <script src="js/assetLoader.js?v=1.0"></script>
-    <script src="js/viewer.js?v=15.5"></script>
-    <script src="js/hotspots.js?v=15.4"></script>
+    <script src="js/courseData.js?v=20.3"></script>
+    <script src="js/assetLoader.js?v=20.1"></script>
+    <script src="js/viewer.js?v=20.6"></script>
+    <script src="js/hotspots.js?v=20.2"></script>
     <script src="js/modal.js?v=13.9"></script>
     <script src="js/assessment.js?v=12.6"></script>
-    <script src="js/app.js?v=17.3"></script>
+    <script src="js/app.js?v=20.2"></script>
 
 </body>
 </html>

@@ -9,7 +9,6 @@
         { url: 'Videos/far_from_building_4k.mov', type: 'video', label: 'Approach 360' },
         { url: 'Videos/welcome_360_4k.mov', type: 'video', label: 'Welcome 360' },
         { url: 'Videos/51_D_4k.mov', type: 'video', label: 'Reception 360' },
-        { url: 'Videos/welcome_tip_avatar.mp4', type: 'video', label: 'Welcome avatar' },
         { url: 'Audios/Welcome_Enter.mp3', type: 'audio', label: 'Welcome enter' },
         { url: 'Audios/CHRO_Intro.mp3', type: 'audio', label: 'CHRO intro' },
         { url: 'Audios/Welcome Notes.mp3', type: 'audio', label: 'CEO welcome notes' },

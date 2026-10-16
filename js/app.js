@@ -14,12 +14,14 @@ class WebXRApp {
         this.isAudioMuted = false;
         this.devPanelOpen = false;
         this.receptionChroUnlocked = false;
+        this.welcomePortalUnlocked = false;
         this._receptionTipTimer = null;
         this._chroIntroAudio = null;
         this._ceoIntroAudio = null;
         this._welcomeEnterAudio = null;
         this._tipAvatarRaf = null;
         this._tipAvatarKeying = false;
+        this._sceneTransitioning = false;
         
         // Sound effects synthesis via Web Audio API (zero external asset dependency)
         this.audioCtx = null;
@@ -139,12 +141,6 @@ class WebXRApp {
                 error: `Could not load: ${names || 'some media files'}. Check your connection and tap Retry.`
             });
             return;
-        }
-
-        // Point tip avatar video at cached blob for instant playback later
-        const tipVideo = document.getElementById('reception-tip-avatar-video');
-        if (tipVideo) {
-            tipVideo.src = this.assets.getUrl('Videos/welcome_tip_avatar.mp4');
         }
 
         this.updateAssetLoadingUI({ ...result.progress, percent: 100 }, {
@@ -292,6 +288,9 @@ class WebXRApp {
         const tipGap = document.getElementById('dev-tip-gap');
         const tipShowBtn = document.getElementById('dev-tip-show');
         const tipResetBtn = document.getElementById('dev-tip-reset');
+        const avatarHeight = document.getElementById('dev-avatar-height');
+        const avatarWidth = document.getElementById('dev-avatar-width');
+        const avatarRadius = document.getElementById('dev-avatar-radius');
         if (!panel || !sphereYaw || !camPitch || !camYaw) return;
 
         const applyOrientation = () => {
@@ -303,11 +302,29 @@ class WebXRApp {
         const applyHotspot = () => {
             if (!hotSelect || !hotSelect.value) return;
             const pitch = Number(hotPitch.value);
-            const yaw = Number(hotYaw.value);
+            let yaw = Number(hotYaw.value);
+            yaw = ((yaw % 360) + 360) % 360;
             this.hotspots.setHotspotCoords(hotSelect.value, pitch, yaw);
             this.persistHotspotCoords(hotSelect.value, pitch, yaw);
             document.getElementById('dev-hot-pitch-val').textContent = `${Math.round(pitch)}°`;
             document.getElementById('dev-hot-yaw-val').textContent = `${Math.round(yaw)}°`;
+            this.updateDevOrientationReadout();
+        };
+
+        const applySceneAvatarImage = () => {
+            const id = this.getSelectedAvatarHotspotId();
+            if (!id || !avatarHeight || !avatarWidth || !avatarRadius) return;
+            const worldHeight = Number(avatarHeight.value);
+            const worldWidth = Number(avatarWidth.value);
+            const radius = Number(avatarRadius.value);
+            this.viewer.setSceneAvatarSize(id, { worldHeight, worldWidth, radius });
+            this.persistAvatarImageSettings(id, { worldHeight, worldWidth, radius });
+            const hVal = document.getElementById('dev-avatar-height-val');
+            const wVal = document.getElementById('dev-avatar-width-val');
+            const rVal = document.getElementById('dev-avatar-radius-val');
+            if (hVal) hVal.textContent = String(Math.round(worldHeight));
+            if (wVal) wVal.textContent = String(Math.round(worldWidth));
+            if (rVal) rVal.textContent = String(Math.round(radius));
             this.updateDevOrientationReadout();
         };
 
@@ -330,6 +347,9 @@ class WebXRApp {
         camYaw.addEventListener('input', applyOrientation);
         if (hotPitch) hotPitch.addEventListener('input', applyHotspot);
         if (hotYaw) hotYaw.addEventListener('input', applyHotspot);
+        if (avatarHeight) avatarHeight.addEventListener('input', applySceneAvatarImage);
+        if (avatarWidth) avatarWidth.addEventListener('input', applySceneAvatarImage);
+        if (avatarRadius) avatarRadius.addEventListener('input', applySceneAvatarImage);
         if (tipLeft) tipLeft.addEventListener('input', applyTipPlacement);
         if (tipBottom) tipBottom.addEventListener('input', applyTipPlacement);
         if (tipWidth) tipWidth.addEventListener('input', applyTipPlacement);
@@ -338,14 +358,18 @@ class WebXRApp {
         if (tipGap) tipGap.addEventListener('input', applyTipPlacement);
 
         if (hotSelect) {
-            hotSelect.addEventListener('change', () => this.loadSelectedHotspotIntoDevSliders());
+            hotSelect.addEventListener('change', () => {
+                this.loadSelectedHotspotIntoDevSliders();
+                this.loadAvatarImageSettingsIntoDevSliders();
+            });
         }
 
         if (placeBtn) {
             placeBtn.addEventListener('click', () => {
                 if (!hotSelect || !hotSelect.value) return;
                 const pitch = Math.round(this.viewer.targetPitch);
-                const yaw = Math.round(this.viewer.targetYaw);
+                let yaw = Math.round(this.viewer.targetYaw);
+                yaw = ((yaw % 360) + 360) % 360;
                 hotPitch.value = String(pitch);
                 hotYaw.value = String(yaw);
                 this.hotspots.setHotspotCoords(hotSelect.value, pitch, yaw);
@@ -506,6 +530,29 @@ class WebXRApp {
         }
     }
 
+    persistAvatarImageSettings(id, { worldHeight, worldWidth, radius }) {
+        const scene = window.COURSE_DATA.scenes[this.currentSceneId];
+        if (!scene || !scene.hotspots) return;
+        const source = scene.hotspots.find((h) => h.id === id);
+        const live = this.hotspots ? this.hotspots.getHotspotById(id) : null;
+        [source, live].forEach((h) => {
+            if (!h) return;
+            if (typeof worldHeight === 'number') h.worldHeight = worldHeight;
+            if (typeof worldWidth === 'number') h.worldWidth = worldWidth;
+            if (typeof radius === 'number') h.radius = radius;
+        });
+    }
+
+    getSelectedAvatarHotspotId() {
+        const hotSelect = document.getElementById('dev-hotspot-select');
+        if (!hotSelect || !hotSelect.value || !this.hotspots) return null;
+        const h = this.hotspots.getHotspotById(hotSelect.value);
+        if (h && h.type === 'avatar') return h.id;
+        // Fallback: first avatar in scene
+        const avatar = (this.hotspots.hotspots || []).find((x) => x.type === 'avatar');
+        return avatar ? avatar.id : null;
+    }
+
     refreshDevHotspotList() {
         const hotSelect = document.getElementById('dev-hotspot-select');
         if (!hotSelect || !this.hotspots) return;
@@ -526,13 +573,18 @@ class WebXRApp {
         list.forEach((h) => {
             const opt = document.createElement('option');
             opt.value = h.id;
-            opt.textContent = `${h.label || h.id} (${h.id})`;
+            const kind = h.type === 'avatar' ? 'image' : (h.type || 'hotspot');
+            opt.textContent = `${h.label || h.id} [${kind}]`;
             hotSelect.appendChild(opt);
         });
         if (prev && list.some((h) => h.id === prev)) {
             hotSelect.value = prev;
+        } else {
+            const avatar = list.find((h) => h.type === 'avatar');
+            if (avatar) hotSelect.value = avatar.id;
         }
         this.loadSelectedHotspotIntoDevSliders();
+        this.loadAvatarImageSettingsIntoDevSliders();
     }
 
     loadSelectedHotspotIntoDevSliders() {
@@ -542,10 +594,35 @@ class WebXRApp {
         if (!hotSelect || !hotSelect.value || !hotPitch || !hotYaw) return;
         const h = this.hotspots.getHotspotById(hotSelect.value);
         if (!h) return;
+        const yaw = ((Math.round(h.yaw) % 360) + 360) % 360;
         hotPitch.value = String(Math.round(h.pitch));
-        hotYaw.value = String(Math.round(h.yaw));
+        hotYaw.value = String(yaw);
         document.getElementById('dev-hot-pitch-val').textContent = `${Math.round(h.pitch)}°`;
-        document.getElementById('dev-hot-yaw-val').textContent = `${Math.round(h.yaw)}°`;
+        document.getElementById('dev-hot-yaw-val').textContent = `${yaw}°`;
+    }
+
+    loadAvatarImageSettingsIntoDevSliders() {
+        const id = this.getSelectedAvatarHotspotId();
+        const heightEl = document.getElementById('dev-avatar-height');
+        const widthEl = document.getElementById('dev-avatar-width');
+        const radiusEl = document.getElementById('dev-avatar-radius');
+        if (!heightEl || !widthEl || !radiusEl) return;
+
+        const h = id && this.hotspots ? this.hotspots.getHotspotById(id) : null;
+        const live = id && this.viewer ? this.viewer.getSceneAvatarSettings(id) : null;
+        const worldHeight = (live && live.worldHeight) || (h && h.worldHeight) || 150;
+        const worldWidth = (live && live.worldWidth) || (h && h.worldWidth) || Math.round(worldHeight * 0.35);
+        const radius = (live && live.radius) || (h && h.radius) || 430;
+
+        heightEl.value = String(Math.round(worldHeight));
+        widthEl.value = String(Math.round(worldWidth));
+        radiusEl.value = String(Math.round(radius));
+        const hVal = document.getElementById('dev-avatar-height-val');
+        const wVal = document.getElementById('dev-avatar-width-val');
+        const rVal = document.getElementById('dev-avatar-radius-val');
+        if (hVal) hVal.textContent = String(Math.round(worldHeight));
+        if (wVal) wVal.textContent = String(Math.round(worldWidth));
+        if (rVal) rVal.textContent = String(Math.round(radius));
     }
 
     syncDevOrientationPanel(fromCameraOnly = false) {
@@ -582,7 +659,19 @@ class WebXRApp {
         if (yawVal) yawVal.textContent = `${o.initialYaw}°`;
         if (pre) {
             const hotLines = hotspots.length
-                ? hotspots.map((h) => `  - ${h.id}: pitch ${h.pitch}, yaw ${h.yaw}`).join('\n')
+                ? hotspots.map((h) => {
+                    const live = this.hotspots.getHotspotById(h.id);
+                    if (live && live.type === 'avatar') {
+                        const s = this.viewer.getSceneAvatarSettings(h.id) || {};
+                        return (
+                            `  - ${h.id}: pitch ${h.pitch}, yaw ${h.yaw}` +
+                            `, worldHeight ${Math.round(s.worldHeight || live.worldHeight || 150)}` +
+                            `, worldWidth ${Math.round(s.worldWidth || live.worldWidth || 52)}` +
+                            `, radius ${Math.round(s.radius || live.radius || 430)}`
+                        );
+                    }
+                    return `  - ${h.id}: pitch ${h.pitch}, yaw ${h.yaw}`;
+                }).join('\n')
                 : '  (none)';
             const tip = this.tipPlacement || {
                 left: 20, bottom: 29, width: 348, height: 440, tipWidth: 392, gap: -1
@@ -621,16 +710,97 @@ class WebXRApp {
         });
     }
 
-    goToScene(sceneId) {
+    _buildHotspotList(scene) {
+        let hotspotList = scene.hotspots || [];
+        if (scene.id === 'welcome') {
+            hotspotList = hotspotList.map((h) => {
+                if (h.id === 'enter_reception') {
+                    return { ...h, hidden: !this.welcomePortalUnlocked };
+                }
+                return { ...h };
+            });
+        }
+        if (scene.id === 'reception') {
+            hotspotList = hotspotList.map((h) => {
+                if (h.id === 'video_chro_welcome') {
+                    return { ...h, hidden: !this.receptionChroUnlocked };
+                }
+                // Show next arrow as a cue, but block navigation for now
+                if (h.id === 'enter_hq') {
+                    return { ...h, hidden: false, locked: true };
+                }
+                return { ...h };
+            });
+        }
+        return hotspotList;
+    }
+
+    /**
+     * ENTER TABUK — close welcome popup, reveal portal hotspot to reception.
+     */
+    dismissWelcomeIntro() {
+        if (this.currentSceneId !== 'welcome') return;
+
+        const welcomeOverlay = document.getElementById('welcome-modal-overlay');
+        if (welcomeOverlay) welcomeOverlay.classList.remove('active');
+        this.stopWelcomeEnterAudio();
+        this.playTone(520, 'sine', 0.12);
+
+        this.welcomePortalUnlocked = true;
+        if (this.hotspots) {
+            this.hotspots.setHotspotHidden('enter_reception', false);
+            if (this.devPanelOpen) this.refreshDevHotspotList();
+        }
+    }
+
+    _sceneOrientation(scene) {
+        return {
+            pitch: typeof scene.initialPitch === 'number' ? scene.initialPitch : 0,
+            yaw: typeof scene.initialYaw === 'number' ? scene.initialYaw : 0,
+            sphereYaw: typeof scene.sphereYaw === 'number' ? scene.sphereYaw : 0
+        };
+    }
+
+    _applySceneMediaReady(scene) {
+        const { pitch, yaw, sphereYaw } = this._sceneOrientation(scene);
+        this.viewer.setSphereRotationY(sphereYaw);
+        this.viewer.setLookAt(pitch, yaw);
+        // 360 videos start at min zoom (widest view); stills use scene FOV or default
+        if (scene.bgVideo) {
+            this.viewer.setMinZoom();
+        } else if (typeof scene.initialFov === 'number') {
+            this.viewer.setFov(scene.initialFov, true);
+        } else {
+            this.viewer.setFov(75, true);
+        }
+        this.syncDevOrientationPanel();
+    }
+
+    _finishSceneUI(scene) {
+        this.hotspots.setHotspots(this._buildHotspotList(scene));
+        this.updateHUD(scene);
+        this.syncDevOrientationPanel();
+    }
+
+    goToScene(sceneId, options = {}) {
         const scene = window.COURSE_DATA.scenes[sceneId];
         if (!scene) {
             console.error("Unknown scene ID:", sceneId);
             return;
         }
 
+        if (this._sceneTransitioning || (this.viewer && this.viewer.isTransitioning())) {
+            return;
+        }
+
         this.playTone(380, 'sine', 0.2);
         this.currentSceneId = sceneId;
         this.visitedScenes.add(sceneId);
+
+        // Welcome portal only after ENTER TABUK on this visit
+        if (sceneId === 'welcome') {
+            this.welcomePortalUnlocked = false;
+        }
 
         // Update SCORM suspend data
         if (window.scorm) {
@@ -645,45 +815,76 @@ class WebXRApp {
         const drawer = document.getElementById('quick-menu-drawer');
         if (drawer) drawer.classList.remove('active');
 
-        // Load 360 video or still panorama
-        const onMediaReady = () => {
-            this.viewer.setSphereRotationY(scene.sphereYaw || 0);
-            this.viewer.setLookAt(scene.initialPitch || 0, scene.initialYaw || 0);
-            // 360 videos start at min zoom (widest view); stills use scene FOV or default
-            if (scene.bgVideo) {
-                this.viewer.setMinZoom();
-            } else if (typeof scene.initialFov === 'number') {
-                this.viewer.setFov(scene.initialFov, true);
-            } else {
-                this.viewer.setFov(75, true);
-            }
-            this.syncDevOrientationPanel();
-        };
+        const fromHotspot = options.fromHotspot || null;
+        const useForwardTransition = !!(fromHotspot && fromHotspot.type === 'portal' && this.viewer);
+
+        if (useForwardTransition) {
+            this._sceneTransitioning = true;
+            // Hide markers + overlays while dollied forward
+            this.hotspots.setHotspots([]);
+            const welcomeOverlay = document.getElementById('welcome-modal-overlay');
+            const assessmentOverlay = document.getElementById('assessment-modal-overlay');
+            const completionOverlay = document.getElementById('completion-modal-overlay');
+            if (welcomeOverlay) welcomeOverlay.classList.remove('active');
+            if (assessmentOverlay) assessmentOverlay.classList.remove('active');
+            if (completionOverlay) completionOverlay.classList.remove('active');
+            this.hideReceptionTip();
+            this.stopWelcomeEnterAudio();
+
+            const targetFov = scene.bgVideo
+                ? this.viewer.maxFov
+                : (typeof scene.initialFov === 'number' ? scene.initialFov : 75);
+
+            const { pitch, yaw, sphereYaw } = this._sceneOrientation(scene);
+            this.viewer.transitionForward({
+                mediaType: scene.bgVideo ? 'video' : 'image',
+                url: scene.bgVideo || scene.bgImage,
+                lookPitch: fromHotspot.pitch,
+                lookYaw: fromHotspot.yaw,
+                targetPitch: pitch,
+                targetYaw: yaw,
+                targetFov,
+                sphereYaw,
+                duration: 800,
+                onSwapped: () => this.syncDevOrientationPanel()
+            }).then(() => {
+                this._sceneTransitioning = false;
+                this._finishSceneUI(scene);
+            }).catch((err) => {
+                console.error('Scene transition failed:', err);
+                this._sceneTransitioning = false;
+                this._applySceneMediaReady(scene);
+                this._finishSceneUI(scene);
+            });
+            return;
+        }
+
+        // Instant path (menu / first launch) — pass orientation into dissolve so
+        // look-at is correct when the new panorama appears (not after it finishes).
+        const { pitch, yaw, sphereYaw } = this._sceneOrientation(scene);
+        const hasExistingMedia = !!(this.viewer.sphere?.material?.map || this.viewer.activeVideo);
+        // First launch: no media yet — set look-at now so we never flash 0°/0°.
+        if (!hasExistingMedia) {
+            this.viewer.setSphereRotationY(sphereYaw);
+            this.viewer.setLookAt(pitch, yaw);
+        }
+
+        const onMediaReady = () => this._applySceneMediaReady(scene);
+        const orientOpts = { sphereYaw, targetPitch: pitch, targetYaw: yaw };
         if (scene.bgVideo) {
             this.viewer.setMinZoom();
-            this.viewer.loadVideo(scene.bgVideo, onMediaReady);
+            this.viewer.loadVideo(scene.bgVideo, onMediaReady, {
+                ...orientOpts,
+                targetFov: this.viewer.maxFov
+            });
         } else {
-            this.viewer.loadTexture(scene.bgImage, onMediaReady);
-        }
-
-        // Set hotspots (reception: CHRO locked until CEO close; next arrow visible but inactive)
-        let hotspotList = scene.hotspots || [];
-        if (scene.id === 'reception') {
-            hotspotList = hotspotList.map((h) => {
-                if (h.id === 'video_chro_welcome') {
-                    return { ...h, hidden: !this.receptionChroUnlocked };
-                }
-                // Show next arrow as a cue, but block navigation for now
-                if (h.id === 'enter_hq') {
-                    return { ...h, hidden: false, locked: true };
-                }
-                return { ...h };
+            this.viewer.loadTexture(scene.bgImage, onMediaReady, {
+                ...orientOpts,
+                targetFov: typeof scene.initialFov === 'number' ? scene.initialFov : 75
             });
         }
-        this.hotspots.setHotspots(hotspotList);
 
-        // Update UI HUD Cards & Overlays
-        this.updateHUD(scene);
+        this._finishSceneUI(scene);
     }
 
     handleWelcomeVideoClosed(profile, ended) {
@@ -745,127 +946,77 @@ class WebXRApp {
             this._tipAvatarRaf = null;
         }
         const avatar = document.getElementById('reception-tip-avatar');
-        const video = document.getElementById('reception-tip-avatar-video');
         if (avatar) avatar.hidden = true;
-        if (video) {
-            video.pause();
-            try { video.currentTime = 0; } catch (e) { /* ignore */ }
-        }
+        this.stopCeoIntroAudio();
     }
 
     startTipAvatar() {
         const avatar = document.getElementById('reception-tip-avatar');
-        const video = document.getElementById('reception-tip-avatar-video');
+        const img = document.getElementById('reception-tip-avatar-img');
         const canvas = document.getElementById('reception-tip-avatar-canvas');
-        if (!avatar || !video || !canvas) return;
+        if (!avatar || !img || !canvas) return;
 
         this.stopTipAvatar();
         avatar.hidden = false;
         this._tipAvatarKeying = true;
 
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
-        const syncCanvasSize = () => {
-            const vw = video.videoWidth || 360;
-            const vh = video.videoHeight || 360;
-            // Cap processing size for performance while keeping aspect
+
+        const paint = () => {
+            if (!this._tipAvatarKeying) return;
+            const iw = img.naturalWidth || 360;
+            const ih = img.naturalHeight || 640;
             const maxSide = 720;
-            const scale = Math.min(1, maxSide / Math.max(vw, vh));
-            const w = Math.max(2, Math.round(vw * scale));
-            const h = Math.max(2, Math.round(vh * scale));
+            const scale = Math.min(1, maxSide / Math.max(iw, ih));
+            const w = Math.max(2, Math.round(iw * scale));
+            const h = Math.max(2, Math.round(ih * scale));
             if (canvas.width !== w || canvas.height !== h) {
                 canvas.width = w;
                 canvas.height = h;
             }
-        };
-
-        const render = () => {
-            if (!this._tipAvatarKeying) return;
-            if (video.readyState >= 2) {
-                syncCanvasSize();
-                const w = canvas.width;
-                const h = canvas.height;
-                ctx.clearRect(0, 0, w, h);
-                ctx.drawImage(video, 0, 0, w, h);
-                this.keyGreenScreen(ctx, w, h);
-            }
-            this._tipAvatarRaf = requestAnimationFrame(render);
+            ctx.clearRect(0, 0, w, h);
+            ctx.drawImage(img, 0, 0, w, h);
+            this.keyBlackBackground(ctx, w, h);
         };
 
         const begin = () => {
-            // Play green-screen video with its own audio (no separate CEO_Intro)
-            video.muted = false;
-            video.volume = 1;
-            video.playsInline = true;
-            try { video.currentTime = 0; } catch (e) { /* ignore */ }
-            syncCanvasSize();
-            video.play().catch(() => {
-                // If unmuted autoplay is blocked, keep video visuals muted-free retry after gesture
-            });
-            if (!this._tipAvatarRaf) render();
+            paint();
+            // Static avatar — play welcome VO that used to live in the tip video
+            this.playCeoIntroAudio();
         };
 
-        if (video.readyState >= 2) {
+        if (img.complete && img.naturalWidth > 0) {
             begin();
         } else {
-            video.addEventListener('loadeddata', begin, { once: true });
-            video.load();
+            img.addEventListener('load', begin, { once: true });
+            img.addEventListener('error', () => {
+                console.warn('Tip avatar image failed to load');
+                avatar.hidden = false;
+            }, { once: true });
         }
     }
 
-    keyGreenScreen(ctx, w, h) {
+    keyBlackBackground(ctx, w, h) {
         let frame;
         try {
             frame = ctx.getImageData(0, 0, w, h);
         } catch (err) {
-            console.warn('Green-screen key failed:', err);
+            console.warn('Black-background key failed:', err);
             return;
         }
 
         const data = frame.data;
-        // Sample key color from the four corners (solid InShot green)
-        const corners = [0, (w - 1) * 4, ((h - 1) * w) * 4, ((h - 1) * w + (w - 1)) * 4];
-        let kr = 0;
-        let kg = 0;
-        let kb = 0;
-        corners.forEach((idx) => {
-            kr += data[idx];
-            kg += data[idx + 1];
-            kb += data[idx + 2];
-        });
-        kr /= 4;
-        kg /= 4;
-        kb /= 4;
-
         for (let i = 0; i < data.length; i += 4) {
             const r = data[i];
             const g = data[i + 1];
             const b = data[i + 2];
-            const maxRB = Math.max(r, b);
-            const greenDom = g - maxRB;
-            const dist = Math.hypot(r - kr, g - kg, b - kb);
-
-            // Strong key for solid green + similarity to corner color
-            const solidGreen = g > 55 && greenDom > 18;
-            const nearKey = dist < 95 && g > Math.max(r, b);
-
-            let alpha = data[i + 3] / 255;
-            if (solidGreen || nearKey) {
-                if (greenDom > 40 || dist < 55) {
-                    alpha = 0;
-                } else {
-                    const softA = solidGreen
-                        ? Math.max(0, 1 - (greenDom - 18) / 30)
-                        : Math.max(0, (dist - 55) / 40);
-                    alpha *= softA;
-                }
+            const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+            // Solid black plate → transparent; keep dark shoe detail (higher lum / color)
+            if (lum < 10 && Math.max(r, g, b) < 14) {
+                data[i + 3] = 0;
+            } else if (lum < 22 && Math.max(r, g, b) < 28) {
+                data[i + 3] = Math.round(data[i + 3] * ((lum - 10) / 12));
             }
-
-            // Despill residual green fringe on edges
-            if (alpha > 0.02 && alpha < 0.98 && g > r + 8 && g > b + 8) {
-                data[i + 1] = Math.min(g, Math.round((r + b) * 0.55));
-            }
-
-            data[i + 3] = Math.round(Math.max(0, Math.min(1, alpha)) * 255);
         }
 
         ctx.putImageData(frame, 0, 0);
@@ -910,6 +1061,16 @@ class WebXRApp {
             this._ceoIntroAudio.onerror = null;
             this._ceoIntroAudio = null;
         }
+    }
+
+    playCeoIntroAudio() {
+        this.stopCeoIntroAudio();
+        const audio = new Audio(this.resolveMediaUrl('Audios/Welcome Notes.mp3'));
+        this._ceoIntroAudio = audio;
+        audio.preload = 'auto';
+        audio.play().catch(() => {
+            // Autoplay may be blocked until a further gesture
+        });
     }
 
     startChroIntroSequence() {
@@ -1006,8 +1167,9 @@ class WebXRApp {
             if (!this.receptionChroUnlocked) {
                 this.showReceptionTip(
                     'Welcome to Tabuk Pharmaceuticals!<br><em>Your journey starts here.</em>',
-                    { showAvatar: true }
+                    { showAvatar: false }
                 );
+                this.playCeoIntroAudio();
             } else {
                 this.showReceptionTip(
                     'And now, a personal welcome from our CHRO.',
@@ -1023,14 +1185,19 @@ class WebXRApp {
         // Welcome / ENTER TABUK screen narration
         this.stopWelcomeEnterAudio();
         if (scene.id === 'welcome') {
+            // Portal stays hidden until ENTER TABUK; popup shows on each visit
+            this.welcomePortalUnlocked = false;
             welcomeOverlay.classList.add('active');
             this.playWelcomeEnterAudio();
-        } else if (scene.isAssessment) {
-            assessmentOverlay.classList.add('active');
-            this.assessment.start();
-        } else if (scene.isCompletion) {
-            completionOverlay.classList.add('active');
-            this.renderCompletionScreen();
+        } else {
+            this.welcomePortalUnlocked = false;
+            if (scene.isAssessment) {
+                assessmentOverlay.classList.add('active');
+                this.assessment.start();
+            } else if (scene.isCompletion) {
+                completionOverlay.classList.add('active');
+                this.renderCompletionScreen();
+            }
         }
     }
 
@@ -1041,11 +1208,15 @@ class WebXRApp {
             return;
         }
 
+        if (this._sceneTransitioning || (this.viewer && this.viewer.isTransitioning())) {
+            return;
+        }
+
         this.playTone(660, 'sine', 0.15);
         this.visitedHotspots.add(hotspot.id);
 
         if (hotspot.type === 'portal') {
-            this.goToScene(hotspot.targetScene);
+            this.goToScene(hotspot.targetScene, { fromHotspot: hotspot });
         } else if (hotspot.type === 'modal') {
             // Stop reception tip VO/avatar when opening CEO/CHRO video players
             if (hotspot.modalId === 'modal_video_welcome' || hotspot.modalId === 'modal_video_chro') {
