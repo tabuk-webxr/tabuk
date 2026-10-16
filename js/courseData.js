@@ -67,8 +67,8 @@ window.COURSE_DATA = {
             envType: "intro",
             bgVideo: "Videos/51_D_4k.mov",
             bgImage: "assets/images/scene0_exterior.jpg",
-            initialPitch: 1,
-            initialYaw: 178,
+            initialPitch: -1,
+            initialYaw: 180,
             sphereYaw: 0,
             cardText: "Corporate Reception\nFind the marker to continue",
             // Glue Who We Are onto the TV in the 360 video — pin 4 corners in DEV
@@ -123,8 +123,8 @@ window.COURSE_DATA = {
                     worldHeight: 95,
                     worldWidth: 92,
                     worldRot: 0,
-                    playOffsetY: -48,
-                    labelOffsetY: -36,
+                    playOffsetY: -36,
+                    labelOffsetY: -50,
                     labelOffsetX: 0,
                     modalId: "modal_video_welcome"
                 },
@@ -141,9 +141,8 @@ window.COURSE_DATA = {
                     worldHeight: 95,
                     worldWidth: 92,
                     worldRot: 0,
-                    // Same play + label offsets as CEO
-                    playOffsetY: -48,
-                    labelOffsetY: -36,
+                    playOffsetY: -72,
+                    labelOffsetY: -44,
                     labelOffsetX: 0,
                     modalId: "modal_video_chro"
                 },
