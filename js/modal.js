@@ -331,11 +331,14 @@ class ModalManager {
             const firstCaption = (profile.captions && profile.captions[0])
                 ? profile.captions[0].text
                 : 'Welcome to Tabuk Pharmaceuticals.';
+            const portraitSrc = (window.app && window.app.assets)
+                ? window.app.assets.getUrl(profile.image)
+                : profile.image;
             innerHtml = `
                 <div class="deck-modal-video-player">
                     <button class="card-close-x video-close-btn" onclick="window.modalManager.closeVideoPlayer()" aria-label="Close Video">&times;</button>
                     <div class="deck-video-curved-viewport">
-                        <img src="${profile.image}" alt="${profile.label}" class="deck-video-visual" />
+                        <img src="${portraitSrc}" alt="${profile.label}" class="deck-video-visual" />
                         
                         <div class="deck-video-overlay-gradient"></div>
                         

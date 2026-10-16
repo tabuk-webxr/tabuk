@@ -13,15 +13,23 @@
         { url: 'Audios/Welcome_Enter.mp3', type: 'audio', label: 'Welcome enter' },
         { url: 'Audios/CHRO_Intro.mp3', type: 'audio', label: 'CHRO intro' },
         { url: 'Audios/Welcome Notes.mp3', type: 'audio', label: 'CEO welcome notes' },
-        { url: 'Audios/CHRO_Notes.mp3', type: 'audio', label: 'CHRO notes' }
+        { url: 'Audios/CHRO_Notes.mp3', type: 'audio', label: 'CHRO notes' },
+        // Reception glued props + guide (cache so tablets appear instantly)
+        { url: 'assets/images/tablet_ceo.png', type: 'image', label: 'CEO tablet' },
+        { url: 'assets/images/tablet_chro.png', type: 'image', label: 'CHRO tablet' },
+        { url: 'assets/images/welcome_tip_avatar.png', type: 'image', label: 'Welcome guide' },
+        { url: 'assets/images/video_chro_welcome.png', type: 'image', label: 'CEO welcome portrait' },
+        { url: 'assets/images/video_executive_welcome.png', type: 'image', label: 'CHRO welcome portrait' }
     ];
 
     function normalizeUrl(url) {
         if (!url) return url;
         try {
-            return decodeURIComponent(url);
+            // Strip cache-bust query (?v=4) so preload keys match courseData URLs
+            const bare = String(url).split('?')[0];
+            return decodeURIComponent(bare);
         } catch (e) {
-            return url;
+            return String(url).split('?')[0];
         }
     }
 
