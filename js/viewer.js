@@ -410,13 +410,14 @@ class PanoramaViewer {
         this.sphere.material.needsUpdate = true;
     }
 
-    preloadVideo(videoUrl) {
+    preloadVideo(videoUrl, options = {}) {
         return new Promise((resolve, reject) => {
             const video = document.createElement('video');
             video.src = this._resolveMediaUrl(videoUrl);
             video.crossOrigin = 'anonymous';
-            video.loop = true;
-            video.muted = true;
+            // Ambient 360 loops by default; one-shot transitions set loop: false
+            video.loop = options.loop !== false;
+            video.muted = options.muted !== false;
             video.playsInline = true;
             video.setAttribute('playsinline', '');
             video.setAttribute('webkit-playsinline', '');
@@ -987,7 +988,10 @@ class PanoramaViewer {
         const targetYaw = typeof options.targetYaw === 'number' ? options.targetYaw : null;
         const targetFov = typeof options.targetFov === 'number' ? options.targetFov : null;
 
-        this.preloadVideo(videoUrl)
+        this.preloadVideo(videoUrl, {
+            loop: options.loop !== false,
+            muted: options.muted !== false
+        })
             .then(async (video) => {
                 await this.dissolveToMedia({
                     mediaType: 'video',
@@ -998,12 +1002,12 @@ class PanoramaViewer {
                     targetFov,
                     duration: 550
                 });
-                if (onComplete) onComplete();
+                if (onComplete) onComplete(video);
             })
             .catch((err) => {
                 console.error(err);
                 this.sphere.material.opacity = 1;
-                if (onComplete) onComplete();
+                if (onComplete) onComplete(null);
             });
     }
 

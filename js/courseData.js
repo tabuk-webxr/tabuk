@@ -67,8 +67,8 @@ window.COURSE_DATA = {
             envType: "intro",
             bgVideo: "Videos/51_D_4k.mov",
             bgImage: "assets/images/scene0_exterior.jpg",
-            initialPitch: -1,
-            initialYaw: 180,
+            initialPitch: -3,
+            initialYaw: 174,
             sphereYaw: 0,
             cardText: "Corporate Reception\nFind the marker to continue",
             // Glue Who We Are onto the TV in the 360 video — pin 4 corners in DEV
@@ -155,6 +155,22 @@ window.COURSE_DATA = {
                     yaw: 132,
                     arrowYaw: 0,
                     targetScene: "riyadh_hq"
+                },
+                {
+                    // New interactive next-destination arrow (previous enter_hq stays locked)
+                    id: "next_destination",
+                    type: "portal",
+                    icon: "arrow",
+                    label: "Next — Lift",
+                    pitch: -4,
+                    yaw: 176,
+                    arrowYaw: 0,
+                    promptOffsetY: 6,
+                    arrowScale: 0.7,
+                    targetScene: "riyadh_elevator",
+                    // 360 lift walkthrough — plays in the sphere, then opens elevator scene
+                    transitionVideo: "Videos/Lift_4k.mov",
+                    transitionIs360: true
                 }
             ]
         },
@@ -237,51 +253,12 @@ window.COURSE_DATA = {
             subtitle: "Riyadh Foyer & Elevator",
             envIndex: 1,
             bgImage: "assets/images/scene1_elevator_values.jpg",
-            initialPitch: 0,
-            initialYaw: 0,
+            initialPitch: -4,
+            initialYaw: 76,
+            sphereYaw: 0,
             cardText: "Next stop: The Dammam Plant.\nLet’s see where Tabuk’s medicines are made.",
-            hotspots: [
-                {
-                    id: "vision_hotspot",
-                    type: "info",
-                    icon: "eye",
-                    label: "Our Vision",
-                    pitch: 18,
-                    yaw: -32,
-                    title: "Tabuk Vision",
-                    text: "To be a leading pharmaceutical company valued for its trusted and diversified products across regional and global markets.",
-                    bullets: ["Trusted healthcare partner", "Diversified therapeutic portfolio", "Regional and global reach"]
-                },
-                {
-                    id: "mission_hotspot",
-                    type: "info",
-                    icon: "target",
-                    label: "Our Mission",
-                    pitch: 18,
-                    yaw: 35,
-                    title: "Tabuk Mission",
-                    text: "Investing in differentiated technologies to deliver high quality, affordable generic medicines for better global healthcare.",
-                    bullets: ["Differentiated technologies", "High quality & affordability", "Better healthcare outcomes"]
-                },
-                {
-                    id: "values_iceberg",
-                    type: "modal",
-                    icon: "diamond",
-                    label: "Core Values",
-                    pitch: -8,
-                    yaw: -28,
-                    modalId: "modal_values"
-                },
-                {
-                    id: "nav_to_dammam",
-                    type: "portal",
-                    icon: "arrow",
-                    label: "Board Lift to Dammam Plant",
-                    pitch: -12,
-                    yaw: -48,
-                    targetScene: "dammam_reception"
-                }
-            ]
+            // Lift 360 stay — no hotspots for now
+            hotspots: []
         },
         "dammam_reception": {
             id: "dammam_reception",

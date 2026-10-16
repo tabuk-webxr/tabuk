@@ -75,6 +75,10 @@ class HotspotManager {
         } else if (data.type === 'portal') {
             // 3 stacked 3D chevrons — angle via arrowYaw (0 = straight)
             const yawRot = typeof data.arrowYaw === 'number' ? data.arrowYaw : 0;
+            const promptGap = typeof data.promptOffsetY === 'number' ? data.promptOffsetY : 6;
+            const arrowScale = typeof data.arrowScale === 'number' ? data.arrowScale : 1;
+            wrapper.style.setProperty('--arrow-prompt-gap', `${promptGap}px`);
+            wrapper.style.setProperty('--arrow-scale', String(arrowScale));
             // Solid closed chevron (reference shape) — fixed colors, no color picker
             const chevronSvg = (key) => `
                 <div class="portal-chevron portal-chevron-${key}" aria-hidden="true">
@@ -216,6 +220,33 @@ class HotspotManager {
             entry.el.style.setProperty('--name-rot', `${rot}deg`);
         }
         this.updatePositions();
+        return true;
+    }
+
+    setPromptOffsetY(id, promptOffsetY) {
+        const hotspot = this.getHotspotById(id);
+        const entry = this.elements.find((e) => e.data.id === id);
+        if (!hotspot || hotspot.type !== 'portal') return false;
+        if (typeof promptOffsetY !== 'number') return false;
+        hotspot.promptOffsetY = promptOffsetY;
+        if (entry) {
+            entry.data.promptOffsetY = promptOffsetY;
+            entry.el.style.setProperty('--arrow-prompt-gap', `${promptOffsetY}px`);
+        }
+        return true;
+    }
+
+    setArrowScale(id, arrowScale) {
+        const hotspot = this.getHotspotById(id);
+        const entry = this.elements.find((e) => e.data.id === id);
+        if (!hotspot || hotspot.type !== 'portal') return false;
+        if (typeof arrowScale !== 'number') return false;
+        const scale = Math.max(0.25, Math.min(1.5, arrowScale));
+        hotspot.arrowScale = scale;
+        if (entry) {
+            entry.data.arrowScale = scale;
+            entry.el.style.setProperty('--arrow-scale', String(scale));
+        }
         return true;
     }
 
