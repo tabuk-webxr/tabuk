@@ -14,6 +14,7 @@ class WebXRApp {
         this.isAudioMuted = false;
         this.devPanelOpen = false;
         this.receptionChroUnlocked = false;
+        this.receptionLiftUnlocked = false;
         this.welcomePortalUnlocked = false;
         this._receptionTipTimer = null;
         this._chroIntroAudio = null;
@@ -30,8 +31,8 @@ class WebXRApp {
     init() {
         console.log("%c[Tabuk WebXR Induction] Initializing...", "color:#0072CE; font-weight:bold; font-size:14px;");
 
-        // 1. Initialize SCORM
-        if (window.scorm) {
+        // 1. Initialize SCORM (off while SCORM_ENABLED is false in scorm.js)
+        if (window.SCORM_ENABLED && window.scorm) {
             window.scorm.init();
         }
 
@@ -231,17 +232,23 @@ class WebXRApp {
             });
         }
 
-        // SCORM Diagnostic drawer toggle
+        // SCORM Diagnostic drawer toggle (hidden while SCORM is disabled)
         const scormLogBtn = document.getElementById('btn-toggle-scorm-logs');
         const scormPanel = document.getElementById('scorm-diagnostics-panel');
-        if (scormLogBtn && scormPanel) {
+        if (!window.SCORM_ENABLED) {
+            if (scormLogBtn) scormLogBtn.style.display = 'none';
+            if (scormPanel) {
+                scormPanel.classList.remove('active');
+                scormPanel.style.display = 'none';
+            }
+        } else if (scormLogBtn && scormPanel) {
             scormLogBtn.addEventListener('click', () => {
                 scormPanel.classList.toggle('active');
             });
-        }
-        const scormClose = document.getElementById('scorm-panel-close');
-        if (scormClose && scormPanel) {
-            scormClose.addEventListener('click', () => scormPanel.classList.remove('active'));
+            const scormClose = document.getElementById('scorm-panel-close');
+            if (scormClose) {
+                scormClose.addEventListener('click', () => scormPanel.classList.remove('active'));
+            }
         }
 
         // DEV ONLY — 360 orientation sliders
@@ -305,6 +312,8 @@ class WebXRApp {
         const labelY = document.getElementById('dev-label-y');
         const labelX = document.getElementById('dev-label-x');
         const playY = document.getElementById('dev-play-y');
+        const promptGap = document.getElementById('dev-prompt-gap');
+        const arrowScaleEl = document.getElementById('dev-arrow-scale');
         if (!panel || !sphereYaw || !camPitch || !camYaw) return;
 
         const applyOrientation = () => {
@@ -417,6 +426,32 @@ class WebXRApp {
             this.updateDevOrientationReadout();
         };
 
+        const applyArrowPromptGap = () => {
+            if (!hotSelect || !hotSelect.value || !promptGap) return;
+            const id = hotSelect.value;
+            const h = this.hotspots.getHotspotById(id);
+            if (!h || h.type !== 'portal') return;
+            const promptOffsetY = Number(promptGap.value);
+            this.hotspots.setPromptOffsetY(id, promptOffsetY);
+            this.persistArrowPromptOffset(id, { promptOffsetY });
+            const gVal = document.getElementById('dev-prompt-gap-val');
+            if (gVal) gVal.textContent = `${Math.round(promptOffsetY)}px`;
+            this.updateDevOrientationReadout();
+        };
+
+        const applyArrowScale = () => {
+            if (!hotSelect || !hotSelect.value || !arrowScaleEl) return;
+            const id = hotSelect.value;
+            const h = this.hotspots.getHotspotById(id);
+            if (!h || h.type !== 'portal') return;
+            const arrowScale = Number(arrowScaleEl.value) / 100;
+            this.hotspots.setArrowScale(id, arrowScale);
+            this.persistArrowPromptOffset(id, { arrowScale });
+            const sVal = document.getElementById('dev-arrow-scale-val');
+            if (sVal) sVal.textContent = `${Math.round(arrowScale * 100)}%`;
+            this.updateDevOrientationReadout();
+        };
+
         sphereYaw.addEventListener('input', applyOrientation);
         camPitch.addEventListener('input', applyOrientation);
         camYaw.addEventListener('input', applyOrientation);
@@ -447,6 +482,8 @@ class WebXRApp {
         if (labelY) labelY.addEventListener('input', applyTabletLabelOffset);
         if (labelX) labelX.addEventListener('input', applyTabletLabelOffset);
         if (playY) playY.addEventListener('input', applyTabletLabelOffset);
+        if (promptGap) promptGap.addEventListener('input', applyArrowPromptGap);
+        if (arrowScaleEl) arrowScaleEl.addEventListener('input', applyArrowScale);
 
         if (hotSelect) {
             hotSelect.addEventListener('change', () => {
@@ -454,6 +491,7 @@ class WebXRApp {
                 this.loadAvatarImageSettingsIntoDevSliders();
                 this.loadNameTagSettingsIntoDevSliders();
                 this.loadTabletLabelOffsetIntoDevSliders();
+                this.loadArrowPromptGapIntoDevSliders();
             });
         }
 
@@ -683,6 +721,18 @@ class WebXRApp {
         });
     }
 
+    persistArrowPromptOffset(id, { promptOffsetY, arrowScale } = {}) {
+        const scene = window.COURSE_DATA.scenes[this.currentSceneId];
+        if (!scene || !scene.hotspots) return;
+        const source = scene.hotspots.find((h) => h.id === id);
+        const live = this.hotspots ? this.hotspots.getHotspotById(id) : null;
+        [source, live].forEach((h) => {
+            if (!h || h.type !== 'portal') return;
+            if (typeof promptOffsetY === 'number') h.promptOffsetY = promptOffsetY;
+            if (typeof arrowScale === 'number') h.arrowScale = arrowScale;
+        });
+    }
+
     persistAvatarNameTagSettings(id, { pitch, yaw, rot }) {
         const scene = window.COURSE_DATA.scenes[this.currentSceneId];
         if (!scene || !scene.hotspots) return;
@@ -776,6 +826,7 @@ class WebXRApp {
         this.loadAvatarImageSettingsIntoDevSliders();
         this.loadNameTagSettingsIntoDevSliders();
         this.loadTabletLabelOffsetIntoDevSliders();
+        this.loadArrowPromptGapIntoDevSliders();
         this.refreshDevScreenOverlayList();
     }
 
@@ -850,6 +901,30 @@ class WebXRApp {
         document.getElementById('dev-hot-pitch-val').textContent = `${Math.round(h.pitch)}°`;
         document.getElementById('dev-hot-yaw-val').textContent = `${yaw}°`;
         this.loadTabletLabelOffsetIntoDevSliders();
+        this.loadArrowPromptGapIntoDevSliders();
+    }
+
+    loadArrowPromptGapIntoDevSliders() {
+        const hotSelect = document.getElementById('dev-hotspot-select');
+        const promptGap = document.getElementById('dev-prompt-gap');
+        const arrowScaleEl = document.getElementById('dev-arrow-scale');
+        const gVal = document.getElementById('dev-prompt-gap-val');
+        const sVal = document.getElementById('dev-arrow-scale-val');
+        if (!promptGap && !arrowScaleEl) return;
+
+        const h = hotSelect && hotSelect.value && this.hotspots
+            ? this.hotspots.getHotspotById(hotSelect.value)
+            : null;
+        const isPortal = !!(h && h.type === 'portal');
+        if (promptGap) promptGap.disabled = !isPortal;
+        if (arrowScaleEl) arrowScaleEl.disabled = !isPortal;
+
+        const promptOffsetY = isPortal && typeof h.promptOffsetY === 'number' ? h.promptOffsetY : 6;
+        const arrowScale = isPortal && typeof h.arrowScale === 'number' ? h.arrowScale : 1;
+        if (promptGap) promptGap.value = String(Math.round(promptOffsetY));
+        if (arrowScaleEl) arrowScaleEl.value = String(Math.round(arrowScale * 100));
+        if (gVal) gVal.textContent = `${Math.round(promptOffsetY)}px`;
+        if (sVal) sVal.textContent = `${Math.round(arrowScale * 100)}%`;
     }
 
     loadTabletLabelOffsetIntoDevSliders() {
@@ -997,6 +1072,15 @@ class WebXRApp {
                     if (live && live.type === 'nametag') {
                         return `  - ${h.id}: pitch ${h.pitch}, yaw ${h.yaw}, rot ${Math.round(live.rot || 0)}`;
                     }
+                    if (live && live.type === 'portal') {
+                        const gap = typeof live.promptOffsetY === 'number' ? live.promptOffsetY : 6;
+                        const scale = typeof live.arrowScale === 'number' ? live.arrowScale : 1;
+                        return (
+                            `  - ${h.id}: pitch ${h.pitch}, yaw ${h.yaw}` +
+                            `, promptOffsetY ${Math.round(gap)}` +
+                            `, arrowScale ${Math.round(scale * 100) / 100}`
+                        );
+                    }
                     return `  - ${h.id}: pitch ${h.pitch}, yaw ${h.yaw}`;
                 }).join('\n')
                 : '  (none)';
@@ -1067,9 +1151,17 @@ class WebXRApp {
                 if (h.id === 'video_chro_welcome') {
                     return { ...h, hidden: !this.receptionChroUnlocked };
                 }
-                // Show next arrow as a cue, but block navigation for now
+                // Original HQ arrow stays visible but disabled
                 if (h.id === 'enter_hq') {
                     return { ...h, hidden: false, locked: true };
+                }
+                // Lift arrow only after CHRO video ends + close
+                if (h.id === 'next_destination') {
+                    return {
+                        ...h,
+                        hidden: !this.receptionLiftUnlocked,
+                        locked: !this.receptionLiftUnlocked
+                    };
                 }
                 return { ...h };
             });
@@ -1235,10 +1327,114 @@ class WebXRApp {
 
     handleWelcomeVideoClosed(profile, ended) {
         if (this.currentSceneId !== 'reception') return;
-        if (!profile || profile.id !== 'ceo') return;
-        if (this.receptionChroUnlocked) return;
-        // Unlock CHRO on any CEO close (even before video ends)
-        this.startChroIntroSequence();
+        if (!profile) return;
+
+        if (profile.id === 'ceo') {
+            if (this.receptionChroUnlocked) return;
+            // Unlock CHRO on any CEO close (even before video ends)
+            this.startChroIntroSequence();
+            return;
+        }
+
+        if (profile.id === 'chro') {
+            // Lift arrow after CHRO close (even if closed early before end)
+            this.unlockLiftHotspot();
+        }
+    }
+
+    unlockLiftHotspot() {
+        if (this.receptionLiftUnlocked) return;
+        this.receptionLiftUnlocked = true;
+        if (this.currentSceneId !== 'reception' || !this.hotspots) return;
+
+        const scene = window.COURSE_DATA.scenes.reception;
+        if (scene) {
+            this.hotspots.setHotspots(this._buildHotspotList(scene));
+        }
+        if (this.devPanelOpen) {
+            this.refreshDevHotspotList();
+        }
+    }
+
+    /**
+     * Plays hotspot.transitionVideo as a 360 panorama (e.g. Lift_4k.mov).
+     * Stays on that 360 — does not auto-advance to another scene.
+     */
+    playPortalTransitionVideo(hotspot) {
+        if (!hotspot || !hotspot.transitionVideo) return;
+        if (this._sceneTransitioning || (this.viewer && this.viewer.isTransitioning())) return;
+
+        this._sceneTransitioning = true;
+        this.hotspots.setHotspots([]);
+        // Drop glued TV / screen overlays so they don't stick onto the lift 360
+        if (this.viewer && typeof this.viewer.syncScreenOverlays === 'function') {
+            this.viewer.syncScreenOverlays([]);
+        }
+        this.hideReceptionTip();
+        this.stopWelcomeEnterAudio();
+        this.stopCeoIntroAudio();
+        this.stopChroIntroAudio();
+
+        const arriveAtTargetScene = () => {
+            this._sceneTransitioning = false;
+            // Update scene state / HUD only — keep the lift 360 playing (no media swap)
+            if (hotspot.targetScene) {
+                this.currentSceneId = hotspot.targetScene;
+                this.visitedScenes.add(hotspot.targetScene);
+                const scene = window.COURSE_DATA.scenes[hotspot.targetScene];
+                if (scene) {
+                    // Lift 360 stay — no hotspots / no TV overlays
+                    this.hotspots.setHotspots([]);
+                    if (this.viewer && typeof this.viewer.syncScreenOverlays === 'function') {
+                        this.viewer.syncScreenOverlays([]);
+                    }
+                    this.updateHUD(scene);
+                    this.syncDevOrientationPanel();
+                    if (this.devPanelOpen) this.refreshDevHotspotList();
+                }
+            }
+        };
+
+        const targetScene = hotspot.targetScene
+            ? window.COURSE_DATA.scenes[hotspot.targetScene]
+            : null;
+        const orient = targetScene
+            ? this._sceneOrientation(targetScene)
+            : {
+                pitch: typeof hotspot.pitch === 'number' ? hotspot.pitch : 0,
+                yaw: typeof hotspot.yaw === 'number' ? hotspot.yaw : 0,
+                sphereYaw: 0
+            };
+
+        this.viewer.setMinZoom();
+        this.viewer.loadVideo(
+            hotspot.transitionVideo,
+            (video) => {
+                if (!video) {
+                    console.warn('360 transition video failed');
+                    this._sceneTransitioning = false;
+                    return;
+                }
+                // Keep looping on the lift — no auto jump to the next still scene
+                video.loop = true;
+                try {
+                    video.currentTime = 0;
+                    const playPromise = video.play();
+                    if (playPromise && typeof playPromise.catch === 'function') {
+                        playPromise.catch(() => { /* ignore autoplay block */ });
+                    }
+                } catch (e) { /* ignore */ }
+                arriveAtTargetScene();
+            },
+            {
+                loop: true,
+                muted: true,
+                sphereYaw: orient.sphereYaw,
+                targetPitch: orient.pitch,
+                targetYaw: orient.yaw,
+                targetFov: this.viewer.maxFov
+            }
+        );
     }
 
     showReceptionTip(html, { animate = true, showAvatar = false } = {}) {
@@ -1524,8 +1720,9 @@ class WebXRApp {
             }
         } else {
             this.hideReceptionTip();
-            // Reset CHRO lock when leaving reception so revisit starts with CEO again
+            // Reset reception progress when leaving so revisit starts with CEO again
             this.receptionChroUnlocked = false;
+            this.receptionLiftUnlocked = false;
         }
 
         // Welcome / ENTER TABUK screen narration
@@ -1562,7 +1759,11 @@ class WebXRApp {
         this.visitedHotspots.add(hotspot.id);
 
         if (hotspot.type === 'portal') {
-            this.goToScene(hotspot.targetScene, { fromHotspot: hotspot });
+            if (hotspot.transitionVideo) {
+                this.playPortalTransitionVideo(hotspot);
+            } else {
+                this.goToScene(hotspot.targetScene, { fromHotspot: hotspot });
+            }
         } else if (hotspot.type === 'modal') {
             // Stop reception tip VO/avatar when opening CEO/CHRO video players
             if (hotspot.modalId === 'modal_video_welcome' || hotspot.modalId === 'modal_video_chro') {
@@ -1611,7 +1812,7 @@ class WebXRApp {
                     <button class="btn btn-primary" onclick="window.app.goToScene('riyadh_hq')">
                         Revisit Environments
                     </button>
-                    <button class="btn btn-secondary" onclick="window.scorm.terminate(); alert('Module completed. You may now close this window.');">
+                    <button class="btn btn-secondary" onclick="if (window.scorm) { window.scorm.terminate(); } alert('Module completed. You may now close this window.');">
                         Exit Induction
                     </button>
                 </div>

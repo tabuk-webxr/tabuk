@@ -2,7 +2,10 @@
  * SCORM 1.2 API Wrapper & Diagnostic Bridge
  * Supports official SCORM 1.2 LMS runtime environments (Cornerstone, SuccessFactors, Moodle, SCORM Cloud)
  * and provides a simulated mock LMS for standalone browser testing.
+ *
+ * Set SCORM_ENABLED to true when packaging for LMS again.
  */
+window.SCORM_ENABLED = false;
 
 class ScormController {
     constructor() {
@@ -157,4 +160,9 @@ class ScormController {
     }
 }
 
-window.scorm = new ScormController();
+if (window.SCORM_ENABLED) {
+    window.scorm = new ScormController();
+} else {
+    window.scorm = null;
+    console.log('[SCORM] Disabled for local preview');
+}
