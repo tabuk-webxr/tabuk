@@ -441,9 +441,10 @@ class PanoramaViewer {
     }
 
     preloadTexture(imageUrl) {
+        const resolved = this._resolveMediaUrl(imageUrl);
         return new Promise((resolve, reject) => {
             this.textureLoader.load(
-                imageUrl,
+                resolved,
                 (texture) => resolve(texture),
                 undefined,
                 (err) => reject(err || new Error('Error loading texture: ' + imageUrl))
@@ -655,7 +656,7 @@ class PanoramaViewer {
     addSceneAvatar(data) {
         if (!data || !this.scene || !window.THREE) return null;
 
-        const imageUrl = data.image || 'assets/images/welcome_tip_avatar.png';
+        const imageUrl = this._resolveMediaUrl(data.image || 'assets/images/welcome_tip_avatar.png');
         const pitch = typeof data.pitch === 'number' ? data.pitch : 0;
         const yaw = typeof data.yaw === 'number' ? data.yaw : 0;
         const radius = typeof data.radius === 'number' ? data.radius : 430;
@@ -894,7 +895,7 @@ class PanoramaViewer {
         this._screenOverlays.push(entry);
 
         this.textureLoader.load(
-            data.image,
+            this._resolveMediaUrl(data.image),
             (texture) => {
                 texture.minFilter = THREE.LinearFilter;
                 texture.magFilter = THREE.LinearFilter;
