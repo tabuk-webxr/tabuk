@@ -113,6 +113,9 @@ class HotspotManager {
             wrapper.style.setProperty('--label-offset-y', `${labelY}px`);
             wrapper.style.setProperty('--label-offset-x', `${labelX}px`);
             wrapper.style.setProperty('--play-offset-y', `${playY}px`);
+            const tooltip = data.hideLabel
+                ? ''
+                : `<div class="hotspot-tooltip"><span class="tooltip-title">${data.label}</span></div>`;
             wrapper.innerHTML = `
                 <div class="hotspot-monitor-hit" aria-hidden="true">
                     <div class="hotspot-monitor-play">
@@ -121,9 +124,7 @@ class HotspotManager {
                         </svg>
                     </div>
                 </div>
-                <div class="hotspot-tooltip">
-                    <span class="tooltip-title">${data.label}</span>
-                </div>
+                ${tooltip}
             `;
         } else {
             // Concentric pulsing circular marker — rings + icon share one center stack

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TABUK PHARMACEUTICALS · INDUCTION</title>
     <meta name="description" content="Interactive WebXR Employee Induction Experience for Tabuk Pharmaceuticals covering Riyadh HQ, Dammam Plant, Tabuk Campus, and Final Assessment.">
-    <link rel="stylesheet" href="css/style.css?v=20.14">
+    <link rel="stylesheet" href="css/style.css?v=20.28">
 </head>
 <body>
 
@@ -121,6 +121,59 @@
         <div class="modal-container" style="max-width: 650px;">
             <div id="completion-overlay-content"></div>
         </div>
+    </div>
+
+    <!-- Who We Are cinematic — 1994 → Today, then People & Purpose -->
+    <div id="timeline-cinematic-overlay" class="timeline-cinematic" hidden>
+        <header class="cinematic-chrome">
+            <p class="cinematic-chrome-title">TABUK PHARMACEUTICALS  &middot;  Induction  &middot;  Who We Are</p>
+            <p class="cinematic-chrome-meta">E1-S2  &middot;  ENVIRONMENT 1</p>
+            <button type="button" id="timeline-cinematic-close" class="timeline-cinematic-close" aria-label="Close timeline">&times;</button>
+        </header>
+        <div class="timeline-cinematic-stage">
+            <div class="timeline-beats">
+                <div class="timeline-line-draw" aria-hidden="true"></div>
+                <article class="timeline-beat" data-col="1">
+                    <p class="timeline-ost-line" data-beat="1">Started in 1994 as a family-led business</p>
+                    <div class="timeline-node" data-node="1">
+                        <span class="timeline-node-dot"></span>
+                        <span class="timeline-node-label">1994</span>
+                    </div>
+                </article>
+                <article class="timeline-beat" data-col="2">
+                    <p class="timeline-ost-line" data-beat="2">Today, growing to serve patients across the region</p>
+                    <div class="timeline-node" data-node="2">
+                        <span class="timeline-node-dot"></span>
+                        <span class="timeline-node-label">Today</span>
+                    </div>
+                </article>
+                <article class="timeline-beat" data-col="3">
+                    <p class="timeline-ost-line" data-beat="3">Guided by responsibility, in everything we do</p>
+                    <div class="timeline-node" data-node="3">
+                        <span class="timeline-node-dot"></span>
+                    </div>
+                </article>
+                <article class="timeline-beat" data-col="4">
+                    <p class="timeline-ost-line timeline-ost-values" data-beat="4">Care. Integrity. Quality.</p>
+                    <div class="timeline-node" data-node="4">
+                        <span class="timeline-node-dot"></span>
+                    </div>
+                    <img class="timeline-beat-graphic" src="assets/images/timeline_beat_today_ksa.png?v=4" alt="">
+                </article>
+            </div>
+        </div>
+        <section class="people-purpose-screen" aria-label="People and Purpose">
+            <article class="people-panel" data-people-col="1">
+                <img class="people-purpose-photo" src="assets/images/people_purpose_line.jpg" alt="">
+                <div class="people-purpose-dim" aria-hidden="true"></div>
+                <p class="people-ost-line" data-people-beat="1">Every role contributing to something bigger</p>
+            </article>
+            <article class="people-panel" data-people-col="2">
+                <img class="people-purpose-photo" src="assets/images/people_purpose_lab.jpg" alt="">
+                <div class="people-purpose-dim" aria-hidden="true"></div>
+                <p class="people-ost-line" data-people-beat="2">Supporting patients, communities</p>
+            </article>
+        </section>
     </div>
 
     <!-- Quick Menu & Scene Jump Drawer -->
@@ -355,13 +408,13 @@ tipAvatar: —</pre>
     <!-- Application Scripts -->
     <script src="assets/lib/three.min.js"></script>
     <script src="js/scorm.js?v=12.6"></script>
-    <script src="js/courseData.js?v=20.24"></script>
-    <script src="js/assetLoader.js?v=20.2"></script>
+    <script src="js/courseData.js?v=20.28"></script>
+    <script src="js/assetLoader.js?v=20.9"></script>
     <script src="js/viewer.js?v=20.24"></script>
-    <script src="js/hotspots.js?v=20.14"></script>
+    <script src="js/hotspots.js?v=20.17"></script>
     <script src="js/modal.js?v=14.0"></script>
     <script src="js/assessment.js?v=12.6"></script>
-    <script src="js/app.js?v=20.23"></script>
+    <script src="js/app.js?v=20.32"></script>
 
 </body>
 </html>

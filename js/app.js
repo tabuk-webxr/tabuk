@@ -14,6 +14,8 @@ class WebXRApp {
         this.isAudioMuted = false;
         this.devPanelOpen = false;
         this.receptionChroUnlocked = false;
+        this.receptionRightUnlocked = false;
+        this.receptionRightArrived = false;
         this.receptionLiftUnlocked = false;
         this.welcomePortalUnlocked = false;
         this._receptionTipTimer = null;
@@ -23,6 +25,10 @@ class WebXRApp {
         this._tipAvatarRaf = null;
         this._tipAvatarKeying = false;
         this._sceneTransitioning = false;
+        this._timelineBeatTimers = [];
+        this._cinematicSpeech = null;
+        this._cinematicSpeechGen = 0;
+        this._speechKeepAlive = null;
         
         // Sound effects synthesis via Web Audio API (zero external asset dependency)
         this.audioCtx = null;
@@ -210,6 +216,11 @@ class WebXRApp {
             });
         }
 
+        const timelineClose = document.getElementById('timeline-cinematic-close');
+        if (timelineClose) {
+            timelineClose.addEventListener('click', () => this.hideTimelineCinematic());
+        }
+
         // Fullscreen toggle
         const fsBtn = document.getElementById('btn-toggle-fullscreen');
         if (fsBtn) {
@@ -229,6 +240,7 @@ class WebXRApp {
                 this.isAudioMuted = !this.isAudioMuted;
                 audioBtn.classList.toggle('muted', this.isAudioMuted);
                 audioBtn.innerHTML = this.isAudioMuted ? '🔇 Audio Off' : '🔊 Audio On';
+                if (this.isAudioMuted) this._stopCinematicSpeech();
             });
         }
 
@@ -1148,14 +1160,28 @@ class WebXRApp {
         }
         if (scene.id === 'reception') {
             hotspotList = hotspotList.map((h) => {
+                if (h.id === 'video_welcome') {
+                    return { ...h, hidden: this.receptionRightArrived };
+                }
                 if (h.id === 'video_chro_welcome') {
-                    return { ...h, hidden: !this.receptionChroUnlocked };
+                    return { ...h, hidden: !this.receptionChroUnlocked || this.receptionRightArrived };
                 }
-                // Original HQ arrow stays visible but disabled
+                // Guide, name, and left arrow stay as they were until the right 360
                 if (h.id === 'enter_hq') {
-                    return { ...h, hidden: false, locked: true };
+                    return { ...h, hidden: this.receptionRightArrived, locked: true };
                 }
-                // Lift arrow only after CHRO video ends + close
+                if (h.id === 'reception_right_video') {
+                    return { ...h, hidden: !this.receptionRightArrived };
+                }
+                // Right-reception arrow after CHRO close, before the lift
+                if (h.id === 'next_reception_right') {
+                    return {
+                        ...h,
+                        hidden: !this.receptionRightUnlocked || this.receptionRightArrived,
+                        locked: !this.receptionRightUnlocked
+                    };
+                }
+                // Lift arrow only after the right-reception click
                 if (h.id === 'next_destination') {
                     return {
                         ...h,
@@ -1167,6 +1193,11 @@ class WebXRApp {
             });
         }
         return hotspotList;
+    }
+
+    _visibleScreenOverlays(scene) {
+        if (!scene) return [];
+        return scene.screenOverlays || [];
     }
 
     /**
@@ -1213,7 +1244,7 @@ class WebXRApp {
     _finishSceneUI(scene) {
         this.hotspots.setHotspots(this._buildHotspotList(scene));
         if (this.viewer && typeof this.viewer.syncScreenOverlays === 'function') {
-            this.viewer.syncScreenOverlays(scene.screenOverlays || []);
+            this.viewer.syncScreenOverlays(this._visibleScreenOverlays(scene));
         }
         this.updateHUD(scene);
         this.syncDevOrientationPanel();
@@ -1337,9 +1368,41 @@ class WebXRApp {
         }
 
         if (profile.id === 'chro') {
-            // Lift arrow after CHRO close (even if closed early before end)
-            this.unlockLiftHotspot();
+            // Right-reception arrow after CHRO close (even if closed early)
+            this.unlockReceptionRightHotspot();
         }
+    }
+
+    unlockReceptionRightHotspot() {
+        if (this.receptionRightUnlocked) return;
+        this.receptionRightUnlocked = true;
+        if (this.currentSceneId !== 'reception' || !this.hotspots) return;
+
+        const scene = window.COURSE_DATA.scenes.reception;
+        if (scene) {
+            this.hotspots.setHotspots(this._buildHotspotList(scene));
+        }
+        if (this.devPanelOpen) {
+            this.refreshDevHotspotList();
+        }
+    }
+
+    revealReceptionRightArrival() {
+        this.receptionRightArrived = true;
+        this.receptionLiftUnlocked = true;
+        this.hideReceptionTip();
+        const scene = window.COURSE_DATA.scenes.reception;
+        if (!scene || this.currentSceneId !== 'reception' || !this.hotspots) return;
+
+        this.hotspots.setHotspots(this._buildHotspotList(scene));
+        if (this.viewer && typeof this.viewer.syncScreenOverlays === 'function') {
+            this.viewer.syncScreenOverlays(this._visibleScreenOverlays(scene));
+        }
+        if (this.devPanelOpen) {
+            this.refreshDevHotspotList();
+            this.refreshDevScreenOverlayList();
+        }
+        this.syncDevOrientationPanel();
     }
 
     unlockLiftHotspot() {
@@ -1375,8 +1438,13 @@ class WebXRApp {
         this.stopCeoIntroAudio();
         this.stopChroIntroAudio();
 
+        const stayInScene = !!hotspot.stayInScene;
         const arriveAtTargetScene = () => {
             this._sceneTransitioning = false;
+            if (stayInScene) {
+                this.revealReceptionRightArrival();
+                return;
+            }
             // Update scene state / HUD only — keep the lift 360 playing (no media swap)
             if (hotspot.targetScene) {
                 this.currentSceneId = hotspot.targetScene;
@@ -1395,9 +1463,9 @@ class WebXRApp {
             }
         };
 
-        const targetScene = hotspot.targetScene
+        const targetScene = !stayInScene && hotspot.targetScene
             ? window.COURSE_DATA.scenes[hotspot.targetScene]
-            : null;
+            : window.COURSE_DATA.scenes[this.currentSceneId];
         const orient = targetScene
             ? this._sceneOrientation(targetScene)
             : {
@@ -1413,6 +1481,7 @@ class WebXRApp {
                 if (!video) {
                     console.warn('360 transition video failed');
                     this._sceneTransitioning = false;
+                    if (stayInScene) this.revealReceptionRightArrival();
                     return;
                 }
                 // Keep looping on the lift — no auto jump to the next still scene
@@ -1722,6 +1791,8 @@ class WebXRApp {
             this.hideReceptionTip();
             // Reset reception progress when leaving so revisit starts with CEO again
             this.receptionChroUnlocked = false;
+            this.receptionRightUnlocked = false;
+            this.receptionRightArrived = false;
             this.receptionLiftUnlocked = false;
         }
 
@@ -1741,6 +1812,179 @@ class WebXRApp {
                 completionOverlay.classList.add('active');
                 this.renderCompletionScreen();
             }
+        }
+    }
+
+    showTimelineCinematic() {
+        const overlay = document.getElementById('timeline-cinematic-overlay');
+        if (!overlay) return;
+
+        this._clearTimelineBeats();
+        this.hideReceptionTip();
+        this.stopCeoIntroAudio();
+        this.stopChroIntroAudio();
+        this.stopTipAvatar();
+
+        const hotspotsLayer = document.getElementById('hotspots-layer');
+        const hud = document.getElementById('hud-layer');
+        if (hotspotsLayer) hotspotsLayer.style.visibility = 'hidden';
+        if (hud) hud.style.visibility = 'hidden';
+        if (this.hotspots) this.hotspots.setHotspots([]);
+        if (this.viewer && typeof this.viewer.syncScreenOverlays === 'function') {
+            this.viewer.syncScreenOverlays([]);
+        }
+
+        overlay.hidden = false;
+        overlay.className = 'timeline-cinematic';
+        overlay.querySelectorAll('.people-purpose-photo').forEach((photo) => {
+            const path = photo.getAttribute('src') || '';
+            const bare = path.split('?')[0];
+            if (bare) photo.src = this.resolveMediaUrl(bare);
+        });
+        requestAnimationFrame(() => overlay.classList.add('is-open'));
+
+        const beats = [
+            { at: 240, cls: 'is-beat-1 is-node-1' },
+            { at: 1500, cls: 'is-beat-2 is-node-2 is-draw-2' },
+            { at: 2800, cls: 'is-beat-3 is-node-3 is-draw-3' },
+            { at: 4100, cls: 'is-beat-4 is-node-4 is-draw-4' }
+        ];
+        beats.forEach(({ at, cls }) => {
+            const id = setTimeout(() => overlay.classList.add(...cls.split(' ')), at);
+            this._timelineBeatTimers.push(id);
+        });
+
+        this._speakCinematicLine(
+            "What began as a family-led vision in Riyadh, KSA, has grown into a company committed to improving patients' lives across the region. At Tabuk, that sense of responsibility continues to guide how we work — with care, integrity, and a focus on quality.",
+            () => this._revealPeoplePurposeScreen(overlay)
+        );
+    }
+
+    hideTimelineCinematic() {
+        const overlay = document.getElementById('timeline-cinematic-overlay');
+        this._clearTimelineBeats();
+        this._stopCinematicSpeech();
+        if (overlay) {
+            overlay.className = 'timeline-cinematic';
+            overlay.hidden = true;
+        }
+
+        const hotspotsLayer = document.getElementById('hotspots-layer');
+        const hud = document.getElementById('hud-layer');
+        if (hotspotsLayer) hotspotsLayer.style.visibility = '';
+        if (hud) hud.style.visibility = '';
+
+        const scene = window.COURSE_DATA && window.COURSE_DATA.scenes[this.currentSceneId];
+        if (scene && this.hotspots) {
+            this.hotspots.setHotspots(this._buildHotspotList(scene));
+            if (this.viewer && typeof this.viewer.syncScreenOverlays === 'function') {
+                this.viewer.syncScreenOverlays(this._visibleScreenOverlays(scene));
+            }
+        }
+    }
+
+    _clearTimelineBeats() {
+        (this._timelineBeatTimers || []).forEach((id) => clearTimeout(id));
+        this._timelineBeatTimers = [];
+    }
+
+    _revealPeoplePurposeScreen(overlay) {
+        if (!overlay || overlay.hidden) return;
+        overlay.classList.add('is-people', 'is-people-beat-1');
+        this._speakCinematicLine(
+            'Every role here contributes to something bigger.',
+            () => {
+                if (!overlay || overlay.hidden) return;
+                overlay.classList.add('is-people-beat-2');
+                this._speakCinematicLine(
+                    'Supporting patients, communities, and each other.'
+                );
+            }
+        );
+    }
+
+    _stopCinematicSpeech() {
+        this._cinematicSpeechGen += 1;
+        if (this._speechKeepAlive) {
+            clearInterval(this._speechKeepAlive);
+            this._speechKeepAlive = null;
+        }
+        this._cinematicSpeech = null;
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+        }
+    }
+
+    _pickCinematicVoice() {
+        if (!('speechSynthesis' in window)) return null;
+        const voices = window.speechSynthesis.getVoices() || [];
+        const tests = [
+            (v) => /en-GB/i.test(v.lang) && /female|samantha|karen|moira|serena|kate|susan|fiona/i.test(v.name),
+            (v) => /en-GB/i.test(v.lang),
+            (v) => /en-US/i.test(v.lang) && /female|samantha|karen|moira|siri/i.test(v.name),
+            (v) => /^en[-_]/i.test(v.lang)
+        ];
+        for (let i = 0; i < tests.length; i += 1) {
+            const found = voices.find(tests[i]);
+            if (found) return found;
+        }
+        return voices[0] || null;
+    }
+
+    _speakCinematicLine(text, onEnd) {
+        this._stopCinematicSpeech();
+        const finish = () => {
+            if (typeof onEnd === 'function') onEnd();
+        };
+        if (this.isAudioMuted || !('speechSynthesis' in window)) {
+            const id = setTimeout(finish, 1600);
+            this._timelineBeatTimers.push(id);
+            return;
+        }
+
+        const gen = this._cinematicSpeechGen;
+        let started = false;
+        const speak = () => {
+            if (started || gen !== this._cinematicSpeechGen) return;
+            started = true;
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.lang = 'en-GB';
+            utter.rate = 0.92;
+            utter.pitch = 1;
+            utter.volume = 1;
+            const voice = this._pickCinematicVoice();
+            if (voice) {
+                utter.voice = voice;
+                if (voice.lang) utter.lang = voice.lang;
+            }
+            utter.onend = () => {
+                if (gen !== this._cinematicSpeechGen) return;
+                this._stopCinematicSpeech();
+                finish();
+            };
+            utter.onerror = () => {
+                if (gen !== this._cinematicSpeechGen) return;
+                this._stopCinematicSpeech();
+                finish();
+            };
+            this._cinematicSpeech = utter;
+            window.speechSynthesis.speak(utter);
+            this._speechKeepAlive = setInterval(() => {
+                if (!window.speechSynthesis.speaking) return;
+                window.speechSynthesis.pause();
+                window.speechSynthesis.resume();
+            }, 10000);
+        };
+
+        const voices = window.speechSynthesis.getVoices();
+        if (voices && voices.length) {
+            speak();
+            return;
+        }
+        const waitId = setTimeout(speak, 350);
+        this._timelineBeatTimers.push(waitId);
+        if (typeof window.speechSynthesis.addEventListener === 'function') {
+            window.speechSynthesis.addEventListener('voiceschanged', speak, { once: true });
         }
     }
 
@@ -1771,6 +2015,11 @@ class WebXRApp {
                 this.stopChroIntroAudio();
                 this.stopTipAvatar();
             }
+            if (hotspot.id === 'reception_right_video') {
+                this.showTimelineCinematic();
+                return;
+            }
+            if (!hotspot.modalId) return;
             window.modalManager.showComplexModal(hotspot.modalId);
         } else if (hotspot.type === 'info') {
             window.modalManager.showInfo(hotspot.title, hotspot.text, hotspot.icon || 'building', hotspot.bullets || null);

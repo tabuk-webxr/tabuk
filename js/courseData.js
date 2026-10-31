@@ -150,14 +150,39 @@ window.COURSE_DATA = {
                     id: "enter_hq",
                     type: "portal",
                     icon: "arrow",
-                    label: "Enter Headquarters",
+                    label: "Next to reception on left",
                     pitch: -17,
                     yaw: 132,
                     arrowYaw: 0,
                     targetScene: "riyadh_hq"
                 },
                 {
-                    // New interactive next-destination arrow (previous enter_hq stays locked)
+                    // After CHRO close — placeholder 360 until the real right-reception video lands
+                    id: "next_reception_right",
+                    type: "portal",
+                    icon: "arrow",
+                    label: "Next to reception on right",
+                    pitch: -17,
+                    yaw: 216,
+                    arrowYaw: 0,
+                    promptOffsetY: 6,
+                    arrowScale: 0.7,
+                    stayInScene: true,
+                    transitionVideo: "Videos/white_360.mp4",
+                    transitionIs360: true
+                },
+                {
+                    // Play control on the reception TV — no device art, no label
+                    id: "reception_right_video",
+                    type: "modal",
+                    icon: "monitor",
+                    hideLabel: true,
+                    pitch: -1,
+                    yaw: 212,
+                    playOffsetY: 0
+                },
+                {
+                    // Lift arrow (previous enter_hq stays locked)
                     id: "next_destination",
                     type: "portal",
                     icon: "arrow",

@@ -10,6 +10,7 @@
         { url: 'Videos/welcome_360_4k.mov', type: 'video', label: 'Welcome 360' },
         { url: 'Videos/51_D_4k.mov', type: 'video', label: 'Reception 360' },
         { url: 'Videos/Lift_4k.mov', type: 'video', label: 'Lift transition' },
+        { url: 'Videos/white_360.mp4', type: 'video', label: 'Reception right (placeholder)' },
         { url: 'Audios/Welcome_Enter.mp3', type: 'audio', label: 'Welcome enter' },
         { url: 'Audios/CHRO_Intro.mp3', type: 'audio', label: 'CHRO intro' },
         { url: 'Audios/Welcome Notes.mp3', type: 'audio', label: 'CEO welcome notes' },
@@ -19,7 +20,13 @@
         { url: 'assets/images/tablet_chro.png', type: 'image', label: 'CHRO tablet' },
         { url: 'assets/images/welcome_tip_avatar.png', type: 'image', label: 'Welcome guide' },
         { url: 'assets/images/video_chro_welcome.png', type: 'image', label: 'CEO welcome portrait' },
-        { url: 'assets/images/video_executive_welcome.png', type: 'image', label: 'CHRO welcome portrait' }
+        { url: 'assets/images/video_executive_welcome.png', type: 'image', label: 'CHRO welcome portrait' },
+        { url: 'assets/images/timeline_beat_1994.png', type: 'image', label: 'Timeline 1994 graphic' },
+        { url: 'assets/images/timeline_beat_today_ksa.png', type: 'image', label: 'Timeline KSA HQ graphic' },
+        { url: 'assets/images/timeline_beat_responsibility.png', type: 'image', label: 'Timeline responsibility graphic' },
+        { url: 'assets/images/timeline_beat_values.png', type: 'image', label: 'Timeline values graphic' },
+        { url: 'assets/images/people_purpose_line.jpg', type: 'image', label: 'People production line' },
+        { url: 'assets/images/people_purpose_lab.jpg', type: 'image', label: 'People lab scientist' }
     ];
 
     function normalizeUrl(url) {
