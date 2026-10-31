@@ -29,6 +29,11 @@ class WebXRApp {
         this._cinematicSpeech = null;
         this._cinematicSpeechGen = 0;
         this._speechKeepAlive = null;
+        this.footprintPins = null;
+        this.footprintPinKey = 'ksa';
+        this._footprintDragKey = null;
+        this._footprintDragEdge = null;
+        this.devPanelSide = 'right';
         
         // Sound effects synthesis via Web Audio API (zero external asset dependency)
         this.audioCtx = null;
@@ -44,6 +49,7 @@ class WebXRApp {
 
         // 2. Initialize 360 Viewer
         this.viewer = new window.PanoramaViewer('vr-viewport');
+        this._primeCinematicVoices();
 
         // 3. Initialize Hotspot Manager
         this.hotspots = new window.HotspotManager(
@@ -71,7 +77,36 @@ class WebXRApp {
         // 6. Preload all video/audio, then open first scene
         this.assets = new window.AssetLoader();
         this.bindAssetLoadingUI();
+        const cinematicMode = new URLSearchParams(window.location.search).get('cinematic');
+        if (cinematicMode === 'timeline' || cinematicMode === 'people' || cinematicMode === 'footprint') {
+            this.hideAssetLoadingScreen();
+            this._openCinematicPreview(cinematicMode);
+            return;
+        }
         this.runAssetPreload();
+    }
+
+    _openCinematicPreview(mode) {
+        this.showTimelineCinematic();
+        this._clearTimelineBeats();
+        this._stopCinematicSpeech();
+        const overlay = document.getElementById('timeline-cinematic-overlay');
+        if (!overlay) return;
+        overlay.classList.add(
+            'is-open',
+            'is-beat-1', 'is-beat-2', 'is-beat-3', 'is-beat-4',
+            'is-node-1', 'is-node-2', 'is-node-3', 'is-node-4',
+            'is-draw-4'
+        );
+        this._alignTimelineLineSoon();
+        if (mode === 'people') {
+            overlay.classList.add('is-people', 'is-people-beat-1', 'is-people-beat-2');
+        }
+        if (mode === 'footprint') {
+            overlay.classList.add('is-people', 'is-footprint', 'is-foot-out');
+            this.applyFootprintPins();
+            this._syncDevFootprintClass();
+        }
     }
 
     bindAssetLoadingUI() {
@@ -615,6 +650,7 @@ class WebXRApp {
 
         this.syncDevTipPlacementSliders();
         this.applyTipPlacementStyles();
+        this.bindDevFootprintPins();
     }
 
     syncDevTipPlacementSliders() {
@@ -683,6 +719,482 @@ class WebXRApp {
         if (gapVal) gapVal.textContent = `${gap}px`;
     }
 
+    _footprintPinDefaults() {
+        return {
+            ksa: { x: 76.3, y: 38.4, w: 19.6, h: 27.4, rot: 81 },
+            gulf: { x: 88.6, y: 35, w: 23.2, h: 30.8, rot: 55 },
+            nafrica: { x: 28.3, y: 26, w: 16.8, h: 40, rot: 0 },
+            origin: { x: 76.5, y: 38.3 },
+            r1: { x: 28.2, y: 26 },
+            r2: { x: 84, y: 27.3 },
+            r3: { x: 93, y: 46.1 }
+        };
+    }
+
+    _isFootprintRoutePin(key) {
+        return key === 'origin' || key === 'r1' || key === 'r2' || key === 'r3';
+    }
+
+    _isFootprintGlowPin(key) {
+        return key === 'ksa' || key === 'gulf' || key === 'nafrica';
+    }
+
+    _cloneFootprintPins(source) {
+        const defaults = this._footprintPinDefaults();
+        const src = source || defaults;
+        const out = {};
+        Object.keys(defaults).forEach((key) => {
+            const base = defaults[key];
+            const next = src[key] || base;
+            out[key] = { x: Number(next.x), y: Number(next.y) };
+            if (this._isFootprintGlowPin(key)) {
+                const oldCircle = (
+                    (key === 'ksa' && Number(next.w) === 17 && Number(next.h) === 30) ||
+                    (key === 'gulf' && Number(next.w) === 20 && Number(next.h) === 36) ||
+                    (key === 'nafrica' && Number(next.w) === 18 && Number(next.h) === 30)
+                );
+                out[key].w = Number(oldCircle ? base.w : (next.w != null ? next.w : base.w));
+                out[key].h = Number(oldCircle ? base.h : (next.h != null ? next.h : base.h));
+                out[key].rot = Number(next.rot != null ? next.rot : (base.rot || 0));
+            }
+        });
+        return out;
+    }
+
+    _loadFootprintPins() {
+        try {
+            const raw = window.localStorage.getItem('tabuk-footprint-pins');
+            if (raw) return this._cloneFootprintPins(JSON.parse(raw));
+        } catch (err) {
+            /* keep defaults */
+        }
+        return this._cloneFootprintPins();
+    }
+
+    _saveFootprintPins() {
+        try {
+            window.localStorage.setItem('tabuk-footprint-pins', JSON.stringify(this.footprintPins));
+        } catch (err) {
+            /* ignore quota / private mode */
+        }
+    }
+
+    _syncDevFootprintClass() {
+        const overlay = document.getElementById('timeline-cinematic-overlay');
+        if (!overlay) return;
+        overlay.classList.toggle(
+            'is-dev-footprint',
+            !!(this.devPanelOpen && overlay.classList.contains('is-footprint'))
+        );
+    }
+
+    _footprintImageBox() {
+        const wrap = document.querySelector('.footprint-map-wrap');
+        const map = document.querySelector('.footprint-map');
+        if (!wrap || !map) return null;
+        const wrapR = wrap.getBoundingClientRect();
+        const mapR = map.getBoundingClientRect();
+        if (mapR.width < 2 || mapR.height < 2) return null;
+        return {
+            left: mapR.left - wrapR.left,
+            top: mapR.top - wrapR.top,
+            w: mapR.width,
+            h: mapR.height
+        };
+    }
+
+    _fitFootprintLayer() {
+        const wrap = document.querySelector('.footprint-map-wrap');
+        const map = document.querySelector('.footprint-map');
+        const layer = document.querySelector('.footprint-layer');
+        if (!wrap || !map || !layer) return null;
+        const nw = map.naturalWidth;
+        const nh = map.naturalHeight;
+        if (nw < 2 || nh < 2) return this._footprintImageBox();
+        wrap.style.height = '';
+        const maxW = wrap.clientWidth;
+        const maxH = wrap.clientHeight;
+        if (maxW < 2 || maxH < 2) return this._footprintImageBox();
+        const scale = Math.min(maxW / nw, maxH / nh);
+        const w = Math.round(nw * scale);
+        const h = Math.round(nh * scale);
+        map.style.width = `${w}px`;
+        map.style.height = `${h}px`;
+        const wrapR = wrap.getBoundingClientRect();
+        const mapR = map.getBoundingClientRect();
+        const left = Math.max(0, mapR.left - wrapR.left);
+        const top = Math.max(0, mapR.top - wrapR.top);
+        layer.style.left = `${left}px`;
+        layer.style.top = `${top}px`;
+        layer.style.width = `${w}px`;
+        layer.style.height = `${h}px`;
+        return { left, top, w, h };
+    }
+
+    _footprintMapSize() {
+        const box = this._fitFootprintLayer() || this._footprintImageBox();
+        if (!box) return null;
+        return { w: box.w, h: box.h };
+    }
+
+    _normalizeFootprintRot(deg) {
+        let rot = Number(deg) || 0;
+        while (rot > 180) rot -= 360;
+        while (rot < -180) rot += 360;
+        return Math.round(rot * 10) / 10;
+    }
+
+    _rotateAroundPin(pin, x, y) {
+        const map = this._footprintMapSize();
+        const rot = Number(pin.rot) || 0;
+        if (!map || !rot) return { x, y };
+        const rad = rot * Math.PI / 180;
+        const dx = (x - pin.x) / 100 * map.w;
+        const dy = (y - pin.y) / 100 * map.h;
+        return {
+            x: Math.round((pin.x + (dx * Math.cos(rad) - dy * Math.sin(rad)) / map.w * 100) * 10) / 10,
+            y: Math.round((pin.y + (dx * Math.sin(rad) + dy * Math.cos(rad)) / map.h * 100) * 10) / 10
+        };
+    }
+
+    _setFootprintPinRotFromPoint(key, pt) {
+        const pin = this.footprintPins && this.footprintPins[key];
+        const map = this._footprintMapSize();
+        if (!pin || !map || !this._isFootprintGlowPin(key)) return;
+        const dx = pt.x / 100 * map.w - pin.x / 100 * map.w;
+        const dy = pt.y / 100 * map.h - pin.y / 100 * map.h;
+        pin.rot = this._normalizeFootprintRot(Math.atan2(dy, dx) * 180 / Math.PI + 90);
+        this.syncDevFootprintSliders();
+        this.applyFootprintPins();
+    }
+
+    _footprintImagePercent(clientX, clientY) {
+        this._fitFootprintLayer();
+        const layer = document.querySelector('.footprint-layer');
+        if (!layer) return null;
+        const rect = layer.getBoundingClientRect();
+        if (rect.width < 2 || rect.height < 2) return null;
+        const x = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
+        const y = Math.max(0, Math.min(100, ((clientY - rect.top) / rect.height) * 100));
+        return {
+            x: Math.round(x * 10) / 10,
+            y: Math.round(y * 10) / 10
+        };
+    }
+
+    _setFootprintPinXY(key, x, y, { persist = false } = {}) {
+        if (!this.footprintPins || !this.footprintPins[key]) return;
+        this.footprintPins[key].x = x;
+        this.footprintPins[key].y = y;
+        if (persist) this._saveFootprintPins();
+        this.syncDevFootprintSliders();
+        this.applyFootprintPins();
+    }
+
+    _footprintPinEdges(pin) {
+        const w = Number(pin.w) || 8;
+        const left = Math.round((pin.x - w / 2) * 10) / 10;
+        const right = Math.round((pin.x + w / 2) * 10) / 10;
+        return { left, right };
+    }
+
+    _setFootprintPinEdges(key, { left, right } = {}) {
+        if (!this._isFootprintGlowPin(key)) return;
+        const pin = this.footprintPins && this.footprintPins[key];
+        if (!pin) return;
+        const minW = 6;
+        const current = this._footprintPinEdges(pin);
+        let nextLeft = left != null ? Number(left) : current.left;
+        let nextRight = right != null ? Number(right) : current.right;
+        nextLeft = Math.max(0, Math.min(100 - minW, nextLeft));
+        nextRight = Math.max(nextLeft + minW, Math.min(100, nextRight));
+        pin.w = Math.round((nextRight - nextLeft) * 10) / 10;
+        pin.x = Math.round((nextLeft + pin.w / 2) * 10) / 10;
+        this.syncDevFootprintSliders();
+        this.applyFootprintPins();
+    }
+
+    applyDevPanelSide() {
+        const panel = document.getElementById('dev-orientation-panel');
+        if (!panel) return;
+        const side = this.devPanelSide === 'left' ? 'left' : 'right';
+        this.devPanelSide = side;
+        panel.classList.toggle('is-left', side === 'left');
+        try {
+            window.localStorage.setItem('tabuk-dev-panel-side', side);
+        } catch (err) {
+            /* ignore */
+        }
+    }
+
+    applyFootprintPins() {
+        if (!this.footprintPins) this.footprintPins = this._loadFootprintPins();
+        this._fitFootprintLayer();
+        const pins = this.footprintPins;
+        const selected = this.footprintPinKey || 'ksa';
+
+        ['ksa', 'gulf', 'nafrica'].forEach((key) => {
+            const pin = pins[key];
+            const glow = document.querySelector(`.footprint-glow[data-foot-pin="${key}"]`);
+            if (!glow || !pin) return;
+            glow.style.left = `${pin.x - pin.w / 2}%`;
+            glow.style.top = `${pin.y - pin.h / 2}%`;
+            glow.style.width = `${pin.w}%`;
+            glow.style.height = `${pin.h}%`;
+            glow.style.setProperty('--foot-rot', `${Number(pin.rot) || 0}deg`);
+            glow.classList.toggle('is-selected-glow', selected === key);
+        });
+
+        const origin = pins.origin;
+        ['r1', 'r2', 'r3'].forEach((key) => {
+            const end = pins[key];
+            const path = document.querySelector(`.footprint-route[data-foot-route="${key}"]`);
+            if (!path || !origin || !end) return;
+            path.setAttribute('d', `M${origin.x} ${origin.y} L${end.x} ${end.y}`);
+        });
+
+        document.querySelectorAll('[data-foot-handle]').forEach((handle) => {
+            const key = handle.getAttribute('data-foot-handle');
+            const pin = pins[key];
+            if (!pin) return;
+            handle.style.left = `${pin.x}%`;
+            handle.style.top = `${pin.y}%`;
+            handle.classList.toggle('is-selected', selected === key);
+            handle.classList.toggle('is-dragging', this._footprintDragKey === key && !this._footprintDragEdge);
+        });
+
+        const selectedPin = pins[selected];
+        const showEdges = this._isFootprintGlowPin(selected) && selectedPin;
+        const edges = showEdges ? this._footprintPinEdges(selectedPin) : null;
+        document.querySelectorAll('[data-foot-edge]').forEach((handle) => {
+            const edge = handle.getAttribute('data-foot-edge');
+            handle.style.visibility = showEdges ? 'visible' : 'hidden';
+            if (!edges) return;
+            let point = { x: selectedPin.x, y: selectedPin.y };
+            if (edge === 'left') point = { x: edges.left, y: selectedPin.y };
+            if (edge === 'right') point = { x: edges.right, y: selectedPin.y };
+            if (edge === 'rot') point = { x: selectedPin.x, y: selectedPin.y - selectedPin.h / 2 };
+            point = this._rotateAroundPin(selectedPin, point.x, point.y);
+            handle.style.left = `${point.x}%`;
+            handle.style.top = `${point.y}%`;
+        });
+    }
+
+    syncDevFootprintSliders() {
+        if (!this.footprintPins) this.footprintPins = this._loadFootprintPins();
+        const key = this.footprintPinKey || 'ksa';
+        const pin = this.footprintPins[key];
+        if (!pin) return;
+        const pinSelect = document.getElementById('dev-foot-pin');
+        const leftEl = document.getElementById('dev-foot-left');
+        const rightEl = document.getElementById('dev-foot-right');
+        const xEl = document.getElementById('dev-foot-x');
+        const yEl = document.getElementById('dev-foot-y');
+        const hEl = document.getElementById('dev-foot-h');
+        const rotEl = document.getElementById('dev-foot-rot');
+        const leftVal = document.getElementById('dev-foot-left-val');
+        const rightVal = document.getElementById('dev-foot-right-val');
+        const xVal = document.getElementById('dev-foot-x-val');
+        const yVal = document.getElementById('dev-foot-y-val');
+        const hVal = document.getElementById('dev-foot-h-val');
+        const rotVal = document.getElementById('dev-foot-rot-val');
+        const isGlow = this._isFootprintGlowPin(key);
+        const edges = isGlow ? this._footprintPinEdges(pin) : { left: pin.x, right: pin.x };
+        if (pinSelect && pinSelect.value !== key) pinSelect.value = key;
+        if (leftEl) {
+            leftEl.disabled = !isGlow;
+            if (isGlow) leftEl.value = String(edges.left);
+        }
+        if (rightEl) {
+            rightEl.disabled = !isGlow;
+            if (isGlow) rightEl.value = String(edges.right);
+        }
+        if (xEl) xEl.value = String(pin.x);
+        if (yEl) yEl.value = String(pin.y);
+        if (leftVal) leftVal.textContent = isGlow ? `${edges.left}%` : '—';
+        if (rightVal) rightVal.textContent = isGlow ? `${edges.right}%` : '—';
+        if (xVal) xVal.textContent = `${pin.x}%`;
+        if (yVal) yVal.textContent = `${pin.y}%`;
+        if (hEl) {
+            hEl.disabled = !isGlow;
+            if (isGlow) hEl.value = String(pin.h);
+        }
+        if (hVal) hVal.textContent = isGlow ? `${pin.h}%` : '—';
+        if (rotEl) {
+            rotEl.disabled = !isGlow;
+            if (isGlow) rotEl.value = String(pin.rot || 0);
+        }
+        if (rotVal) rotVal.textContent = isGlow ? `${pin.rot || 0}°` : '—';
+    }
+
+    bindDevFootprintPins() {
+        this.footprintPins = this._loadFootprintPins();
+        if (!this.footprintPins[this.footprintPinKey]) this.footprintPinKey = 'ksa';
+        this._footprintDragKey = null;
+        this._footprintDragEdge = null;
+        try {
+            const savedSide = window.localStorage.getItem('tabuk-dev-panel-side');
+            if (savedSide === 'left' || savedSide === 'right') this.devPanelSide = savedSide;
+        } catch (err) {
+            /* keep default */
+        }
+        this.applyDevPanelSide();
+
+        const pinSelect = document.getElementById('dev-foot-pin');
+        const leftEl = document.getElementById('dev-foot-left');
+        const rightEl = document.getElementById('dev-foot-right');
+        const xEl = document.getElementById('dev-foot-x');
+        const yEl = document.getElementById('dev-foot-y');
+        const hEl = document.getElementById('dev-foot-h');
+        const rotEl = document.getElementById('dev-foot-rot');
+        const resetBtn = document.getElementById('dev-foot-reset');
+        const panelLeftBtn = document.getElementById('dev-panel-left');
+        const panelRightBtn = document.getElementById('dev-panel-right');
+        const wrap = document.querySelector('.footprint-map-wrap');
+        const map = document.querySelector('.footprint-map');
+
+        const applyFromSliders = (edge) => {
+            const key = pinSelect ? pinSelect.value : this.footprintPinKey;
+            this.footprintPinKey = key;
+            const pin = this.footprintPins[key];
+            if (!pin) return;
+            if (this._isFootprintGlowPin(key) && (edge === 'left' || edge === 'right')) {
+                this._setFootprintPinEdges(key, {
+                    left: leftEl ? Number(leftEl.value) : undefined,
+                    right: rightEl ? Number(rightEl.value) : undefined
+                });
+            } else {
+                if (xEl) pin.x = Number(xEl.value);
+                if (yEl) pin.y = Number(yEl.value);
+                if (this._isFootprintGlowPin(key) && hEl) pin.h = Number(hEl.value);
+                if (this._isFootprintGlowPin(key) && rotEl) pin.rot = this._normalizeFootprintRot(rotEl.value);
+                this.syncDevFootprintSliders();
+                this.applyFootprintPins();
+            }
+            this._saveFootprintPins();
+            this.updateDevOrientationReadout();
+        };
+
+        if (pinSelect) {
+            pinSelect.addEventListener('change', () => {
+                this.footprintPinKey = pinSelect.value;
+                this.syncDevFootprintSliders();
+                this.applyFootprintPins();
+            });
+        }
+        if (leftEl) leftEl.addEventListener('input', () => applyFromSliders('left'));
+        if (rightEl) rightEl.addEventListener('input', () => applyFromSliders('right'));
+        if (xEl) xEl.addEventListener('input', () => applyFromSliders('x'));
+        if (yEl) yEl.addEventListener('input', () => applyFromSliders('y'));
+        if (hEl) hEl.addEventListener('input', () => applyFromSliders('h'));
+        if (rotEl) rotEl.addEventListener('input', () => applyFromSliders('rot'));
+        if (panelLeftBtn) {
+            panelLeftBtn.addEventListener('click', () => {
+                this.devPanelSide = 'left';
+                this.applyDevPanelSide();
+            });
+        }
+        if (panelRightBtn) {
+            panelRightBtn.addEventListener('click', () => {
+                this.devPanelSide = 'right';
+                this.applyDevPanelSide();
+            });
+        }
+
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                this.footprintPins = this._cloneFootprintPins();
+                this._saveFootprintPins();
+                this.syncDevFootprintSliders();
+                this.applyFootprintPins();
+                this.updateDevOrientationReadout();
+            });
+        }
+
+        if (map) {
+            map.addEventListener('load', () => this.applyFootprintPins());
+        }
+        const wrapEl = document.querySelector('.footprint-map-wrap');
+        if (wrapEl && typeof ResizeObserver !== 'undefined') {
+            const ro = new ResizeObserver(() => this.applyFootprintPins());
+            ro.observe(wrapEl);
+        }
+        const beatsEl = document.querySelector('.timeline-beats');
+        if (beatsEl && typeof ResizeObserver !== 'undefined') {
+            const lineRo = new ResizeObserver(() => this._alignTimelineLineSoon());
+            lineRo.observe(beatsEl);
+        }
+        window.addEventListener('resize', () => {
+            this._alignTimelineLine();
+            if (document.querySelector('.timeline-cinematic.is-footprint')) {
+                this.applyFootprintPins();
+            }
+        });
+
+        if (wrap) {
+            wrap.addEventListener('pointerdown', (e) => {
+                if (!this.devPanelOpen) return;
+                const overlay = document.getElementById('timeline-cinematic-overlay');
+                if (!overlay || !overlay.classList.contains('is-footprint')) return;
+                const edgeHandle = e.target.closest('[data-foot-edge]');
+                if (edgeHandle) {
+                    this._footprintDragKey = this.footprintPinKey;
+                    this._footprintDragEdge = edgeHandle.getAttribute('data-foot-edge');
+                    if (edgeHandle.setPointerCapture) edgeHandle.setPointerCapture(e.pointerId);
+                    e.preventDefault();
+                    return;
+                }
+                const handle = e.target.closest('[data-foot-handle]');
+                if (handle) {
+                    this.footprintPinKey = handle.getAttribute('data-foot-handle');
+                    if (pinSelect) pinSelect.value = this.footprintPinKey;
+                    this.syncDevFootprintSliders();
+                    this._footprintDragKey = this.footprintPinKey;
+                    this._footprintDragEdge = null;
+                    this.applyFootprintPins();
+                    if (handle.setPointerCapture) handle.setPointerCapture(e.pointerId);
+                    e.preventDefault();
+                    return;
+                }
+                const pt = this._footprintImagePercent(e.clientX, e.clientY);
+                if (!pt) return;
+                this._footprintDragKey = this.footprintPinKey;
+                this._footprintDragEdge = null;
+                this._setFootprintPinXY(this.footprintPinKey, pt.x, pt.y);
+                e.preventDefault();
+            });
+        }
+
+        window.addEventListener('pointermove', (e) => {
+            if (!this._footprintDragKey) return;
+            const pt = this._footprintImagePercent(e.clientX, e.clientY);
+            if (!pt) return;
+            if (this._footprintDragEdge === 'rot') {
+                this._setFootprintPinRotFromPoint(this._footprintDragKey, pt);
+                return;
+            }
+            if (this._footprintDragEdge === 'left' || this._footprintDragEdge === 'right') {
+                this._setFootprintPinEdges(this._footprintDragKey, {
+                    [this._footprintDragEdge]: pt.x
+                });
+                return;
+            }
+            this._setFootprintPinXY(this._footprintDragKey, pt.x, pt.y);
+        });
+
+        window.addEventListener('pointerup', () => {
+            if (!this._footprintDragKey && !this._footprintDragEdge) return;
+            this._footprintDragKey = null;
+            this._footprintDragEdge = null;
+            this._saveFootprintPins();
+            this.applyFootprintPins();
+            this.updateDevOrientationReadout();
+        });
+
+        this.syncDevFootprintSliders();
+        this.applyFootprintPins();
+    }
+
     toggleDevOrientationPanel(forceState) {
         const panel = document.getElementById('dev-orientation-panel');
         if (!panel) return;
@@ -693,7 +1205,11 @@ class WebXRApp {
             this.syncDevOrientationPanel();
             this.syncDevTipPlacementSliders();
             this.applyTipPlacementStyles();
+            this.syncDevFootprintSliders();
+            this.applyFootprintPins();
+            this.applyDevPanelSide();
         }
+        this._syncDevFootprintClass();
     }
 
     persistHotspotCoords(id, pitch, yaw) {
@@ -1134,6 +1650,17 @@ class WebXRApp {
                 `.reception-welcome-stack { left: ${tip.left}px; bottom: ${tip.bottom}px; ${gapCss} }\n` +
                 `.reception-tip-avatar { width: ${tip.width}px; height: ${tip.height}px; }\n` +
                 `.reception-welcome-tip { width: ${tip.tipWidth}px;${tip.gap < 0 ? ` margin-top: ${tip.gap}px;` : ''} }`;
+            const pins = this.footprintPins || this._loadFootprintPins();
+            const pinLines = Object.keys(this._footprintPinDefaults()).map((key) => {
+                const p = pins[key];
+                if (!p) return `  ${key}: (missing)`;
+                if (this._isFootprintGlowPin(key)) {
+                    const edges = this._footprintPinEdges(p);
+                    return `  ${key}: { left: ${edges.left}, right: ${edges.right}, x: ${p.x}, y: ${p.y}, w: ${p.w}, h: ${p.h}, rot: ${p.rot || 0} }`;
+                }
+                return `  ${key}: { x: ${p.x}, y: ${p.y} }`;
+            }).join('\n');
+            pre.textContent += `\nfootprintPins:\n${pinLines}`;
         }
     }
 
@@ -1815,6 +2342,37 @@ class WebXRApp {
         }
     }
 
+    _alignTimelineLine() {
+        const overlay = document.getElementById('timeline-cinematic-overlay');
+        const beats = document.querySelector('.timeline-beats');
+        const line = document.querySelector('.timeline-line-draw');
+        const dots = overlay ? [...overlay.querySelectorAll('.timeline-node-dot')] : [];
+        if (!overlay || overlay.hidden || !beats || !line || dots.length < 2) return;
+        const br = beats.getBoundingClientRect();
+        const first = dots[0].getBoundingClientRect();
+        const last = dots[dots.length - 1].getBoundingClientRect();
+        if (br.width < 2 || first.width < 2 || last.width < 2) return;
+        const x1 = first.left + first.width / 2 - br.left;
+        const x2 = last.left + last.width / 2 - br.left;
+        line.style.left = `${Math.round(x1)}px`;
+        line.style.right = 'auto';
+        line.style.width = `${Math.max(0, Math.round(x2 - x1))}px`;
+        line.style.top = '';
+    }
+
+    _alignTimelineLineSoon() {
+        this._alignTimelineLine();
+        requestAnimationFrame(() => {
+            this._alignTimelineLine();
+            requestAnimationFrame(() => this._alignTimelineLine());
+        });
+        if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(() => this._alignTimelineLine());
+        }
+        clearTimeout(this._timelineLineAlignTimer);
+        this._timelineLineAlignTimer = setTimeout(() => this._alignTimelineLine(), 120);
+    }
+
     showTimelineCinematic() {
         const overlay = document.getElementById('timeline-cinematic-overlay');
         if (!overlay) return;
@@ -1836,12 +2394,17 @@ class WebXRApp {
 
         overlay.hidden = false;
         overlay.className = 'timeline-cinematic';
-        overlay.querySelectorAll('.people-purpose-photo').forEach((photo) => {
+        this._alignTimelineLineSoon();
+        overlay.querySelectorAll('.people-purpose-photo, .footprint-map').forEach((photo) => {
             const path = photo.getAttribute('src') || '';
             const bare = path.split('?')[0];
             if (bare) photo.src = this.resolveMediaUrl(bare);
         });
-        requestAnimationFrame(() => overlay.classList.add('is-open'));
+        this.applyFootprintPins();
+        requestAnimationFrame(() => {
+            overlay.classList.add('is-open');
+            this._alignTimelineLineSoon();
+        });
 
         const beats = [
             { at: 240, cls: 'is-beat-1 is-node-1' },
@@ -1868,6 +2431,7 @@ class WebXRApp {
             overlay.className = 'timeline-cinematic';
             overlay.hidden = true;
         }
+        this._syncDevFootprintClass();
 
         const hotspotsLayer = document.getElementById('hotspots-layer');
         const hud = document.getElementById('hud-layer');
@@ -1897,10 +2461,64 @@ class WebXRApp {
                 if (!overlay || overlay.hidden) return;
                 overlay.classList.add('is-people-beat-2');
                 this._speakCinematicLine(
-                    'Supporting patients, communities, and each other.'
+                    'Supporting patients, communities, and each other.',
+                    () => this._revealFootprintScreen(overlay)
                 );
             }
         );
+    }
+
+    _revealFootprintScreen(overlay) {
+        if (!overlay || overlay.hidden) return;
+        overlay.classList.add('is-footprint', 'is-foot-ksa');
+        this.applyFootprintPins();
+        this._syncDevFootprintClass();
+        this._playFootprintTone(0);
+        const lines = [
+            {
+                cls: 'is-foot-ksa',
+                text: 'In Saudi Arabia, our core market, we have a strong operational presence across key cities like Riyadh, Jeddah, Dammam, and Tabuk.'
+            },
+            {
+                cls: 'is-foot-gulf',
+                text: 'Across the Gulf, we serve key markets through a growing regional footprint.'
+            },
+            {
+                cls: 'is-foot-nafrica',
+                text: 'In North Africa, our presence spans multiple countries across the region.'
+            },
+            {
+                cls: 'is-foot-out',
+                text: 'Beyond these, we extend our reach through a network of distribution partners.'
+            }
+        ];
+        const footBeats = ['is-foot-ksa', 'is-foot-gulf', 'is-foot-nafrica', 'is-foot-out'];
+        const speakStep = (index) => {
+            if (!overlay || overlay.hidden) return;
+            const step = lines[index];
+            overlay.classList.remove(...footBeats);
+            overlay.classList.add(step.cls);
+            this._playFootprintTone(index);
+            this._speakCinematicLine(step.text, () => {
+                if (index < lines.length - 1) speakStep(index + 1);
+            });
+        };
+        speakStep(0);
+    }
+
+    _playFootprintTone(step) {
+        const freqs = [523, 587, 659, 784];
+        this.playTone(freqs[step] || 523, 'sine', 0.16);
+    }
+
+    _primeCinematicVoices() {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.getVoices();
+        if (typeof window.speechSynthesis.addEventListener === 'function') {
+            window.speechSynthesis.addEventListener('voiceschanged', () => {
+                window.speechSynthesis.getVoices();
+            }, { once: true });
+        }
     }
 
     _stopCinematicSpeech() {
@@ -1943,49 +2561,44 @@ class WebXRApp {
         }
 
         const gen = this._cinematicSpeechGen;
-        let started = false;
-        const speak = () => {
-            if (started || gen !== this._cinematicSpeechGen) return;
-            started = true;
-            const utter = new SpeechSynthesisUtterance(text);
-            utter.lang = 'en-GB';
-            utter.rate = 0.92;
-            utter.pitch = 1;
-            utter.volume = 1;
-            const voice = this._pickCinematicVoice();
-            if (voice) {
-                utter.voice = voice;
-                if (voice.lang) utter.lang = voice.lang;
-            }
-            utter.onend = () => {
-                if (gen !== this._cinematicSpeechGen) return;
-                this._stopCinematicSpeech();
-                finish();
-            };
-            utter.onerror = () => {
-                if (gen !== this._cinematicSpeechGen) return;
-                this._stopCinematicSpeech();
-                finish();
-            };
-            this._cinematicSpeech = utter;
-            window.speechSynthesis.speak(utter);
-            this._speechKeepAlive = setInterval(() => {
-                if (!window.speechSynthesis.speaking) return;
-                window.speechSynthesis.pause();
-                window.speechSynthesis.resume();
-            }, 10000);
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = 'en-GB';
+        utter.rate = 0.92;
+        utter.pitch = 1;
+        utter.volume = 1;
+        const voice = this._pickCinematicVoice();
+        if (voice) {
+            utter.voice = voice;
+            if (voice.lang) utter.lang = voice.lang;
+        }
+        utter.onend = () => {
+            if (gen !== this._cinematicSpeechGen) return;
+            this._stopCinematicSpeech();
+            finish();
         };
-
-        const voices = window.speechSynthesis.getVoices();
-        if (voices && voices.length) {
-            speak();
-            return;
-        }
-        const waitId = setTimeout(speak, 350);
-        this._timelineBeatTimers.push(waitId);
-        if (typeof window.speechSynthesis.addEventListener === 'function') {
-            window.speechSynthesis.addEventListener('voiceschanged', speak, { once: true });
-        }
+        utter.onerror = (event) => {
+            if (gen !== this._cinematicSpeechGen) return;
+            const err = event && event.error;
+            if (err === 'interrupted' || err === 'canceled') return;
+            const waitMs = Math.max(1600, text.split(/\s+/).length * 380);
+            const waitId = setTimeout(() => {
+                if (gen !== this._cinematicSpeechGen) return;
+                this._stopCinematicSpeech();
+                finish();
+            }, waitMs);
+            this._timelineBeatTimers.push(waitId);
+        };
+        this._cinematicSpeech = utter;
+        // Chrome drops the next utterance if speak() follows cancel() in the same tick
+        const id = setTimeout(() => {
+            if (gen !== this._cinematicSpeechGen) return;
+            window.speechSynthesis.speak(utter);
+        }, 40);
+        this._timelineBeatTimers.push(id);
+        this._speechKeepAlive = setInterval(() => {
+            if (!window.speechSynthesis.speaking) return;
+            if (window.speechSynthesis.paused) window.speechSynthesis.resume();
+        }, 4000);
     }
 
     handleHotspotClick(hotspot) {

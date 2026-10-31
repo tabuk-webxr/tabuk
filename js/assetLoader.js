@@ -26,7 +26,8 @@
         { url: 'assets/images/timeline_beat_responsibility.png', type: 'image', label: 'Timeline responsibility graphic' },
         { url: 'assets/images/timeline_beat_values.png', type: 'image', label: 'Timeline values graphic' },
         { url: 'assets/images/people_purpose_line.jpg', type: 'image', label: 'People production line' },
-        { url: 'assets/images/people_purpose_lab.jpg', type: 'image', label: 'People lab scientist' }
+        { url: 'assets/images/people_purpose_lab.jpg', type: 'image', label: 'People lab scientist' },
+        { url: 'assets/images/image15.png', type: 'image', label: 'Regional footprint map' }
     ];
 
     function normalizeUrl(url) {
