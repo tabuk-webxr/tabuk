@@ -181,6 +181,11 @@ html, body {
     height: 100%;
     z-index: 1;
     cursor: grab;
+    touch-action: none;
+}
+
+#vr-viewport canvas {
+    touch-action: none;
 }
 
 #vr-viewport:active {
@@ -3370,5 +3375,603 @@ html, body {
     .scene-info-card {
         max-width: 240px;
         padding: 14px 18px;
+    }
+}
+
+/* ================= VISION, MISSION & VALUES (slides 15–35) ================= */
+.values-entry-arrow[hidden] {
+    display: none !important;
+}
+
+.values-entry-arrow {
+    position: absolute;
+    z-index: 6;
+    left: 50%;
+    bottom: 28px;
+    transform: translateX(-50%);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    border: 0;
+    border-radius: 999px;
+    padding: 12px 18px 12px 14px;
+    background: #E2B84A;
+    color: #1a1a1a;
+    font-family: var(--font-heading), "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+}
+
+.values-entry-mark {
+    width: 0;
+    height: 0;
+    border-top: 7px solid transparent;
+    border-bottom: 7px solid transparent;
+    border-left: 11px solid #1a1a1a;
+}
+
+.values-experience[hidden] {
+    display: none !important;
+}
+
+.values-experience {
+    position: fixed;
+    inset: 0;
+    z-index: 46;
+    display: flex;
+    flex-direction: column;
+    background:
+        linear-gradient(180deg, rgba(6, 10, 18, 0.55), rgba(6, 10, 18, 0.72)),
+        url("../assets/images/vmv_lobby.png") center / cover no-repeat;
+    color: #f4f1ea;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+}
+
+.values-experience.is-open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.values-experience.is-summary {
+    background:
+        linear-gradient(180deg, rgba(8, 16, 28, 0.55), rgba(8, 16, 28, 0.72)),
+        url("../assets/images/vmv_lobby.png") center / cover no-repeat;
+    color: #f7f4ee;
+}
+
+.values-stage {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding: 56px 28px 18px;
+    touch-action: none;
+}
+
+.vmv-board,
+.vmv-values,
+.vmv-vault,
+.vmv-summary {
+    width: min(1180px, 100%);
+    margin: 0 auto;
+}
+
+.vmv-board {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(240px, 1fr) minmax(280px, 1.15fr) minmax(240px, 1fr);
+    grid-template-areas:
+        "vision iceberg mission"
+        "supports iceberg mission";
+    column-gap: 18px;
+    row-gap: 18px;
+    align-items: start;
+    min-height: min(620px, calc(100vh - 140px));
+    padding: 8px 0 24px;
+}
+
+.vmv-board.is-mission {
+    grid-template-areas:
+        "vision iceberg mission"
+        "vision iceberg mission";
+}
+
+.vmv-waterline {
+    position: absolute;
+    left: 4%;
+    right: 4%;
+    top: 46%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(186, 230, 253, 0.95), transparent);
+    box-shadow: 0 0 12px rgba(125, 211, 252, 0.55);
+    pointer-events: none;
+    z-index: 2;
+}
+
+.vmv-vision { grid-area: vision; }
+.vmv-iceberg { grid-area: iceberg; }
+.vmv-mission { grid-area: mission; }
+.vmv-support-row { grid-area: supports; }
+
+.vmv-panel {
+    background: rgba(8, 12, 22, 0.88);
+    border: 1px solid rgba(226, 184, 74, 0.18);
+    border-radius: 4px;
+    padding: 16px 18px 18px;
+    color: #f7f4ee;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+    position: relative;
+    z-index: 3;
+}
+
+.vmv-vision {
+    border: 2px solid #E2B84A;
+}
+
+.vmv-panel.is-quiet {
+    border-color: rgba(226, 184, 74, 0.28);
+    opacity: 0.78;
+}
+
+.vmv-mission.is-dim {
+    opacity: 0.38;
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.vmv-mission.is-live {
+    opacity: 1;
+    border: 2px solid #1aa6a6;
+    box-shadow: 0 0 0 4px rgba(26, 166, 166, 0.16);
+}
+
+.vmv-kicker {
+    margin: 0 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-heading), "Helvetica Neue", Arial, sans-serif;
+    font-size: 15px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #E2B84A;
+}
+
+.vmv-mission .vmv-kicker {
+    color: #d7dde4;
+}
+
+.vmv-mission.is-live .vmv-kicker {
+    color: #7ee0e0;
+}
+
+.vmv-kicker-icon {
+    font-size: 16px;
+}
+
+.vmv-statement,
+.vmv-guide,
+.vmv-question,
+.vmv-instruction,
+.vmv-hint,
+.vmv-below-q {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.45;
+}
+
+.vmv-support-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    position: relative;
+    z-index: 3;
+}
+
+.vmv-support-slot {
+    margin: 0;
+    min-height: 88px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(18, 24, 36, 0.55);
+    overflow: hidden;
+    position: relative;
+}
+
+.vmv-support-slot.is-active {
+    border: 2px solid #E2B84A;
+}
+
+.vmv-support-slot.is-done {
+    opacity: 0.55;
+}
+
+.vmv-support-slot.is-pending {
+    opacity: 0.55;
+    min-height: 72px;
+    display: flex;
+    align-items: flex-end;
+}
+
+.vmv-support-slot:nth-child(3) {
+    grid-column: 1 / span 2;
+    min-height: 64px;
+}
+
+.vmv-support-slot img {
+    display: block;
+    width: 100%;
+    height: 92px;
+    object-fit: cover;
+}
+
+.vmv-support-slot figcaption {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 6px 8px;
+    font-size: 12px;
+    font-weight: 650;
+    color: #f7f4ee;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.72));
+}
+
+.vmv-support-slot.is-pending figcaption {
+    position: static;
+    background: none;
+    padding: 10px 12px;
+    color: rgba(247, 244, 238, 0.7);
+}
+
+.vmv-hotspot {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    text-align: left;
+}
+
+.vmv-hotspot.is-done {
+    opacity: 0.55;
+}
+
+.vmv-hotspot.is-dim {
+    opacity: 0.4;
+}
+
+.vmv-hotspot.is-active {
+    color: #f7f4ee;
+    font-weight: 650;
+}
+
+.vmv-mark {
+    width: 1.1em;
+    flex: 0 0 auto;
+}
+
+.vmv-iceberg {
+    margin: 0;
+    position: relative;
+    z-index: 1;
+    align-self: stretch;
+    display: flex;
+    justify-content: center;
+}
+
+.vmv-iceberg img {
+    display: block;
+    width: min(100%, 420px);
+    height: auto;
+    max-height: min(640px, 78vh);
+    object-fit: contain;
+}
+
+.vmv-mission-go,
+.vmv-below,
+.vmv-next,
+.vmv-lift {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 14px;
+    border: 0;
+    border-radius: 999px;
+    padding: 10px 16px;
+    background: #1aa6a6;
+    color: #ffffff;
+    font-family: var(--font-heading), "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.vmv-below,
+.vmv-lift,
+.values-experience.is-summary .vmv-lift {
+    background: #E2B84A;
+    color: #1a1a1a;
+}
+
+.vmv-below-q {
+    margin-top: 8px;
+    color: #3d4d5c;
+}
+
+.vmv-hotspots {
+    display: grid;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.vmv-hotspot {
+    width: 100%;
+    min-height: 44px;
+    border: 1px solid #d5dee6;
+    border-radius: 12px;
+    background: #f7fbfb;
+    padding: 8px 10px;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.vmv-hotspot:disabled {
+    cursor: default;
+}
+
+.vmv-hotspot.is-active {
+    border-color: #1aa6a6;
+    background: #ffffff;
+}
+
+.vmv-hotspot ul {
+    margin: 6px 0 0;
+    padding-left: 18px;
+}
+
+.vmv-values,
+.vmv-summary {
+    display: grid;
+    gap: 16px;
+    justify-items: center;
+    text-align: center;
+}
+
+.vmv-iceberg-inline {
+    width: min(280px, 70%);
+    margin: 0;
+}
+
+.vmv-value-grid,
+.vmv-panels {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.vmv-value-card,
+.vmv-panel-card {
+    background: #ffffff;
+    color: #1a2b3c;
+    border: 1px solid #d5dee6;
+    border-radius: 14px;
+    padding: 14px 12px;
+    text-align: left;
+}
+
+.vmv-value-card h3,
+.vmv-panel-card h3,
+.vmv-reveal h3,
+.vmv-vault-head h2 {
+    margin: 0 0 6px;
+    font-family: var(--font-heading), "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+}
+
+.vmv-value-card p,
+.vmv-panel-card p,
+.vmv-reveal p,
+.vmv-card p,
+.vmv-vault-head p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.vmv-guide {
+    font-weight: 650;
+}
+
+.vmv-next {
+    background: #004B87;
+}
+
+.vmv-vault-head {
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.vmv-vault-head h2 {
+    font-size: 26px;
+}
+
+.vmv-progress,
+.vmv-final,
+.vmv-banner {
+    font-family: var(--font-heading), "Helvetica Neue", Arial, sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.vmv-final,
+.vmv-banner {
+    color: #8a6a12;
+}
+
+.vmv-panels {
+    margin-top: 14px;
+}
+
+.vmv-panel-card {
+    font: inherit;
+    cursor: pointer;
+}
+
+.vmv-panel-card.is-locked {
+    opacity: 0.92;
+}
+
+.vmv-panel-card.is-open {
+    border-color: #1aa6a6;
+    box-shadow: 0 0 0 3px rgba(26, 166, 166, 0.16);
+}
+
+.vmv-panel-card.is-wrong {
+    animation: vmv-wrong 0.45s ease;
+    border-color: #d64545;
+    background: #fdecec;
+}
+
+.vmv-lock {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #5c6b78;
+}
+
+.vmv-panel-card.is-open .vmv-lock {
+    color: #0d6e6e;
+}
+
+.vmv-card {
+    width: min(640px, 100%);
+    margin: 8px auto 0;
+    padding: 16px 18px;
+    border-radius: 16px;
+    background: #ffffff;
+    border: 1px solid #c9d5df;
+    box-shadow: 0 12px 28px rgba(15, 35, 55, 0.08);
+    cursor: grab;
+    touch-action: none;
+}
+
+.vmv-card.is-final {
+    border: 2px solid #E2B84A;
+}
+
+.vmv-card.is-dragging {
+    cursor: grabbing;
+    position: relative;
+    z-index: 3;
+}
+
+.vmv-card.is-settled {
+    cursor: default;
+}
+
+.vmv-instruction,
+.vmv-hint {
+    text-align: center;
+    margin-top: 12px;
+}
+
+.vmv-hint {
+    color: #9b2c2c;
+}
+
+.vmv-reveal {
+    width: min(640px, 100%);
+    margin: 12px auto 0;
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: #eef8f6;
+    border: 1px solid #1aa6a6;
+    text-align: left;
+}
+
+.vmv-reveal-kicker {
+    margin: 0 0 4px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #0d6e6e;
+}
+
+.vmv-summary .vmv-guide,
+.vmv-summary .vmv-question,
+.vmv-summary .vmv-dots {
+    color: #f7f4ee;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.35);
+}
+
+.vmv-dots {
+    letter-spacing: 0.4em;
+}
+
+.vmv-vo {
+    width: min(980px, 100%);
+    margin: 18px auto 0;
+    color: rgba(247, 244, 238, 0.78);
+    font-size: 13px;
+    line-height: 1.45;
+    font-style: italic;
+}
+
+.values-experience.is-summary .vmv-vo {
+    color: #f7f4ee;
+}
+
+@keyframes vmv-wrong {
+    0%, 100% { transform: none; }
+    25% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+    75% { transform: translateX(-3px); }
+}
+
+@media (max-width: 900px) {
+    .vmv-board,
+    .vmv-board.is-mission,
+    .vmv-value-grid,
+    .vmv-panels {
+        grid-template-columns: 1fr;
+    }
+
+    .vmv-board,
+    .vmv-board.is-mission {
+        grid-template-areas:
+            "vision"
+            "iceberg"
+            "mission"
+            "supports";
+        min-height: 0;
+    }
+
+    .vmv-waterline {
+        display: none;
+    }
+
+    .vmv-support-slot:nth-child(3) {
+        grid-column: auto;
+    }
+
+    .vmv-iceberg img {
+        max-width: 220px;
+        max-height: 280px;
+        margin: 0 auto;
+    }
+
+    .values-stage {
+        padding: 88px 14px 14px;
+    }
+
+    .cinematic-chrome-title {
+        white-space: normal;
     }
 }

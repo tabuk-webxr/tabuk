@@ -32,6 +32,7 @@ class PanoramaViewer {
 
         // Interaction state
         this.isUserInteracting = false;
+        this._lookMoved = false;
         this.onPointerDownPointerX = 0;
         this.onPointerDownPointerY = 0;
         this.onPointerDownYaw = 0;
@@ -1014,12 +1015,18 @@ class PanoramaViewer {
 
     bindEvents() {
         const dom = this.renderer.domElement;
+        const startLook = (e) => this.onPointerDown(e);
 
-        dom.addEventListener('pointerdown', (e) => this.onPointerDown(e));
-        window.addEventListener('pointermove', (e) => this.onPointerMove(e));
+        this.container.style.touchAction = 'none';
+        if (dom) dom.style.touchAction = 'none';
+
+        this.container.addEventListener('pointerdown', startLook);
+        dom.addEventListener('pointerdown', startLook);
+        window.addEventListener('pointermove', (e) => this.onPointerMove(e), { passive: false });
         window.addEventListener('pointerup', () => this.onPointerUp());
-        
-        dom.addEventListener('wheel', (e) => this.onWheel(e), { passive: true });
+        window.addEventListener('pointercancel', () => this.onPointerUp());
+
+        this.container.addEventListener('wheel', (e) => this.onWheel(e), { passive: true });
         window.addEventListener('resize', () => this.onWindowResize());
 
         // Gyroscope handler
@@ -1030,7 +1037,9 @@ class PanoramaViewer {
 
     onPointerDown(event) {
         if (event.isPrimary === false || this._transitioning) return;
+        if (event.button != null && event.button > 0) return;
         this.isUserInteracting = true;
+        this._lookMoved = false;
         this.onPointerDownPointerX = event.clientX;
         this.onPointerDownPointerY = event.clientY;
         this.onPointerDownYaw = this.yaw;
@@ -1039,14 +1048,22 @@ class PanoramaViewer {
 
     onPointerMove(event) {
         if (!this.isUserInteracting) return;
+        const dx = event.clientX - this.onPointerDownPointerX;
+        const dy = event.clientY - this.onPointerDownPointerY;
+        if (Math.abs(dx) + Math.abs(dy) > 6) this._lookMoved = true;
         const deltaX = (this.onPointerDownPointerX - event.clientX) * 0.15;
         const deltaY = (event.clientY - this.onPointerDownPointerY) * 0.15;
         this.targetYaw = this.onPointerDownYaw + deltaX;
         this.targetPitch = Math.max(-85, Math.min(85, this.onPointerDownPitch + deltaY));
+        if (this._lookMoved && event.cancelable) event.preventDefault();
     }
 
     onPointerUp() {
         this.isUserInteracting = false;
+    }
+
+    didLookDrag() {
+        return !!this._lookMoved;
     }
 
     onWheel(event) {

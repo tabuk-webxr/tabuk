@@ -72,6 +72,7 @@ class WebXRApp {
         }
 
         // 5. Bind UI Controls
+        this.valuesExperience = new window.ValuesExperience(this);
         this.bindUI();
 
         // 6. Preload all video/audio, then open first scene
@@ -81,6 +82,11 @@ class WebXRApp {
         if (cinematicMode === 'timeline' || cinematicMode === 'people' || cinematicMode === 'footprint') {
             this.hideAssetLoadingScreen();
             this._openCinematicPreview(cinematicMode);
+            return;
+        }
+        if (cinematicMode === 'values' || cinematicMode === 'vault') {
+            this.hideAssetLoadingScreen();
+            this.valuesExperience.open({ start: cinematicMode === 'vault' ? 'vault' : 'vision' });
             return;
         }
         this.runAssetPreload();
@@ -106,6 +112,7 @@ class WebXRApp {
             overlay.classList.add('is-people', 'is-footprint', 'is-foot-out');
             this.applyFootprintPins();
             this._syncDevFootprintClass();
+            this._offerValuesExperience();
         }
     }
 
@@ -254,6 +261,14 @@ class WebXRApp {
         const timelineClose = document.getElementById('timeline-cinematic-close');
         if (timelineClose) {
             timelineClose.addEventListener('click', () => this.hideTimelineCinematic());
+        }
+
+        const valuesEntry = document.getElementById('values-entry-arrow');
+        if (valuesEntry) {
+            valuesEntry.addEventListener('click', () => {
+                this.hideTimelineCinematic({ restoreScene: false });
+                if (this.valuesExperience) this.valuesExperience.open({ start: 'vision' });
+            });
         }
 
         // Fullscreen toggle
@@ -2392,6 +2407,9 @@ class WebXRApp {
             this.viewer.syncScreenOverlays([]);
         }
 
+        const valuesEntry = document.getElementById('values-entry-arrow');
+        if (valuesEntry) valuesEntry.hidden = true;
+
         overlay.hidden = false;
         overlay.className = 'timeline-cinematic';
         this._alignTimelineLineSoon();
@@ -2423,15 +2441,19 @@ class WebXRApp {
         );
     }
 
-    hideTimelineCinematic() {
+    hideTimelineCinematic(options = {}) {
+        const restoreScene = options.restoreScene !== false;
         const overlay = document.getElementById('timeline-cinematic-overlay');
         this._clearTimelineBeats();
         this._stopCinematicSpeech();
+        const valuesEntry = document.getElementById('values-entry-arrow');
+        if (valuesEntry) valuesEntry.hidden = true;
         if (overlay) {
             overlay.className = 'timeline-cinematic';
             overlay.hidden = true;
         }
         this._syncDevFootprintClass();
+        if (!restoreScene) return;
 
         const hotspotsLayer = document.getElementById('hotspots-layer');
         const hud = document.getElementById('hud-layer');
@@ -2501,9 +2523,17 @@ class WebXRApp {
             this._playFootprintTone(index);
             this._speakCinematicLine(step.text, () => {
                 if (index < lines.length - 1) speakStep(index + 1);
+                else this._offerValuesExperience();
             });
         };
         speakStep(0);
+    }
+
+    _offerValuesExperience() {
+        const overlay = document.getElementById('timeline-cinematic-overlay');
+        const arrow = document.getElementById('values-entry-arrow');
+        if (!overlay || overlay.hidden || !arrow) return;
+        arrow.hidden = false;
     }
 
     _playFootprintTone(step) {

@@ -151,8 +151,19 @@ class HotspotManager {
                 }
             };
 
-            wrapper.addEventListener('pointerdown', (e) => e.stopPropagation());
-            wrapper.addEventListener('click', handleTrigger);
+            wrapper.addEventListener('pointerdown', (e) => {
+                if (this.viewer && typeof this.viewer.onPointerDown === 'function') {
+                    this.viewer.onPointerDown(e);
+                }
+            });
+            wrapper.addEventListener('click', (e) => {
+                if (this.viewer && typeof this.viewer.didLookDrag === 'function' && this.viewer.didLookDrag()) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return;
+                }
+                handleTrigger(e);
+            });
             wrapper.addEventListener('keydown', (e) => {
                 // Space is reserved for DEV panel toggle — use Enter to activate
                 if (e.key === 'Enter') {
