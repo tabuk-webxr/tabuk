@@ -265,10 +265,11 @@ class WebXRApp {
 
         const valuesEntry = document.getElementById('values-entry-arrow');
         if (valuesEntry) {
-            valuesEntry.addEventListener('click', () => {
-                this.hideTimelineCinematic({ restoreScene: false });
-                if (this.valuesExperience) this.valuesExperience.open({ start: 'vision' });
-            });
+            valuesEntry.addEventListener('click', () => this.openValuesExperienceFromPoster());
+        }
+        const posterHotspot = document.getElementById('vmv-poster-hotspot');
+        if (posterHotspot) {
+            posterHotspot.addEventListener('click', () => this.openValuesExperienceFromPoster());
         }
 
         // Fullscreen toggle
@@ -1931,7 +1932,7 @@ class WebXRApp {
 
     revealReceptionRightArrival() {
         this.receptionRightArrived = true;
-        this.receptionLiftUnlocked = true;
+        // Lift stays locked until Vision/Mission/Values completes (slide 35).
         this.hideReceptionTip();
         const scene = window.COURSE_DATA.scenes.reception;
         if (!scene || this.currentSceneId !== 'reception' || !this.hotspots) return;
@@ -1945,6 +1946,21 @@ class WebXRApp {
             this.refreshDevScreenOverlayList();
         }
         this.syncDevOrientationPanel();
+    }
+
+    openValuesExperienceFromPoster() {
+        const overlay = document.getElementById('timeline-cinematic-overlay');
+        const poster = document.getElementById('vmv-poster-hotspot');
+        const start = () => {
+            this.hideTimelineCinematic({ restoreScene: false });
+            if (this.valuesExperience) this.valuesExperience.open({ start: 'vision' });
+        };
+        if (overlay && poster && !poster.hidden) {
+            overlay.classList.add('is-poster-expand');
+            setTimeout(start, 520);
+            return;
+        }
+        start();
     }
 
     unlockLiftHotspot() {
@@ -2409,6 +2425,8 @@ class WebXRApp {
 
         const valuesEntry = document.getElementById('values-entry-arrow');
         if (valuesEntry) valuesEntry.hidden = true;
+        const posterHotspot = document.getElementById('vmv-poster-hotspot');
+        if (posterHotspot) posterHotspot.hidden = true;
 
         overlay.hidden = false;
         overlay.className = 'timeline-cinematic';
@@ -2448,6 +2466,8 @@ class WebXRApp {
         this._stopCinematicSpeech();
         const valuesEntry = document.getElementById('values-entry-arrow');
         if (valuesEntry) valuesEntry.hidden = true;
+        const posterHotspot = document.getElementById('vmv-poster-hotspot');
+        if (posterHotspot) posterHotspot.hidden = true;
         if (overlay) {
             overlay.className = 'timeline-cinematic';
             overlay.hidden = true;
@@ -2532,8 +2552,10 @@ class WebXRApp {
     _offerValuesExperience() {
         const overlay = document.getElementById('timeline-cinematic-overlay');
         const arrow = document.getElementById('values-entry-arrow');
-        if (!overlay || overlay.hidden || !arrow) return;
-        arrow.hidden = false;
+        const poster = document.getElementById('vmv-poster-hotspot');
+        if (!overlay || overlay.hidden) return;
+        if (poster) poster.hidden = false;
+        if (arrow) arrow.hidden = false;
     }
 
     _playFootprintTone(step) {

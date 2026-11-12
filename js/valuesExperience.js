@@ -1,7 +1,7 @@
 /**
  * Environment 1 · Scene 3 — Vision, Mission & Values (storyboard slides 15–35).
  * Copy, sequence, and interactions follow the slide text and speaker notes.
- * Visual treatment follows the induction UI, not a pixel copy of the deck.
+ * Visual treatment matches storyboard colors and layout (slides 15–35).
  */
 (function () {
     const VISION = 'To be a leading pharmaceutical company valued for its trusted and diversified products.';
@@ -22,15 +22,18 @@
 
     const HOTSPOTS = [
         {
-            title: 'Aim for EXCELLENCE',
+            lead: 'Aim for',
+            title: 'EXCELLENCE',
             points: ['Set high standards', 'Drive accountability', 'Execute flawlessly']
         },
         {
-            title: 'Win through COLLABORATION',
+            lead: 'Win through',
+            title: 'COLLABORATION',
             points: ['Communicate well', 'Build relationships', 'Influence']
         },
         {
-            title: 'Have a BUSINESS MINDSET',
+            lead: 'Have a',
+            title: 'BUSINESS MINDSET',
             points: ['Know our business', 'Think analytically', 'Be open to change']
         }
     ];
@@ -169,8 +172,11 @@
             this._setSceneChromeHidden(true);
 
             this.root.hidden = false;
-            this.root.classList.remove('is-open', 'is-summary');
-            requestAnimationFrame(() => this.root.classList.add('is-open'));
+            this.root.classList.remove('is-open', 'is-summary', 'is-vault', 'is-values', 'is-vault-complete', 'is-expanding');
+            requestAnimationFrame(() => {
+                this.root.classList.add('is-open', 'is-expanding');
+                setTimeout(() => this.root && this.root.classList.remove('is-expanding'), 700);
+            });
 
             if (options.start === 'vault') {
                 this._showVaultIntro();
@@ -190,7 +196,7 @@
                 this.app._stopCinematicSpeech();
             }
             if (this.root) {
-                this.root.classList.remove('is-open', 'is-summary');
+                this.root.classList.remove('is-open', 'is-summary', 'is-vault', 'is-values', 'is-vault-complete', 'is-expanding');
                 this.root.hidden = true;
             }
             if (restore) this._setSceneChromeHidden(false);
@@ -203,7 +209,8 @@
             const hotspot = scene && (scene.hotspots || []).find((item) => item.id === 'next_destination');
             if (!this.app || !hotspot || typeof this.app.playPortalTransitionVideo !== 'function') return;
             if (!this.app.currentSceneId) this.app.currentSceneId = 'reception';
-            this.app.receptionLiftUnlocked = true;
+            if (typeof this.app.unlockLiftHotspot === 'function') this.app.unlockLiftHotspot();
+            else this.app.receptionLiftUnlocked = true;
             this.app.playPortalTransitionVideo(hotspot);
         }
 
@@ -265,9 +272,11 @@
             if (this.phase !== 'scenario') return;
             if (this.scenarioPhase === 'correct' || this._resolving) return;
             this._resolving = true;
-            setTimeout(() => { this._resolving = false; }, 280);
             const scenario = SCENARIOS[this.scenarioIndex];
-            if (!scenario || !valueId) return;
+            if (!scenario || !valueId) {
+                this._resolving = false;
+                return;
+            }
 
             if (valueId === scenario.answer) {
                 this.unlocked.add(valueId);
@@ -275,18 +284,55 @@
                 this.vo = scenario.correctVo;
                 this._speak(scenario.correctVo);
                 this._render();
+                this._burstParticles(valueId, this.unlocked.size === 4);
                 if (this.app && typeof this.app.playTone === 'function') this.app.playTone(660, 'sine', 0.12);
+                setTimeout(() => { this._resolving = false; }, 400);
                 return;
             }
 
+            const panel = this.stage && this.stage.querySelector(`[data-value="${valueId}"]`);
+            if (panel) {
+                panel.classList.add('is-wrong');
+                panel.classList.add('is-pulse-wrong');
+            }
+            this._snapCardBack();
+            if (navigator.vibrate) navigator.vibrate(70);
+            if (this.app && typeof this.app.playTone === 'function') this.app.playTone(196, 'sine', 0.12);
             this.scenarioPhase = 'wrong';
             this.vo = scenario.wrongVo;
             this._speak(scenario.wrongVo);
-            this._render();
-            const panel = this.stage && this.stage.querySelector(`[data-value="${valueId}"]`);
-            if (panel) panel.classList.add('is-wrong');
-            if (navigator.vibrate) navigator.vibrate(70);
-            if (this.app && typeof this.app.playTone === 'function') this.app.playTone(196, 'sine', 0.12);
+            setTimeout(() => {
+                if (!this.isOpen || this.phase !== 'scenario') {
+                    this._resolving = false;
+                    return;
+                }
+                this._render();
+                this._resolving = false;
+            }, 420);
+        }
+
+        _snapCardBack() {
+            const card = this.stage && this.stage.querySelector('.vmv-card');
+            if (!card) return;
+            card.classList.add('is-snap-back');
+            setTimeout(() => card.classList.remove('is-snap-back'), 420);
+        }
+
+        _burstParticles(valueId, grand) {
+            if (!this.stage) return;
+            const host = this.stage.querySelector(`[data-value="${valueId}"]`) || this.stage.querySelector('.vmv-panels');
+            if (!host) return;
+            const burst = document.createElement('div');
+            burst.className = grand ? 'vmv-particles is-grand' : 'vmv-particles';
+            burst.setAttribute('aria-hidden', 'true');
+            for (let i = 0; i < (grand ? 18 : 10); i += 1) {
+                const speck = document.createElement('span');
+                speck.style.setProperty('--i', String(i));
+                speck.style.setProperty('--a', `${(i / (grand ? 18 : 10)) * 360}deg`);
+                burst.appendChild(speck);
+            }
+            host.appendChild(burst);
+            setTimeout(() => burst.remove(), 900);
         }
 
         _continueAfterCorrect() {
@@ -355,6 +401,9 @@
             if (this.titleEl) this.titleEl.textContent = chrome.title;
             if (this.metaEl) this.metaEl.textContent = chrome.meta;
             this.root.classList.toggle('is-summary', this.phase === 'summary');
+            this.root.classList.toggle('is-vault', this.phase === 'vault-intro' || this.phase === 'scenario');
+            this.root.classList.toggle('is-values', this.phase === 'values');
+            this.root.classList.toggle('is-vault-complete', this.phase === 'scenario' && this.scenarioPhase === 'correct' && this.unlocked.size === 4);
             this.root.dataset.phase = this.phase;
             this.root.dataset.slide = String(this._slideNumber());
             this.root.dataset.vo = this.vo || '';
@@ -382,7 +431,7 @@
                 const img = index <= step
                     ? `<img src="${esc(item.image)}" alt="${esc(item.label)}">`
                     : '';
-                return `<figure class="vmv-support-slot ${state}">
+                return `<figure class="vmv-support-slot ${item.id} ${state}">
                     ${img}
                     <figcaption>${esc(item.label)} <span aria-hidden="true">${mark}</span></figcaption>
                 </figure>`;
@@ -393,8 +442,11 @@
             const step = this.visionStep;
             const missionLive = step >= 2;
             return `
-                <div class="vmv-board">
+                <div class="vmv-board is-vision is-step-${step}">
                     <div class="vmv-waterline" aria-hidden="true"></div>
+                    <figure class="vmv-iceberg">
+                        <img src="assets/images/vmv_iceberg.png" alt="">
+                    </figure>
                     <article class="vmv-panel vmv-vision">
                         <h2 class="vmv-kicker">
                             <span class="vmv-kicker-icon" aria-hidden="true">👁</span>
@@ -402,18 +454,15 @@
                         </h2>
                         <p class="vmv-statement">${esc(VISION)}</p>
                     </article>
-                    <figure class="vmv-iceberg">
-                        <img src="assets/images/vmv_iceberg.png" alt="">
-                    </figure>
                     <article class="vmv-panel vmv-mission ${missionLive ? 'is-live' : 'is-dim'}">
                         <h2 class="vmv-kicker">
                             <span class="vmv-kicker-icon" aria-hidden="true">🎯</span>
-                            Mission
+                            ${missionLive ? 'Mission →' : 'Mission'}
                         </h2>
                         <p class="vmv-statement">${esc(MISSION_SHORT)}</p>
-                        ${missionLive ? '<button type="button" class="vmv-mission-go" data-action="mission">How does this vision come to life?</button>' : ''}
                     </article>
-                    <div class="vmv-support-row">${this._htmlSupportSlots(step)}</div>
+                    ${this._htmlSupportSlots(step)}
+                    ${missionLive ? '<button type="button" class="vmv-footer-prompt" data-action="mission">How does this vision come to life?</button>' : ''}
                 </div>`;
         }
 
@@ -421,7 +470,7 @@
             const revealed = this.missionRevealed;
             const hotspots = HOTSPOTS.map((hotspot, index) => {
                 const state = index < revealed - 1 ? 'is-done' : index === revealed - 1 ? 'is-active' : 'is-dim';
-                const title = state === 'is-dim' ? '' : `<strong>${esc(hotspot.title)}</strong>`;
+                const title = `<span class="vmv-hotspot-lead">${esc(hotspot.lead)}</span> <strong>${esc(hotspot.title)}</strong>`;
                 const points = state === 'is-active'
                     ? `<ul>${hotspot.points.map((point) => `<li>${esc(point)}</li>`).join('')}</ul>`
                     : '';
@@ -434,12 +483,15 @@
                 </button>`;
             }).join('');
             const below = revealed >= 3
-                ? `<button type="button" class="vmv-below" data-action="below">Look below the surface ↓ Our Values</button>
+                ? `<button type="button" class="vmv-below" data-action="below">Look below the surface  ↓  Our Values</button>
                    <p class="vmv-below-q">What truly drives everything we do?</p>`
                 : '';
             return `
                 <div class="vmv-board is-mission">
                     <div class="vmv-waterline" aria-hidden="true"></div>
+                    <figure class="vmv-iceberg">
+                        <img src="assets/images/vmv_iceberg.png" alt="">
+                    </figure>
                     <article class="vmv-panel vmv-vision is-quiet">
                         <h2 class="vmv-kicker">
                             <span class="vmv-kicker-icon" aria-hidden="true">👁</span>
@@ -447,51 +499,44 @@
                         </h2>
                         <p class="vmv-statement">${esc(VISION)}</p>
                     </article>
-                    <figure class="vmv-iceberg">
-                        <img src="assets/images/vmv_iceberg.png" alt="">
-                    </figure>
                     <article class="vmv-panel vmv-mission is-live">
                         <h2 class="vmv-kicker">
                             <span class="vmv-kicker-icon" aria-hidden="true">🎯</span>
                             Mission
                         </h2>
                         <p class="vmv-statement">${esc(MISSION_FULL)}</p>
-                        <div class="vmv-hotspots">${hotspots}</div>
-                        ${below}
                     </article>
+                    <div class="vmv-hotspots">${hotspots}</div>
+                    ${below}
                 </div>`;
         }
 
         _htmlValues() {
             return `
-                <div class="vmv-values">
-                    <figure class="vmv-iceberg vmv-iceberg-inline">
+                <div class="vmv-board vmv-values">
+                    <figure class="vmv-iceberg">
                         <img src="assets/images/vmv_iceberg.png" alt="">
                     </figure>
-                    <div class="vmv-value-grid">
-                        ${VALUES.map((value) => `
-                            <article class="vmv-value-card">
-                                <h3>${esc(value.name)}</h3>
-                                <p>${esc(value.short)}</p>
-                            </article>`).join('')}
-                    </div>
-                    <p class="vmv-guide">These values guide how we work at Tabuk.</p>
-                    <button type="button" class="vmv-next" data-action="vault">See them in action</button>
+                    ${VALUES.map((value) => `
+                        <article class="vmv-value-card vmv-value-${value.id}">
+                            <h3>${esc(value.name)}</h3>
+                            <p>${esc(value.short)}</p>
+                        </article>`).join('')}
+                    <button type="button" class="vmv-footer-prompt" data-action="vault">These values guide how we work at Tabuk.</button>
                 </div>`;
         }
 
         _htmlVaultIntro() {
             return `
-                <div class="vmv-vault">
+                <div class="vmv-board vmv-vault">
                     <div class="vmv-vault-head">
                         <h2>The Values Vault</h2>
-                        <p>Four values power everything at Tabuk.</p>
-                        <p>Can you unlock them all?</p>
-                        <p class="vmv-progress">${this.unlocked.size} / 4 unlocked</p>
+                        <p>Four values power everything at Tabuk.<br>Can you unlock them all?</p>
+                        <div class="vmv-progress-track" aria-hidden="true"><span style="width:${(this.unlocked.size / 4) * 100}%"></span></div>
+                        <p class="vmv-progress">${this.unlocked.size} / 4  unlocked</p>
                     </div>
                     ${this._htmlPanels(false)}
-                    <p class="vmv-instruction">Read each scenario card, then DRAG it onto the correct value panel to unlock it</p>
-                    <button type="button" class="vmv-next" data-action="begin">Begin</button>
+                    <button type="button" class="vmv-instruction-bar" data-action="begin">Read each scenario card, then DRAG it onto the correct value panel to unlock it</button>
                 </div>`;
         }
 
@@ -499,7 +544,7 @@
             const scenario = SCENARIOS[this.scenarioIndex];
             const n = this.scenarioIndex + 1;
             let status = `Scenario ${n}`;
-            let extra = `<p class="vmv-instruction">${esc(scenario.drag)}</p>`;
+            let extra = '';
             if (this.scenarioPhase === 'wrong') {
                 status = `Scenario ${n} · ${scenario.wrongTitle}`;
                 extra = `<p class="vmv-hint">✕ ${esc(scenario.wrongHint)}</p>`;
@@ -516,16 +561,23 @@
                     <button type="button" class="vmv-next" data-action="continue">${n === 4 ? 'All four values' : 'Continue'}</button>`;
             }
             const cardLive = this.scenarioPhase !== 'correct';
+            const showHand = this.scenarioPhase === 'ask' && n === 1;
             return `
-                <div class="vmv-vault">
+                <div class="vmv-board vmv-vault is-scenario ${scenario.final ? 'is-final-round' : ''}">
                     <div class="vmv-vault-head">
-                        <p class="vmv-progress">${this.unlocked.size} / 4 unlocked</p>
-                        <h2>${esc(status)}</h2>
+                        <h2>The Values Vault</h2>
+                        <p class="vmv-scenario-status">${esc(status)}</p>
+                        <div class="vmv-progress-track" aria-hidden="true"><span style="width:${(this.unlocked.size / 4) * 100}%"></span></div>
+                        <p class="vmv-progress">${this.unlocked.size} / 4  unlocked</p>
                         ${scenario.final ? '<p class="vmv-final">Final vault</p>' : ''}
                     </div>
-                    ${cardLive ? `<article class="vmv-card ${scenario.final ? 'is-final' : ''}" data-drag-card><p>${esc(scenario.prompt)}</p></article>` : `<article class="vmv-card is-settled"><p>${esc(scenario.prompt)}</p></article>`}
-                    ${extra}
                     ${this._htmlPanels(true)}
+                    <p class="vmv-instruction-bar is-static">${esc(scenario.drag)}</p>
+                    ${cardLive ? `<article class="vmv-card ${scenario.final ? 'is-final' : ''} ${showHand ? 'has-hand' : ''}" data-drag-card>
+                        <p>${esc(scenario.prompt)}</p>
+                        ${showHand ? '<span class="vmv-hand" aria-hidden="true"></span>' : ''}
+                    </article>` : `<article class="vmv-card is-settled"><p>${esc(scenario.prompt)}</p></article>`}
+                    ${extra}
                 </div>`;
         }
 
@@ -535,9 +587,11 @@
                 const tag = choosable ? 'button' : 'article';
                 const attrs = choosable
                     ? ` type="button" data-action="choose" data-value="${value.id}"`
-                    : '';
-                return `<${tag} class="vmv-panel-card ${open ? 'is-open' : 'is-locked'}"${attrs}>
-                    <span class="vmv-lock">${open ? '✓ Unlocked' : 'Locked'}</span>
+                    : ` data-value="${value.id}"`;
+                const justOpened = open && this.phase === 'scenario' && this.scenarioPhase === 'correct'
+                    && SCENARIOS[this.scenarioIndex] && SCENARIOS[this.scenarioIndex].answer === value.id;
+                return `<${tag} class="vmv-panel-card vmv-value-${value.id} ${open ? 'is-open' : 'is-locked'} ${justOpened ? 'is-opening' : ''}"${attrs}>
+                    <span class="vmv-lock" aria-hidden="true">${open ? '✓' : '🔒'}</span>
                     <h3>${esc(value.name)}</h3>
                     <p>${esc(value.short)}</p>
                 </${tag}>`;
@@ -546,17 +600,15 @@
 
         _htmlSummary() {
             return `
-                <div class="vmv-summary">
+                <div class="vmv-board vmv-summary">
                     <p class="vmv-guide">These values guide how we work at Tabuk.</p>
                     <p class="vmv-question">As you begin your journey here, which value will guide the way you work?</p>
-                    <div class="vmv-value-grid">
-                        ${VALUES.map((value) => `
-                            <article class="vmv-value-card is-done">
-                                <span class="vmv-check">✓</span>
-                                <h3>${esc(value.name)}</h3>
-                                <p>${esc(value.summary || value.short)}</p>
-                            </article>`).join('')}
-                    </div>
+                    ${VALUES.map((value) => `
+                        <article class="vmv-value-card vmv-value-${value.id} is-done">
+                            <span class="vmv-check">✓</span>
+                            <h3>${esc(value.name)}</h3>
+                            <p>${esc(value.summary || value.short)}</p>
+                        </article>`).join('')}
                     <p class="vmv-dots" aria-hidden="true">● ● ● ●</p>
                     <button type="button" class="vmv-lift" data-action="lift">Lift</button>
                 </div>`;

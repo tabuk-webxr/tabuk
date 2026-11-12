@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TABUK PHARMACEUTICALS · INDUCTION</title>
     <meta name="description" content="Interactive WebXR Employee Induction Experience for Tabuk Pharmaceuticals covering Riyadh HQ, Dammam Plant, Tabuk Campus, and Final Assessment.">
-    <link rel="stylesheet" href="css/style.css?v=20.68">
+    <link rel="stylesheet" href="css/style.css?v=20.75">
 </head>
 <body>
 
@@ -158,7 +158,7 @@
                     <div class="timeline-node" data-node="4">
                         <span class="timeline-node-dot"></span>
                     </div>
-                    <img class="timeline-beat-graphic" src="assets/images/timeline_beat_today_ksa.png?v=4" alt="">
+                    <img class="timeline-beat-graphic" src="assets/images/timeline_beat_values.png?v=5" alt="">
                 </article>
             </div>
         </div>
@@ -211,16 +211,26 @@
             <span class="values-entry-mark" aria-hidden="true"></span>
             Vision, Mission &amp; Values
         </button>
+        <!-- E1-S3 slide 14: iceberg poster hotspot (no VO until tap) -->
+        <button type="button" id="vmv-poster-hotspot" class="vmv-poster-hotspot" hidden aria-label="Open Vision, Mission and Values poster">
+            <span class="vmv-poster-frame">
+                <img src="assets/images/vmv_iceberg.png" alt="Vision, Mission and Values iceberg poster">
+                <span class="vmv-poster-caption">VISION · MISSION · VALUES · ONE TABUK TEAM</span>
+                <span class="vmv-poster-pulse" aria-hidden="true"></span>
+            </span>
+        </button>
     </div>
 
     <!-- E1-S3 Vision, Mission & Values — storyboard slides 15–35 -->
     <div id="values-experience" class="values-experience" hidden>
-        <header class="cinematic-chrome">
-            <p id="values-chrome-title" class="cinematic-chrome-title">TABUK PHARMACEUTICALS  &middot;  Induction  &middot;  Vision, Mission &amp; Values</p>
-            <p id="values-chrome-meta" class="cinematic-chrome-meta">E1-S3  &middot;  ENVIRONMENT 1</p>
-            <button type="button" id="values-experience-close" class="timeline-cinematic-close" aria-label="Close vision and values">&times;</button>
-        </header>
-        <div id="values-stage" class="values-stage"></div>
+        <div class="vmv-frame">
+            <header class="cinematic-chrome">
+                <p id="values-chrome-title" class="cinematic-chrome-title">TABUK PHARMACEUTICALS  &middot;  Induction  &middot;  Vision, Mission &amp; Values</p>
+                <p id="values-chrome-meta" class="cinematic-chrome-meta">E1-S3  &middot;  ENVIRONMENT 1</p>
+                <button type="button" id="values-experience-close" class="timeline-cinematic-close" aria-label="Close vision and values">&times;</button>
+            </header>
+            <div id="values-stage" class="values-stage"></div>
+        </div>
     </div>
 
     <!-- Quick Menu & Scene Jump Drawer -->
@@ -505,8 +515,8 @@ tipAvatar: —</pre>
     <script src="js/hotspots.js?v=20.18"></script>
     <script src="js/modal.js?v=14.0"></script>
     <script src="js/assessment.js?v=12.6"></script>
-    <script src="js/valuesExperience.js?v=4"></script>
-    <script src="js/app.js?v=20.59"></script>
+    <script src="js/valuesExperience.js?v=6"></script>
+    <script src="js/app.js?v=20.60"></script>
 
 </body>
 </html>
