@@ -42,25 +42,40 @@
         {
             id: 'integrity',
             name: 'Integrity',
-            short: 'Doing the right thing even when it\'s difficult.'
+            short: 'Doing the right thing even when it\'s difficult.',
+            icon: 'assets/images/vmv_icons/integrity.svg'
         },
         {
             id: 'respect',
             name: 'Respect for People',
-            short: 'Supporting each other to do our best work.'
+            short: 'Supporting each other to do our best work.',
+            icon: 'assets/images/vmv_icons/respect.svg'
         },
         {
             id: 'stakeholder',
             name: 'Stakeholder Centric',
-            short: 'Considering impact on all who depend on us.'
+            short: 'Considering impact on all who depend on us.',
+            icon: 'assets/images/vmv_icons/stakeholder.svg'
         },
         {
             id: 'results',
             name: 'Results',
             short: 'Delivering outcomes that matter.',
-            summary: 'Delivering outcomes that matter with quality.'
+            summary: 'Delivering outcomes that matter with quality.',
+            icon: 'assets/images/vmv_icons/results.svg'
         }
     ];
+
+    const VALUE_ICONS = {
+        integrity: '<svg class="vmv-value-icon" viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M24 6 L38 12 V24 C38 33.5 31.5 40.5 24 43 C16.5 40.5 10 33.5 10 24 V12 Z" stroke="currentColor" stroke-width="2.25" stroke-linejoin="round"/><path d="M17.5 24.5 L22 29 L31 18.5" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+        respect: '<svg class="vmv-value-icon" viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="18" cy="16" r="5" stroke="currentColor" stroke-width="2.25"/><circle cx="31" cy="16" r="5" stroke="currentColor" stroke-width="2.25"/><path d="M8.5 36.5 C9.5 29.5 13.5 26 18 26 C20.5 26 22.6 27.1 24 28.8 C25.4 27.1 27.5 26 30 26 C34.5 26 38.5 29.5 39.5 36.5" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+        stakeholder: '<svg class="vmv-value-icon" viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="24" cy="24" r="5" stroke="currentColor" stroke-width="2.25"/><circle cx="24" cy="9" r="3.5" stroke="currentColor" stroke-width="2.25"/><circle cx="37" cy="31.5" r="3.5" stroke="currentColor" stroke-width="2.25"/><circle cx="11" cy="31.5" r="3.5" stroke="currentColor" stroke-width="2.25"/><path d="M24 19 V12.5 M28.2 26.8 L34.2 30.2 M19.8 26.8 L13.8 30.2" stroke="currentColor" stroke-width="2.25" stroke-linecap="round"/></svg>',
+        results: '<svg class="vmv-value-icon" viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M10 34 V26 M19 34 V20 M28 34 V24 M37 34 V14" stroke="currentColor" stroke-width="2.25" stroke-linecap="round"/><path d="M10 14 L19 22 L28 18 L37 10" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/><circle cx="37" cy="10" r="2.25" stroke="currentColor" stroke-width="2"/></svg>',
+        check: '<svg class="vmv-value-icon" viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="24" cy="24" r="16" stroke="currentColor" stroke-width="2.25"/><path d="M16.5 24.5 L21.5 29.5 L32 18" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+        lock: '<svg class="vmv-corner-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 10.25 V7.4 a4 4 0 0 1 8 0 v2.85" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><rect x="5" y="10.25" width="14" height="10" rx="2" fill="currentColor"/><circle cx="12" cy="15.2" r="1.35" fill="#ffffff"/></svg>',
+        unlock: '<svg class="vmv-corner-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 10.25 V7.1 a4 4 0 0 1 7.7 -1.5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><rect x="5" y="10.25" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M9.8 15.5 L11.5 17.1 L15.1 13.2" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+        key: '<svg class="vmv-corner-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8.2" cy="10.2" r="3.6" fill="none" stroke="currentColor" stroke-width="2.3"/><circle cx="8.2" cy="10.2" r="1.15" fill="currentColor"/><path d="M11.4 10.2 H20.2 M17.2 10.2 V13.6 M19.4 10.2 V12.6" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    };
 
     const SCENARIOS = [
         {
@@ -325,10 +340,10 @@
             const burst = document.createElement('div');
             burst.className = grand ? 'vmv-particles is-grand' : 'vmv-particles';
             burst.setAttribute('aria-hidden', 'true');
-            for (let i = 0; i < (grand ? 18 : 10); i += 1) {
+            for (let i = 0; i < (grand ? 12 : 6); i += 1) {
                 const speck = document.createElement('span');
                 speck.style.setProperty('--i', String(i));
-                speck.style.setProperty('--a', `${(i / (grand ? 18 : 10)) * 360}deg`);
+                speck.style.setProperty('--a', `${(i / (grand ? 12 : 6)) * 360}deg`);
                 burst.appendChild(speck);
             }
             host.appendChild(burst);
@@ -535,7 +550,7 @@
                         <div class="vmv-progress-track" aria-hidden="true"><span style="width:${(this.unlocked.size / 4) * 100}%"></span></div>
                         <p class="vmv-progress">${this.unlocked.size} / 4  unlocked</p>
                     </div>
-                    ${this._htmlPanels(false)}
+                    ${this._htmlPanels()}
                     <button type="button" class="vmv-instruction-bar" data-action="begin">Read each scenario card, then DRAG it onto the correct value panel to unlock it</button>
                 </div>`;
         }
@@ -543,16 +558,35 @@
         _htmlScenario() {
             const scenario = SCENARIOS[this.scenarioIndex];
             const n = this.scenarioIndex + 1;
-            let status = `Scenario ${n}`;
+            const isCorrect = this.scenarioPhase === 'correct';
+            const isWrong = this.scenarioPhase === 'wrong';
+            // Layout order: title → progress → vault complete → question → Scenario N → drag → error → 4 options
+            const banner = (isCorrect && scenario.banner)
+                ? `<p class="vmv-banner">${esc(scenario.banner)}</p>`
+                : '';
+            let cardLabel = `Scenario ${n}`;
+            if (isWrong) cardLabel = `Scenario ${n} · ${scenario.wrongTitle}`;
+            else if (isCorrect) cardLabel = `Scenario ${n} · ${scenario.correctTitle}`;
+            const scenarioCard = !isCorrect
+                ? `<article class="vmv-card vmv-option-card ${scenario.final ? 'is-final' : ''} ${isWrong ? 'is-feedback' : ''}" data-drag-card>
+                        <span class="vmv-corner-key" aria-hidden="true" title="Key">${VALUE_ICONS.key}</span>
+                        <p class="vmv-card-label">${esc(cardLabel)}</p>
+                        <p class="vmv-card-question">${esc(scenario.prompt)}</p>
+                   </article>`
+                : '';
+            const statusLabel = isCorrect
+                ? `<p class="vmv-card-label is-status">${esc(cardLabel)}</p>`
+                : '';
+            const dragBar = !isCorrect
+                ? `<p class="vmv-instruction-bar is-static">${esc(scenario.drag)}</p>`
+                : '';
+            const errorBar = isWrong
+                ? `<p class="vmv-hint" role="status">✕ ${esc(scenario.wrongHint)}</p>`
+                : '';
             let extra = '';
-            if (this.scenarioPhase === 'wrong') {
-                status = `Scenario ${n} · ${scenario.wrongTitle}`;
-                extra = `<p class="vmv-hint">✕ ${esc(scenario.wrongHint)}</p>`;
-            } else if (this.scenarioPhase === 'correct') {
-                status = `Scenario ${n} · ${scenario.correctTitle}`;
+            if (isCorrect) {
                 const value = VALUES.find((item) => item.id === scenario.answer);
                 extra = `
-                    ${scenario.banner ? `<p class="vmv-banner">${esc(scenario.banner)}</p>` : ''}
                     <aside class="vmv-reveal">
                         <p class="vmv-reveal-kicker">Value unlocked</p>
                         <h3>${esc(value.name)}</h3>
@@ -560,41 +594,38 @@
                     </aside>
                     <button type="button" class="vmv-next" data-action="continue">${n === 4 ? 'All four values' : 'Continue'}</button>`;
             }
-            const cardLive = this.scenarioPhase !== 'correct';
-            const showHand = this.scenarioPhase === 'ask' && n === 1;
             return `
-                <div class="vmv-board vmv-vault is-scenario ${scenario.final ? 'is-final-round' : ''}">
+                <div class="vmv-board vmv-vault is-scenario ${isCorrect ? 'is-correct' : ''} ${isWrong ? 'is-wrong' : ''} ${scenario.final ? 'is-final-round' : ''}">
                     <div class="vmv-vault-head">
                         <h2>The Values Vault</h2>
-                        <p class="vmv-scenario-status">${esc(status)}</p>
                         <div class="vmv-progress-track" aria-hidden="true"><span style="width:${(this.unlocked.size / 4) * 100}%"></span></div>
                         <p class="vmv-progress">${this.unlocked.size} / 4  unlocked</p>
-                        ${scenario.final ? '<p class="vmv-final">Final vault</p>' : ''}
+                        ${scenario.final && !isCorrect ? '<p class="vmv-final">Final vault</p>' : ''}
                     </div>
-                    ${this._htmlPanels(true)}
-                    <p class="vmv-instruction-bar is-static">${esc(scenario.drag)}</p>
-                    ${cardLive ? `<article class="vmv-card ${scenario.final ? 'is-final' : ''} ${showHand ? 'has-hand' : ''}" data-drag-card>
-                        <p>${esc(scenario.prompt)}</p>
-                        ${showHand ? '<span class="vmv-hand" aria-hidden="true"></span>' : ''}
-                    </article>` : `<article class="vmv-card is-settled"><p>${esc(scenario.prompt)}</p></article>`}
+                    ${banner}
+                    ${statusLabel}
+                    ${scenarioCard}
+                    ${dragBar}
+                    ${errorBar}
                     ${extra}
+                    ${this._htmlPanels()}
                 </div>`;
         }
 
-        _htmlPanels(choosable) {
+        _htmlPanels() {
+            // Drop targets only — answers must come from dragging the scenario card
             return `<div class="vmv-panels">${VALUES.map((value) => {
                 const open = this.unlocked.has(value.id);
-                const tag = choosable ? 'button' : 'article';
-                const attrs = choosable
-                    ? ` type="button" data-action="choose" data-value="${value.id}"`
-                    : ` data-value="${value.id}"`;
                 const justOpened = open && this.phase === 'scenario' && this.scenarioPhase === 'correct'
                     && SCENARIOS[this.scenarioIndex] && SCENARIOS[this.scenarioIndex].answer === value.id;
-                return `<${tag} class="vmv-panel-card vmv-value-${value.id} ${open ? 'is-open' : 'is-locked'} ${justOpened ? 'is-opening' : ''}"${attrs}>
-                    <span class="vmv-lock" aria-hidden="true">${open ? '✓' : '🔒'}</span>
+                const iconSvg = VALUE_ICONS[value.id] || VALUE_ICONS.integrity;
+                const cornerIcon = open ? VALUE_ICONS.unlock : VALUE_ICONS.lock;
+                return `<article class="vmv-panel-card vmv-value-${value.id} ${open ? 'is-open' : 'is-locked'} ${justOpened ? 'is-opening' : ''}" data-value="${value.id}" data-drop-target="true">
+                    <span class="vmv-corner-lock" aria-hidden="true" title="${open ? 'Unlocked' : 'Locked'}">${cornerIcon}</span>
+                    <span class="vmv-lock" aria-hidden="true">${iconSvg}</span>
                     <h3>${esc(value.name)}</h3>
                     <p>${esc(value.short)}</p>
-                </${tag}>`;
+                </article>`;
             }).join('')}</div>`;
         }
 
@@ -624,7 +655,6 @@
             else if (action === 'below') this._enterValues();
             else if (action === 'vault') this._showVaultIntro();
             else if (action === 'begin') this._beginScenario(0);
-            else if (action === 'choose') this._resolveChoice(el.getAttribute('data-value'));
             else if (action === 'continue') this._continueAfterCorrect();
             else if (action === 'lift') this.goToLift();
         }
@@ -657,6 +687,7 @@
                 moved: false
             };
             card.classList.add('is-dragging');
+            card.style.transform = 'none';
             try { card.setPointerCapture(event.pointerId); } catch (err) { /* ignore */ }
             this._bindWindowDrag();
         }
@@ -673,6 +704,7 @@
             card.style.top = `${event.clientY - this._drag.offsetY}px`;
             card.style.width = `${this._drag.width}px`;
             card.style.margin = '0';
+            card.style.transform = 'none';
             card.style.zIndex = '20';
         }
 
@@ -694,8 +726,9 @@
             card.style.pointerEvents = 'none';
             const hit = document.elementFromPoint(event.clientX, event.clientY);
             card.style.pointerEvents = '';
-            const panel = hit && hit.closest('[data-value]');
+            const panel = hit && hit.closest('[data-drop-target="true"][data-value]');
             if (panel) this._resolveChoice(panel.getAttribute('data-value'));
+            else this._snapCardBack();
         }
 
         _cancelDrag() {

@@ -2668,6 +2668,16 @@ class WebXRApp {
         this.visitedHotspots.add(hotspot.id);
 
         if (hotspot.type === 'portal') {
+            // CEO / CHRO message arrows open a video modal instead of navigating
+            if (hotspot.modalId) {
+                if (hotspot.modalId === 'modal_video_welcome' || hotspot.modalId === 'modal_video_chro') {
+                    this.stopCeoIntroAudio();
+                    this.stopChroIntroAudio();
+                    this.stopTipAvatar();
+                }
+                window.modalManager.showComplexModal(hotspot.modalId);
+                return;
+            }
             if (hotspot.transitionVideo) {
                 this.playPortalTransitionVideo(hotspot);
             } else {

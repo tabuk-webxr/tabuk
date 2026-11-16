@@ -91,9 +91,11 @@ class HotspotManager {
                     </svg>
                 </div>`;
 
+            // Default stays "Follow the arrow"; CEO/CHRO set an explicit prompt
+            const promptText = data.prompt || 'Follow the arrow';
             wrapper.innerHTML = `
                 <div class="portal-indicator" style="--arrow-yaw: ${yawRot}deg;">
-                    <div class="portal-arrow-prompt">Follow the arrow</div>
+                    <div class="portal-arrow-prompt">${promptText}</div>
                     <div class="portal-arrow-stage">
                         <div class="portal-arrow-3d">
                             <div class="portal-arrow-motion">

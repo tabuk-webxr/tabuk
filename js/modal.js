@@ -336,7 +336,10 @@ class ModalManager {
                 : profile.image;
             innerHtml = `
                 <div class="deck-modal-video-player">
-                    <button class="card-close-x video-close-btn" onclick="window.modalManager.closeVideoPlayer()" aria-label="Close Video">&times;</button>
+                    <div class="video-close-instruction" role="group" aria-label="Close video">
+                        <p class="video-close-instruction-text">Tap <span class="video-close-key" aria-hidden="true">×</span> to continue exploring</p>
+                        <button type="button" class="video-close-btn" onclick="window.modalManager.closeVideoPlayer()" aria-label="Close video">&times;</button>
+                    </div>
                     <div class="deck-video-curved-viewport">
                         <img src="${portraitSrc}" alt="${profile.label}" class="deck-video-visual" />
                         
