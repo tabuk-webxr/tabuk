@@ -542,7 +542,7 @@
                 <div class="vmv-board is-vision is-step-${step}">
                     <div class="vmv-waterline" aria-hidden="true"></div>
                     <figure class="vmv-iceberg">
-                        <img src="assets/images/vmv_iceberg.png" alt="">
+                        <img src="assets/images/vmv_iceberg_hd.png" alt="">
                     </figure>
                     <article class="vmv-panel vmv-vision">
                         <h2 class="vmv-kicker">
@@ -587,7 +587,7 @@
                 <div class="vmv-board is-mission">
                     <div class="vmv-waterline" aria-hidden="true"></div>
                     <figure class="vmv-iceberg">
-                        <img src="assets/images/vmv_iceberg.png" alt="">
+                        <img src="assets/images/vmv_iceberg_hd.png" alt="">
                     </figure>
                     <article class="vmv-panel vmv-vision is-quiet">
                         <h2 class="vmv-kicker">
@@ -611,9 +611,7 @@
         _htmlValues() {
             return `
                 <div class="vmv-board vmv-values">
-                    <figure class="vmv-iceberg">
-                        <img src="assets/images/vmv_iceberg.png" alt="">
-                    </figure>
+                    <div class="vmv-waterline" aria-hidden="true"></div>
                     <div class="vmv-values-grid">
                         ${VALUES.map((value, index) => `
                             <article class="vmv-value-card vmv-value-${value.id}" style="--i:${index}">

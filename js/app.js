@@ -421,8 +421,14 @@ class WebXRApp {
         if (!panel || !sphereYaw || !camPitch || !camYaw) return;
 
         const applyOrientation = () => {
+            // Don't fight mouse look-drag — panel syncs from the camera instead
+            if (this.viewer && this.viewer.isUserInteracting) {
+                this.updateDevOrientationReadout();
+                return;
+            }
+            const yaw = ((Number(camYaw.value) % 360) + 360) % 360;
             this.viewer.setSphereRotationY(Number(sphereYaw.value));
-            this.viewer.setLookAt(Number(camPitch.value), Number(camYaw.value));
+            this.viewer.setLookAt(Number(camPitch.value), yaw);
             this.updateDevOrientationReadout();
         };
 
@@ -2274,14 +2280,16 @@ class WebXRApp {
         const camYaw = document.getElementById('dev-cam-yaw');
         if (!sphereYaw || !this.viewer || !this.devPanelOpen) return;
 
+        const yawNorm = ((this.viewer.targetYaw % 360) + 360) % 360;
         if (!fromCameraOnly) {
             sphereYaw.value = String(Math.round(this.viewer.sphereRotationY || 0));
         }
+        // Skip writing into a slider the user is actively scrubbing
         if (document.activeElement !== camPitch) {
             camPitch.value = String(Math.round(this.viewer.targetPitch));
         }
         if (document.activeElement !== camYaw) {
-            camYaw.value = String(Math.round(this.viewer.targetYaw));
+            camYaw.value = String(Math.round(yawNorm));
         }
         this.updateDevOrientationReadout();
     }
@@ -2645,9 +2653,8 @@ class WebXRApp {
             this.hideReceptionTip();
             this.stopWelcomeEnterAudio();
 
-            const targetFov = scene.bgVideo
-                ? this.viewer.maxFov
-                : (typeof scene.initialFov === 'number' ? scene.initialFov : 75);
+            this.viewer.setMinZoom();
+            const targetFov = this.viewer.maxFov;
 
             const { pitch, yaw, sphereYaw } = this._sceneOrientation(scene);
             this.viewer.transitionForward({
@@ -2685,8 +2692,8 @@ class WebXRApp {
 
         const onMediaReady = () => this._applySceneMediaReady(scene);
         const orientOpts = { sphereYaw, targetPitch: pitch, targetYaw: yaw };
+        this.viewer.setMinZoom();
         if (scene.bgVideo) {
-            this.viewer.setMinZoom();
             this.viewer.loadVideo(scene.bgVideo, onMediaReady, {
                 ...orientOpts,
                 targetFov: this.viewer.maxFov
@@ -2694,7 +2701,7 @@ class WebXRApp {
         } else {
             this.viewer.loadTexture(scene.bgImage, onMediaReady, {
                 ...orientOpts,
-                targetFov: typeof scene.initialFov === 'number' ? scene.initialFov : 75
+                targetFov: this.viewer.maxFov
             });
         }
 
@@ -3663,17 +3670,19 @@ class WebXRApp {
     _pickCinematicVoice() {
         if (!('speechSynthesis' in window)) return null;
         const voices = window.speechSynthesis.getVoices() || [];
+        const arabicMale = /hamdan|maged|naayf|shakir|fahed|hamed|omar|taim|bassel|moaz|\bali\b|rami|\bmale\b/i;
         const tests = [
-            (v) => /en-GB/i.test(v.lang) && /female|samantha|karen|moira|serena|kate|susan|fiona/i.test(v.name),
-            (v) => /en-GB/i.test(v.lang),
-            (v) => /en-US/i.test(v.lang) && /female|samantha|karen|moira|siri/i.test(v.name),
-            (v) => /^en[-_]/i.test(v.lang)
+            (v) => /^ar[-_]AE/i.test(v.lang) && arabicMale.test(v.name) && !/female/i.test(v.name),
+            (v) => /^ar[-_]/i.test(v.lang) && arabicMale.test(v.name) && !/female/i.test(v.name),
+            (v) => /en-GB/i.test(v.lang) && /\bmale\b|daniel|arthur|oliver|george|ryan|thomas|google uk english male/i.test(v.name),
+            (v) => /^en[-_]/i.test(v.lang) && /\bmale\b|daniel|arthur|oliver|george|ryan|thomas|alex|fred|aaron|guy|david|mark|christopher|eric|rishi/i.test(v.name),
+            (v) => /\bmale\b|daniel|arthur|oliver|george|ryan|thomas|alex|fred|aaron|guy|david|mark|christopher|eric|rishi/i.test(v.name) && !/female/i.test(v.name)
         ];
         for (let i = 0; i < tests.length; i += 1) {
             const found = voices.find(tests[i]);
             if (found) return found;
         }
-        return voices[0] || null;
+        return null;
     }
 
     /**
@@ -3686,8 +3695,28 @@ class WebXRApp {
         const finish = () => {
             if (typeof onEnd === 'function') onEnd();
         };
-        if (this.isAudioMuted || !('speechSynthesis' in window)) {
-            const id = setTimeout(finish, 1600);
+        const canSpeak = !this.isAudioMuted && ('speechSynthesis' in window);
+        if (canSpeak && window.speechSynthesis.getVoices().length === 0 && !opts._waitedForVoices) {
+            const gen0 = this._cinematicSpeechGen;
+            let done = false;
+            const retry = () => {
+                if (done) return;
+                done = true;
+                window.speechSynthesis.removeEventListener('voiceschanged', retry);
+                if (gen0 !== this._cinematicSpeechGen) return;
+                this._speakCinematicLine(text, onEnd, { ...opts, _waitedForVoices: true });
+            };
+            window.speechSynthesis.addEventListener('voiceschanged', retry);
+            this._timelineBeatTimers.push(setTimeout(retry, 1500));
+            return;
+        }
+        const voice = canSpeak ? this._pickCinematicVoice() : null;
+        if (canSpeak && !voice) {
+            console.warn('[TTS] No male voice found. Available voices:',
+                window.speechSynthesis.getVoices().map((v) => `${v.name} (${v.lang})`));
+        }
+        if (!voice) {
+            const id = setTimeout(finish, Math.max(1600, text.split(/\s+/).length * 380));
             this._timelineBeatTimers.push(id);
             return;
         }
@@ -3698,11 +3727,8 @@ class WebXRApp {
         utter.rate = 0.92;
         utter.pitch = 1;
         utter.volume = 1;
-        const voice = this._pickCinematicVoice();
-        if (voice) {
-            utter.voice = voice;
-            if (voice.lang) utter.lang = voice.lang;
-        }
+        utter.voice = voice;
+        if (voice.lang) utter.lang = voice.lang;
         utter.onend = () => {
             if (gen !== this._cinematicSpeechGen) return;
             this._stopCinematicSpeech();

@@ -3907,10 +3907,9 @@ body.is-dragging-avatar * {
 
 .vmv-frame {
     position: relative;
-    width: min(100vw, calc(100vh * 16 / 9));
-    aspect-ratio: 16 / 9;
-    height: auto;
-    max-height: 100vh;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
     overflow: hidden;
     background:
         linear-gradient(#071220b3, #071220b3),
@@ -5517,11 +5516,11 @@ body.is-dragging-avatar * {
 
 .vmv-board.vmv-values {
     display: grid;
-    grid-template-columns: minmax(0, 36%) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr) auto;
     column-gap: 5%;
     row-gap: 3%;
-    padding: 8.6% 5% 4%;
+    padding: 8.6% 10% 4%;
     box-sizing: border-box;
     align-items: center;
 }
@@ -5553,7 +5552,7 @@ body.is-dragging-avatar * {
 }
 
 .vmv-values-grid {
-    grid-column: 2;
+    grid-column: 1;
     grid-row: 1;
     align-self: center;
     display: grid;
@@ -5666,7 +5665,7 @@ body.is-dragging-avatar * {
     left: auto;
     right: auto;
     bottom: auto;
-    grid-column: 2;
+    grid-column: 1;
     grid-row: 2;
     justify-self: stretch;
     height: auto;
@@ -6805,9 +6804,14 @@ body.is-dragging-avatar * {
     box-shadow: 0 0 0 6px rgba(168, 216, 234, 0.06), 0 24px 60px rgba(0, 0, 0, 0.5), 0 0 70px rgba(0, 150, 220, 0.25);
 }
 
+.vmv-board:not(.vmv-values) .vmv-iceberg {
+    top: 5.5%;
+    height: 76.8%;
+}
+
 .vmv-board:not(.vmv-values) .vmv-iceberg img {
     object-fit: cover;
-    object-position: center;
+    object-position: center top;
 }
 
 /* ---- Vision / Mission panels ------------------------------------------ */

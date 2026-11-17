@@ -67,8 +67,8 @@ window.COURSE_DATA = {
             envType: "intro",
             bgVideo: "Videos/51_D_4k.mov",
             bgImage: "assets/images/scene0_exterior.jpg",
-            initialPitch: 1,
-            initialYaw: 164,
+            initialPitch: -1,
+            initialYaw: 176,
             sphereYaw: 0,
             cardText: "Corporate Reception\nFind the marker to continue",
             // Glue panels onto screens in the 360 — pin 4 corners in DEV
@@ -110,8 +110,7 @@ window.COURSE_DATA = {
                     yaw: 118.5,
                     // Level 2 start — feet on floor by reception desk
                     level2Pitch: -27.5,
-                    level2Yaw: 126.5,
-                    interactive: false,
+                    level2Yaw: 126.5,                    interactive: false,
                     radius: 291,
                     offsetY: 3,
                     worldHeight: 128,
@@ -129,8 +128,7 @@ window.COURSE_DATA = {
                     pitch: -18,
                     yaw: 124,
                     level2Pitch: -18,
-                    level2Yaw: 130,
-                    rot: 0,
+                    level2Yaw: 130,                    rot: 0,
                     interactive: false
                 },
                 {
@@ -215,8 +213,8 @@ window.COURSE_DATA = {
                     transitionIs360: true,
                     arriveLiftVmv: true,
                     // Camera when this arrow appears (after Who We Are)
-                    revealPitch: 1,
-                    revealYaw: 188,
+                    revealPitch: -1,
+                    revealYaw: 176,
                     // Camera after click — lift / VMV board view
                     lookPitch: 1,
                     lookYaw: 164

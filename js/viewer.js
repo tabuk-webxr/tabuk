@@ -846,6 +846,11 @@ class PanoramaViewer {
         root.frustumCulled = false;
         root.visible = false;
         root.renderOrder = 10;
+        // Root faces the camera (and carries the perspective width fix);
+        // the pivot holds the avatar's own worldRot turn.
+        const pivot = new THREE.Group();
+        pivot.rotation.order = 'YXZ';
+        root.add(pivot);
 
         const entry = {
             id: data.id,
@@ -863,6 +868,7 @@ class PanoramaViewer {
             modelScale: typeof data.modelScale === 'number' ? data.modelScale : 1,
             offsetY: typeof data.offsetY === 'number' ? data.offsetY : 0,
             mesh: root,
+            pivot,
             modelRoot: null,
             mixer: null,
             baseModelHeight: 1
@@ -901,7 +907,7 @@ class PanoramaViewer {
                 });
 
                 entry.modelRoot = model;
-                root.add(model);
+                pivot.add(model);
                 this._fitAvatarModel(entry);
                 this._placeSceneAvatar(entry);
                 root.visible = !data.hidden;
@@ -1062,8 +1068,13 @@ class PanoramaViewer {
         // subtract raw world XZ into model.position (that drifts the avatar off-pin).
         const prevPos = root.position.clone();
         const prevRot = root.rotation.clone();
+        const prevScale = root.scale.clone();
+        const pivot = entry.pivot;
+        const prevPivotRot = pivot ? pivot.rotation.clone() : null;
         root.position.set(0, 0, 0);
         root.rotation.set(0, 0, 0);
+        root.scale.set(1, 1, 1);
+        if (pivot) pivot.rotation.set(0, 0, 0);
         model.position.set(0, 0, 0);
         model.rotation.set(0, 0, 0);
         model.scale.set(1, 1, 1);
@@ -1105,6 +1116,8 @@ class PanoramaViewer {
 
         root.position.copy(prevPos);
         root.rotation.copy(prevRot);
+        root.scale.copy(prevScale);
+        if (pivot) pivot.rotation.copy(prevPivotRot);
         root.updateMatrixWorld(true);
     }
 
@@ -1134,11 +1147,13 @@ class PanoramaViewer {
             // Upright only — yaw toward camera. Never pitch/roll via lookAt.
             const faceYaw = Math.atan2(pos.x, pos.z) + Math.PI;
             entry.mesh.rotation.order = 'YXZ';
-            entry.mesh.rotation.set(
-                THREE.MathUtils.degToRad(rotX),
-                faceYaw + THREE.MathUtils.degToRad(rotY),
-                THREE.MathUtils.degToRad(rotZ)
-            );
+            const own = [THREE.MathUtils.degToRad(rotX), THREE.MathUtils.degToRad(rotY), THREE.MathUtils.degToRad(rotZ)];
+            if (entry.pivot) {
+                entry.mesh.rotation.set(0, faceYaw, 0);
+                entry.pivot.rotation.set(own[0], own[1], own[2]);
+            } else {
+                entry.mesh.rotation.set(own[0], faceYaw + own[1], own[2]);
+            }
             this._aimAvatarLights(entry);
         } else {
             // Flat PNG / tablet plates still billboard toward the camera
@@ -1168,10 +1183,10 @@ class PanoramaViewer {
 
         if (typeof radius === 'number') entry.radius = radius;
         if (typeof worldHeight === 'number') entry.height = worldHeight;
+        // Never auto-derive width from height — keep the set worldWidth as-is
+        // (auto height×0.35 made plates look warped while looking around the 360).
         if (typeof worldWidth === 'number') {
             entry.width = worldWidth;
-        } else if (typeof worldHeight === 'number' && !entry.isModel) {
-            entry.width = worldHeight * 0.35;
         }
         if (typeof worldRot === 'number') entry.worldRot = worldRot;
         if (typeof worldRotX === 'number') entry.worldRotX = worldRotX;
@@ -1180,12 +1195,13 @@ class PanoramaViewer {
         if (typeof offsetY === 'number') entry.offsetY = offsetY;
 
         if (entry.isModel) {
+            // GLB uses uniform height/modelScale only — do not stretch by worldWidth
             if (entry.modelRoot) this._fitAvatarModel(entry);
             this._placeSceneAvatar(entry);
             return true;
         }
 
-        const nextW = entry.width || entry.height * 0.35;
+        const nextW = typeof entry.width === 'number' ? entry.width : (entry.height || 150) * 0.35;
         const nextH = entry.height || 150;
         const oldGeo = entry.mesh.geometry;
         entry.mesh.geometry = new THREE.PlaneGeometry(nextW, nextH);
@@ -1397,10 +1413,11 @@ class PanoramaViewer {
     }
 
     getOrientation() {
+        const yaw = ((this.targetYaw % 360) + 360) % 360;
         return {
             sphereYaw: Math.round(this.sphereRotationY),
             initialPitch: Math.round(this.targetPitch),
-            initialYaw: Math.round(this.targetYaw)
+            initialYaw: Math.round(yaw)
         };
     }
 
@@ -1697,7 +1714,13 @@ class PanoramaViewer {
         }
 
         const dt = this._avatarClock ? this._avatarClock.getDelta() : 0;
-        (this._sceneAvatars || []).forEach((entry) => {
+        const flatView = !this.renderer.xr.isPresenting;
+        if (flatView) this.camera.updateMatrixWorld();
+        const avatars = this._sceneAvatars || [];
+        // Pose bones on an unsquashed rig — gestures rotate in world space and
+        // a non-uniform parent scale would skew the arms into the body.
+        avatars.forEach((entry) => {
+            if (entry.isModel && entry.mesh) entry.mesh.scale.x = 1;
             if (entry.mixer) entry.mixer.update(dt);
         });
         // Narration lip-sync (after the idle mixer so morph weights win)
@@ -1705,6 +1728,15 @@ class PanoramaViewer {
         // "Explaining" hand gestures while narrating (after mixer so offsets sit on the idle pose)
         if (this.gestures) {
             this.gestures.update(dt, !!(this.lipsync && this.lipsync.speaking), this.lipsync ? this.lipsync.level : 0);
+        }
+        // Perspective widens avatars toward the screen edges; counter it so width stays constant
+        if (flatView) {
+            const p = this._avatarCamPos || (this._avatarCamPos = new THREE.Vector3());
+            avatars.forEach((entry) => {
+                if (!entry.isModel || !entry.mesh) return;
+                p.copy(entry.mesh.position).applyMatrix4(this.camera.matrixWorldInverse);
+                if (p.z < 0) entry.mesh.scale.x = Math.max(0.6, Math.cos(Math.atan2(p.x, -p.z)));
+            });
         }
 
         this.renderer.render(this.scene, this.camera);
