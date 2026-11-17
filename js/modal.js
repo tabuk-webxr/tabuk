@@ -344,6 +344,10 @@ class ModalManager {
                         <img src="${portraitSrc}" alt="${profile.label}" class="deck-video-visual" />
                         
                         <div class="deck-video-overlay-gradient"></div>
+
+                        <div class="deck-video-speaker-title" id="video-speaker-title">
+                            ${profile.speakerTitle || ''}
+                        </div>
                         
                         <!-- Floating Closed Captions -->
                         <div class="deck-video-subtitles" id="video-subtitles-box">
@@ -373,9 +377,6 @@ class ModalManager {
                                 </svg>
                             </button>
                         </div>
-                    </div>
-                    <div class="deck-video-speaker-title" id="video-speaker-title">
-                        ${profile.speakerTitle || ''}
                     </div>
                 </div>
             `;

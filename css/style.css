@@ -5176,3 +5176,1610 @@ html, body {
         white-space: normal;
     }
 }
+
+/* ==========================================================================
+   Values section redesign — iceberg left, 2x2 value cards right, CTA below
+   (same copy and flow; layout, hierarchy and motion only)
+   ========================================================================== */
+.values-experience.is-values .vmv-frame {
+    background:
+        radial-gradient(ellipse 60% 70% at 20% 55%, rgba(0, 120, 190, 0.28), transparent 70%),
+        radial-gradient(ellipse 50% 60% at 85% 80%, rgba(201, 160, 48, 0.12), transparent 70%),
+        linear-gradient(160deg, rgba(6, 16, 34, 0.94), rgba(10, 24, 48, 0.9)),
+        url("../assets/images/vmv_lobby.png") center / cover no-repeat;
+}
+
+.vmv-board.vmv-values {
+    display: grid;
+    grid-template-columns: minmax(0, 36%) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    column-gap: 5%;
+    row-gap: 3%;
+    padding: 8.6% 5% 4%;
+    box-sizing: border-box;
+    align-items: center;
+}
+
+.vmv-values .vmv-iceberg {
+    position: relative;
+    left: auto;
+    top: auto;
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 328 / 423;
+    max-height: 100%;
+    justify-self: center;
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid rgba(168, 216, 234, 0.4);
+    box-shadow:
+        0 0 0 6px rgba(168, 216, 234, 0.06),
+        0 24px 60px rgba(0, 0, 0, 0.5),
+        0 0 70px rgba(0, 150, 220, 0.28);
+    animation: vmvValuesRise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.vmv-values .vmv-iceberg img {
+    object-fit: cover;
+    object-position: center;
+}
+
+.vmv-values-grid {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4.2% 3.6%;
+    position: relative;
+    z-index: 3;
+}
+
+.vmv-values .vmv-value-card {
+    --accent: #34C79A;
+    position: relative;
+    top: auto;
+    left: auto !important;
+    width: auto;
+    height: auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(10px, 1.5vw, 22px);
+    padding: clamp(16px, 2.2vw, 34px) clamp(16px, 2vw, 30px) clamp(18px, 2.4vw, 36px);
+    color: #ffffff;
+    overflow: hidden;
+    border-radius: 16px;
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+    background:
+        radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--accent) 26%, transparent), transparent 62%),
+        linear-gradient(150deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.03));
+    box-shadow:
+        0 14px 34px rgba(0, 0, 0, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+    animation: vmvValuesRise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(0.12s + var(--i, 0) * 0.1s);
+}
+
+.vmv-values .vmv-value-card::before {
+    left: 0;
+    right: auto;
+    top: 18%;
+    bottom: 18%;
+    width: 4px;
+    height: auto;
+    border-radius: 0 4px 4px 0;
+    background: var(--accent) !important;
+    box-shadow: 0 0 14px var(--accent);
+}
+
+.vmv-values .vmv-value-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent);
+    box-shadow:
+        0 20px 44px rgba(0, 0, 0, 0.42),
+        0 0 28px color-mix(in srgb, var(--accent) 35%, transparent),
+        inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.vmv-values .vmv-value-card.vmv-value-integrity   { --accent: #34C79A; background-color: transparent; }
+.vmv-values .vmv-value-card.vmv-value-respect     { --accent: #E2B84A; background-color: transparent; }
+.vmv-values .vmv-value-card.vmv-value-stakeholder { --accent: #7CC8EA; background-color: transparent; }
+.vmv-values .vmv-value-card.vmv-value-results     { --accent: #F2994A; background-color: transparent; }
+
+.vmv-values .vmv-value-card.vmv-value-integrity,
+.vmv-values .vmv-value-card.vmv-value-respect,
+.vmv-values .vmv-value-card.vmv-value-stakeholder,
+.vmv-values .vmv-value-card.vmv-value-results {
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+    background:
+        radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--accent) 26%, transparent), transparent 62%),
+        linear-gradient(150deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.03));
+}
+
+.vmv-value-badge {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: clamp(42px, 4.4vw, 68px);
+    height: clamp(42px, 4.4vw, 68px);
+    border-radius: 50%;
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 16%, rgba(6, 16, 34, 0.6));
+    border: 1.5px solid color-mix(in srgb, var(--accent) 70%, transparent);
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 10%, transparent), 0 0 22px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.vmv-value-badge .vmv-value-icon {
+    width: 58%;
+    height: 58%;
+}
+
+.vmv-values .vmv-value-copy h3 {
+    margin: 0 0 clamp(4px, 0.6vw, 10px);
+    color: var(--accent);
+    font-size: clamp(16px, 1.9vw, 28px);
+    line-height: 1.15;
+    letter-spacing: 0.01em;
+}
+
+.vmv-values .vmv-value-copy p {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: clamp(12px, 1.2vw, 18px);
+    line-height: 1.45;
+}
+
+.vmv-values .vmv-footer-prompt {
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: stretch;
+    height: auto;
+    padding: clamp(12px, 1.4vw, 20px) clamp(18px, 2.2vw, 34px);
+    gap: 0.8em;
+    border-radius: 999px;
+    border: 1px solid rgba(226, 184, 74, 0.7);
+    background: linear-gradient(90deg, rgba(226, 184, 74, 0.2), rgba(226, 184, 74, 0.08));
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.32), 0 0 24px rgba(226, 184, 74, 0.18);
+    font-size: clamp(13px, 1.45vw, 21px);
+    transition: transform 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+    animation: vmvValuesRise 0.6s 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.vmv-values .vmv-footer-prompt::after {
+    content: "\2192";
+    color: #E2B84A;
+    font-size: 1.25em;
+    line-height: 1;
+    transition: transform 0.25s ease;
+}
+
+.vmv-values .vmv-footer-prompt:hover {
+    transform: translateY(-2px);
+    background: linear-gradient(90deg, rgba(226, 184, 74, 0.34), rgba(226, 184, 74, 0.14));
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.38), 0 0 32px rgba(226, 184, 74, 0.3);
+}
+
+.vmv-values .vmv-footer-prompt:hover::after {
+    transform: translateX(4px);
+}
+
+@keyframes vmvValuesRise {
+    0% { opacity: 0; transform: translateY(18px) scale(0.98); }
+    100% { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vmv-values .vmv-iceberg,
+    .vmv-values .vmv-value-card,
+    .vmv-values .vmv-footer-prompt { animation: none; }
+}
+
+/* ==========================================================================
+   Values Vault redesign — control column on the left (title, progress,
+   scenario card, actions), 2x2 vault panels on the right as drop targets.
+   Same copy and flow; layout, hierarchy and feedback only.
+   ========================================================================== */
+.values-experience.is-vault .vmv-frame {
+    background:
+        radial-gradient(ellipse 55% 60% at 12% 18%, rgba(0, 98, 155, 0.14), transparent 70%),
+        radial-gradient(ellipse 50% 60% at 92% 90%, rgba(100, 167, 11, 0.14), transparent 70%),
+        linear-gradient(180deg, rgba(246, 249, 252, 0.96), rgba(233, 240, 246, 0.97)),
+        url("../assets/images/vmv_vault_scene.jpg") center / cover no-repeat;
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault {
+    display: grid;
+    grid-template-columns: minmax(0, 38%) minmax(0, 1fr);
+    column-gap: 3.4%;
+    padding: 10.2% 4% 4%;
+    box-sizing: border-box;
+    align-items: stretch;
+}
+
+/* ---- Left control column ------------------------------------------------ */
+.values-experience.is-vault .vmv-vault-side {
+    position: relative;
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: clamp(10px, 1.5vw, 22px);
+    min-width: 0;
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-vault-head {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: 100%;
+    transform: none;
+    padding: 0;
+    text-align: left;
+    z-index: 3;
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-vault-head h2 {
+    position: relative;
+    margin: 0 0 clamp(6px, 0.9vw, 12px);
+    padding: 0 0 clamp(8px, 1vw, 14px);
+    color: #004B87;
+    font-size: clamp(22px, 2.9vw, 42px);
+    letter-spacing: 0.08em;
+    text-align: left;
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-vault-head h2::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 64px;
+    height: 4px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #004B87, #64A70B);
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-vault-head > p {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    text-align: left;
+    font-size: clamp(13px, 1.35vw, 19px);
+    line-height: 1.45;
+    color: #3d4a57;
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-progress-track {
+    width: 100%;
+    height: 8px;
+    margin: clamp(10px, 1.2vw, 18px) 0 8px;
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-vault-head .vmv-progress {
+    display: inline-block;
+    width: auto;
+    margin: 0;
+    padding: 4px 12px;
+    text-align: left;
+    font-style: normal;
+    font-size: clamp(11px, 1.1vw, 15px);
+    color: #004B87;
+    background: rgba(0, 75, 135, 0.08);
+    border: 1px solid rgba(0, 75, 135, 0.18);
+    border-radius: 999px;
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-vault-head .vmv-final {
+    display: inline-block;
+    width: auto;
+    margin: 0 0 0 8px;
+    padding: 4px 12px;
+    text-align: left;
+    font-size: clamp(11px, 1.1vw, 15px);
+    color: #3E7A06;
+    background: rgba(100, 167, 11, 0.12);
+    border: 1px solid rgba(100, 167, 11, 0.4);
+    border-radius: 999px;
+}
+
+/* Vault complete banner / status label / actions are all in flow now */
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-banner {
+    position: relative;
+    left: auto;
+    right: auto;
+    top: auto;
+    margin: 0;
+    padding: 10px 16px;
+    text-align: left;
+    color: #3E7A06;
+    background: rgba(100, 167, 11, 0.12);
+    border: 1px solid rgba(100, 167, 11, 0.4);
+    border-radius: 12px;
+    font-size: clamp(12px, 1.25vw, 17px);
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-card-label.is-status {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: auto;
+    padding: 0;
+    text-align: left;
+    color: #004B87;
+    font-size: clamp(14px, 1.5vw, 21px);
+}
+
+/* ---- Scenario card (draggable) ----------------------------------------- */
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-card {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: auto;
+    height: auto;
+    min-height: 0;
+    transform: none;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: clamp(8px, 1vw, 14px);
+    padding: clamp(16px, 1.9vw, 28px) clamp(16px, 1.9vw, 28px) clamp(16px, 2vw, 30px) clamp(20px, 2.2vw, 32px);
+    text-align: left;
+    background: #ffffff;
+    border: 1.5px solid #00629B;
+    border-radius: 16px;
+    box-shadow: 0 16px 36px rgba(0, 49, 89, 0.16);
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-card::before {
+    left: 0;
+    right: auto;
+    top: 14px;
+    bottom: 14px;
+    width: 5px;
+    height: auto;
+    border-radius: 0 5px 5px 0;
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-card .vmv-card-label {
+    align-self: flex-start;
+    padding: 4px 12px;
+    font-size: clamp(11px, 1.1vw, 15px);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #004B87;
+    background: rgba(0, 75, 135, 0.08);
+    border-radius: 999px;
+    max-width: calc(100% - 52px);
+    line-height: 1.25;
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-card .vmv-card-question {
+    padding: 0;
+    text-align: left;
+    font-size: clamp(14px, 1.55vw, 22px);
+    line-height: 1.4;
+    color: #111111;
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-card .vmv-corner-key {
+    top: 10px;
+    right: 10px;
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-card.is-final {
+    border-color: #64A70B;
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault.is-wrong .vmv-card {
+    border-color: #d64545;
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault.is-wrong .vmv-card .vmv-card-label {
+    color: #b42318;
+    background: rgba(214, 69, 69, 0.1);
+}
+
+/* drag affordance */
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-card:not(.is-dragging)::after {
+    content: "\2630";
+    position: absolute;
+    right: 14px;
+    bottom: 10px;
+    font-size: 14px;
+    letter-spacing: 0;
+    color: rgba(0, 75, 135, 0.35);
+    pointer-events: none;
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-card.is-dragging {
+    transform: rotate(-1.5deg);
+    box-shadow: 0 24px 48px rgba(0, 49, 89, 0.28), 0 0 0 3px rgba(0, 98, 155, 0.2);
+}
+
+/* ---- Instruction / action bar ----------------------------------------- */
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-instruction-bar {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: 100%;
+    min-height: 0;
+    justify-content: flex-start;
+    gap: 12px;
+    text-align: left;
+    padding: clamp(12px, 1.2vw, 18px) clamp(16px, 1.8vw, 26px);
+    font-size: clamp(12px, 1.2vw, 17px);
+    border-radius: 14px;
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-instruction-bar::after {
+    content: "\2192";
+    margin-left: auto;
+    font-size: 1.3em;
+    line-height: 1;
+    color: #ffffff;
+}
+
+/* intro CTA = primary button */
+.values-experience.is-vault .vmv-board.vmv-vault button.vmv-instruction-bar {
+    color: #ffffff;
+    background: linear-gradient(135deg, #004B87, #00629B);
+    border: 0;
+    box-shadow: 0 14px 30px rgba(0, 75, 135, 0.3);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault button.vmv-instruction-bar::before {
+    background: #64A70B;
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault button.vmv-instruction-bar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 36px rgba(0, 75, 135, 0.38);
+}
+
+/* in-scenario drag line = quiet hint */
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-instruction-bar.is-static {
+    color: #2c3a47;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1.5px dashed rgba(0, 75, 135, 0.4);
+    box-shadow: none;
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-instruction-bar.is-static::before {
+    display: none;
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-instruction-bar.is-static::after {
+    content: "\21E2";
+    color: #004B87;
+}
+
+/* ---- Wrong / correct feedback ------------------------------------------ */
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-hint {
+    position: relative;
+    left: auto;
+    bottom: auto;
+    width: 100%;
+    text-align: left;
+    padding: clamp(10px, 1.1vw, 16px) clamp(14px, 1.6vw, 22px);
+    font-size: clamp(11px, 1.15vw, 16px);
+    border-radius: 14px;
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-reveal {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: auto;
+    padding: clamp(16px, 1.9vw, 28px) clamp(16px, 1.9vw, 28px) clamp(16px, 2vw, 30px) clamp(20px, 2.2vw, 32px);
+    border-radius: 16px;
+    background: linear-gradient(160deg, rgba(100, 167, 11, 0.12), #ffffff 60%);
+    box-shadow: 0 16px 36px rgba(0, 49, 89, 0.14);
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-reveal::before {
+    left: 0;
+    right: auto;
+    top: 14px;
+    bottom: 14px;
+    width: 5px;
+    height: auto;
+    border-radius: 0 5px 5px 0;
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-reveal h3 {
+    font-size: clamp(18px, 2vw, 28px);
+    color: #004B87;
+    margin: 0 0 8px;
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-reveal p {
+    font-size: clamp(13px, 1.35vw, 19px);
+    line-height: 1.45;
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-reveal .vmv-reveal-kicker {
+    font-size: clamp(10px, 1vw, 13px);
+    margin-bottom: 6px;
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault.is-correct .vmv-next {
+    position: relative;
+    left: auto;
+    top: auto;
+    transform: none;
+    align-self: flex-start;
+    padding: clamp(11px, 1.1vw, 16px) clamp(24px, 2.6vw, 38px);
+    font-size: clamp(13px, 1.3vw, 18px);
+    box-shadow: 0 12px 26px rgba(100, 167, 11, 0.35);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault.is-correct .vmv-next::after {
+    content: "\2192";
+    margin-left: 10px;
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault.is-correct .vmv-next:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 30px rgba(100, 167, 11, 0.45);
+}
+
+/* ---- Right: 2x2 vault panels (drop targets) ----------------------------- */
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-panels {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: 100%;
+    height: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: clamp(12px, 1.8vw, 26px);
+    align-self: stretch;
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-panel-card {
+    align-items: flex-start;
+    justify-content: flex-end;
+    text-align: left;
+    gap: 0;
+    padding: clamp(16px, 1.8vw, 28px);
+    border-width: 1.5px;
+    border-radius: 18px;
+    background:
+        radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--panel-accent) 12%, transparent), transparent 60%),
+        #ffffff;
+    box-shadow: 0 14px 32px rgba(0, 49, 89, 0.12);
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-panel-card::before {
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 5px;
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-panel-card h3 {
+    margin: 0 0 6px;
+    padding: 0;
+    font-size: clamp(16px, 1.9vw, 27px);
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-panel-card p {
+    padding: 0;
+    font-size: clamp(12px, 1.2vw, 17px);
+    line-height: 1.4;
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-panel-card .vmv-lock {
+    position: absolute;
+    left: clamp(16px, 1.8vw, 28px);
+    top: clamp(18px, 2vw, 30px);
+    width: clamp(48px, 5vw, 76px);
+    height: clamp(48px, 5vw, 76px);
+    margin: 0;
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-panel-card .vmv-value-icon {
+    width: 56%;
+    height: 56%;
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-panel-card .vmv-corner-lock {
+    top: clamp(14px, 1.6vw, 24px);
+    right: clamp(14px, 1.6vw, 24px);
+    width: clamp(32px, 3vw, 46px);
+    height: clamp(32px, 3vw, 46px);
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-panel-card .vmv-corner-icon {
+    width: 52%;
+    height: 52%;
+}
+
+/* locked panels read as sealed; open ones glow */
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-panel-card.is-locked {
+    border-style: dashed;
+    background:
+        repeating-linear-gradient(135deg, rgba(0, 75, 135, 0.035) 0 10px, transparent 10px 20px),
+        #ffffff;
+}
+
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-panel-card.is-open {
+    border-style: solid;
+    background:
+        radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--panel-accent) 22%, transparent), transparent 62%),
+        linear-gradient(180deg, color-mix(in srgb, var(--panel-accent) 14%, #ffffff), #ffffff 70%);
+}
+
+/* wrong flash must still win over the patterned background */
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-panel-card.is-wrong,
+.values-experience.is-vault .vmv-board.vmv-vault .vmv-panel-card.is-pulse-wrong {
+    background: #fff1f1 !important;
+}
+
+/* ==========================================================================
+   Summary panel redesign — matches the Values screen and the Vault:
+   centred heading, four completed value cards in a row, Lift CTA below.
+   Same copy and flow; layout and hierarchy only.
+   ========================================================================== */
+.values-experience.is-summary .vmv-frame {
+    background:
+        radial-gradient(ellipse 60% 70% at 20% 55%, rgba(0, 120, 190, 0.28), transparent 70%),
+        radial-gradient(ellipse 50% 60% at 85% 80%, rgba(201, 160, 48, 0.12), transparent 70%),
+        linear-gradient(160deg, rgba(6, 16, 34, 0.94), rgba(10, 24, 48, 0.9)),
+        url("../assets/images/vmv_lobby.png") center / cover no-repeat;
+}
+
+.vmv-board.vmv-summary {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(14px, 2.2vw, 34px);
+    padding: 8% 5% 3.5%;
+    box-sizing: border-box;
+}
+
+.vmv-summary .vmv-summary-head {
+    position: relative;
+    z-index: 3;
+    width: 100%;
+    max-width: 62em;
+    text-align: center;
+}
+
+.vmv-summary .vmv-summary-head .vmv-guide,
+.vmv-summary .vmv-summary-head .vmv-question {
+    position: static;
+    margin: 0;
+    left: auto;
+    right: auto;
+}
+
+.vmv-summary .vmv-summary-head .vmv-guide {
+    font-size: clamp(20px, 2.8vw, 40px);
+    letter-spacing: 0.01em;
+    color: #ffffff;
+}
+
+.vmv-summary .vmv-summary-head .vmv-guide::after {
+    content: "";
+    display: block;
+    width: 64px;
+    height: 4px;
+    margin: clamp(10px, 1.2vw, 16px) auto 0;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #E2B84A, #7CC8EA);
+}
+
+.vmv-summary .vmv-summary-head .vmv-question {
+    margin-top: clamp(10px, 1.2vw, 16px);
+    font-size: clamp(14px, 1.6vw, 23px);
+    line-height: 1.4;
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.vmv-summary-grid {
+    position: relative;
+    z-index: 3;
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(12px, 1.8vw, 26px);
+}
+
+.vmv-summary .vmv-value-card {
+    --accent: #34C79A;
+    position: relative;
+    top: auto;
+    left: auto;
+    width: auto;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(10px, 1.4vw, 20px);
+    padding: clamp(18px, 2.2vw, 34px) clamp(14px, 1.7vw, 26px) clamp(20px, 2.4vw, 36px);
+    color: #ffffff;
+    overflow: hidden;
+    border-radius: 18px;
+    border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
+    background:
+        radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--accent) 26%, transparent), transparent 62%),
+        linear-gradient(150deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.03));
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    animation: vmvValuesRise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(0.1s + var(--i, 0) * 0.1s);
+}
+
+.vmv-summary .vmv-value-card.vmv-value-integrity   { --accent: #34C79A; }
+.vmv-summary .vmv-value-card.vmv-value-respect     { --accent: #E2B84A; }
+.vmv-summary .vmv-value-card.vmv-value-stakeholder { --accent: #7CC8EA; }
+.vmv-summary .vmv-value-card.vmv-value-results     { --accent: #F2994A; }
+
+.vmv-summary .vmv-value-card.vmv-value-integrity,
+.vmv-summary .vmv-value-card.vmv-value-respect,
+.vmv-summary .vmv-value-card.vmv-value-stakeholder,
+.vmv-summary .vmv-value-card.vmv-value-results {
+    border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
+    background:
+        radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--accent) 26%, transparent), transparent 62%),
+        linear-gradient(150deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.03));
+}
+
+.vmv-summary .vmv-value-card::before {
+    left: 18%;
+    right: 18%;
+    top: 0;
+    height: 4px;
+    border-radius: 0 0 4px 4px;
+    background: var(--accent) !important;
+    box-shadow: 0 0 14px var(--accent);
+}
+
+.vmv-summary .vmv-value-card .vmv-check {
+    position: absolute;
+    top: clamp(10px, 1.2vw, 18px);
+    right: clamp(10px, 1.2vw, 18px);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: clamp(24px, 2.4vw, 36px);
+    height: clamp(24px, 2.4vw, 36px);
+    margin: 0;
+    border-radius: 50%;
+    font-size: clamp(12px, 1.2vw, 18px);
+    font-weight: 800;
+    color: #06240f;
+    background: #34C79A;
+    box-shadow: 0 0 0 4px rgba(52, 199, 154, 0.2), 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.vmv-summary .vmv-value-badge {
+    width: clamp(48px, 5vw, 76px);
+    height: clamp(48px, 5vw, 76px);
+}
+
+.vmv-summary .vmv-value-copy h3 {
+    margin: 0 0 clamp(4px, 0.6vw, 10px);
+    color: var(--accent);
+    font-size: clamp(16px, 1.9vw, 28px);
+    line-height: 1.15;
+}
+
+.vmv-summary .vmv-value-copy p {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: clamp(12px, 1.2vw, 18px);
+    line-height: 1.45;
+}
+
+.vmv-summary .vmv-dots {
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    z-index: 3;
+    margin: 0;
+    font-size: clamp(10px, 1vw, 14px);
+}
+
+.vmv-summary .vmv-lift {
+    position: relative;
+    left: auto;
+    bottom: auto;
+    transform: none;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.vmv-summary .vmv-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 34px rgba(226, 184, 74, 0.4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vmv-summary .vmv-value-card { animation: none; }
+}
+
+/* ==========================================================================
+   Leader video player redesign — light card, close tip in a clean header,
+   speaker name tag inside the video, floating glass control bar.
+   Same copy, controls and behaviour; layout and styling only.
+   ========================================================================== */
+.modal-overlay:has(.deck-modal-video-player) {
+    background: radial-gradient(ellipse at center, rgba(8, 20, 40, 0.5), rgba(8, 20, 40, 0.72));
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+.deck-modal-video-player {
+    max-width: 880px;
+    width: 92vw;
+    padding: 0 clamp(10px, 1.4vw, 16px) clamp(10px, 1.4vw, 16px);
+    box-sizing: border-box;
+    border-radius: 24px;
+    background: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55), 0 0 0 6px rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+}
+
+.deck-modal-video-player .video-close-instruction {
+    padding: clamp(10px, 1.2vw, 14px) 2px;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    color: #1b2b3a;
+}
+
+.deck-modal-video-player .video-close-instruction-text {
+    font-size: clamp(12px, 1.35vw, 15px);
+    font-weight: 600;
+    color: #2c3a47;
+}
+
+.deck-modal-video-player .video-close-key {
+    min-width: 1.6em;
+    margin: 0 0.3em;
+    padding: 0.05em 0.4em;
+    border-radius: 7px;
+    border: 1px solid rgba(0, 75, 135, 0.35);
+    background: rgba(0, 75, 135, 0.08);
+    color: #004B87;
+    font-weight: 800;
+}
+
+.deck-modal-video-player .video-close-btn {
+    width: 36px;
+    height: 36px;
+    background: #EEF3F8;
+    color: #004B87;
+    border: 1px solid rgba(0, 75, 135, 0.2);
+}
+
+.deck-modal-video-player .video-close-btn:hover {
+    background: #004B87;
+    border-color: #004B87;
+    color: #ffffff;
+    transform: rotate(90deg);
+}
+
+.deck-modal-video-player .deck-video-curved-viewport {
+    border-radius: 16px;
+    box-shadow: 0 14px 34px rgba(0, 49, 89, 0.25);
+}
+
+.deck-modal-video-player .deck-video-overlay-gradient {
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0) 28%, rgba(0, 0, 0, 0) 52%, rgba(0, 0, 0, 0.78) 100%);
+}
+
+/* speaker name tag lives inside the video, top-left */
+.deck-modal-video-player .deck-video-speaker-title {
+    position: absolute;
+    top: clamp(10px, 1.6vw, 18px);
+    left: clamp(10px, 1.6vw, 18px);
+    z-index: 11;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    padding: 8px 16px 8px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: rgba(8, 20, 40, 0.55);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    color: #ffffff;
+    font-size: clamp(11px, 1.25vw, 14px);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.3);
+}
+
+.deck-modal-video-player .deck-video-speaker-title::before {
+    content: "";
+    flex: 0 0 auto;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #64A70B;
+    box-shadow: 0 0 0 4px rgba(100, 167, 11, 0.28), 0 0 12px #64A70B;
+}
+
+/* captions sit just above the floating control bar */
+.deck-modal-video-player .deck-video-subtitles {
+    bottom: 76px;
+    left: 50%;
+    right: auto;
+    width: max-content;
+    max-width: calc(100% - 40px);
+    transform: translateX(-50%);
+    padding: 9px 18px;
+    border-radius: 12px;
+    font-size: clamp(12px, 1.4vw, 15px);
+}
+
+.deck-modal-video-player .deck-video-controls {
+    left: 14px;
+    right: 14px;
+    bottom: 14px;
+    height: auto;
+    padding: 7px 14px 7px 8px;
+    gap: 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    background: rgba(8, 20, 40, 0.58);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35);
+}
+
+.deck-modal-video-player .video-play-toggle {
+    width: 40px;
+    height: 40px;
+    background: #64A70B;
+    border-color: #64A70B;
+    box-shadow: 0 6px 16px rgba(100, 167, 11, 0.45);
+}
+
+.deck-modal-video-player .video-play-toggle:hover {
+    background: #4F8A08;
+    border-color: #4F8A08;
+}
+
+.deck-modal-video-player .video-audio-btn {
+    width: 34px;
+    height: 34px;
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.deck-modal-video-player .video-audio-btn:hover {
+    background: #004B87;
+    border-color: #004B87;
+}
+
+.deck-modal-video-player .video-timeline-fill {
+    background: linear-gradient(90deg, #00A0E3, #64A70B);
+    box-shadow: 0 0 10px rgba(100, 167, 11, 0.6);
+}
+
+.deck-modal-video-player .video-timer-label {
+    font-size: clamp(11px, 1.1vw, 13px);
+    font-variant-numeric: tabular-nums;
+    color: #ffffff;
+}
+
+/* ==========================================================================
+   Who We Are redesign — dark navy stage shared by all four moments:
+   1994 → Today timeline, People & Purpose, Regional footprint, VMV entry.
+   Same copy, order and timing; layout, contrast and hierarchy only.
+   ========================================================================== */
+.timeline-cinematic {
+    background:
+        radial-gradient(ellipse 70% 55% at 50% 38%, rgba(0, 120, 190, 0.28), transparent 70%),
+        radial-gradient(ellipse 50% 50% at 90% 95%, rgba(226, 184, 74, 0.10), transparent 70%),
+        linear-gradient(165deg, #0d2347 0%, #0a1830 55%, #060f1f 100%);
+}
+
+.timeline-cinematic.is-people {
+    background: #08142a;
+}
+
+.timeline-cinematic.is-footprint {
+    background: #071225;
+}
+
+/* ---- 1. Timeline ------------------------------------------------------- */
+.timeline-cinematic-stage {
+    width: min(1240px, 100%);
+}
+
+.timeline-beats {
+    --tl-gap: 28px;
+    align-items: start;
+}
+
+.timeline-beat {
+    min-height: 0;
+}
+
+/* dot + label first (the rail), story card below */
+.timeline-node {
+    order: -1;
+    min-height: 68px;
+    margin-bottom: clamp(14px, 1.8vw, 26px);
+}
+
+.timeline-node-dot {
+    width: 18px;
+    height: 18px;
+}
+
+.timeline-node-label {
+    margin-top: 14px;
+    font-size: clamp(18px, 1.9vw, 26px);
+    font-weight: 700;
+    color: #E2B84A;
+    letter-spacing: 0.02em;
+}
+
+.timeline-line-draw {
+    top: 8px;
+    height: 3px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #E2B84A, #FFE08A 50%, #E2B84A);
+}
+
+.timeline-ost-line {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 6.4em;
+    margin: 0;
+    padding: clamp(14px, 1.7vw, 24px) clamp(14px, 1.6vw, 24px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(15px, 1.55vw, 22px);
+    font-weight: 600;
+    line-height: 1.4;
+    color: #ffffff;
+    background:
+        radial-gradient(circle at 50% 0%, rgba(226, 184, 74, 0.16), transparent 65%),
+        linear-gradient(150deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
+    border: 1px solid rgba(226, 184, 74, 0.35);
+    border-top: 3px solid #E2B84A;
+    border-radius: 16px;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+}
+
+.timeline-ost-values {
+    font-weight: 800;
+    color: #FFE08A;
+}
+
+.timeline-beat-graphic {
+    height: clamp(90px, 12vw, 150px);
+    max-height: none;
+    margin-top: clamp(16px, 2vw, 28px);
+    object-position: center top;
+}
+
+/* ---- 2. People & Purpose ---------------------------------------------- */
+.people-purpose-screen {
+    box-sizing: border-box;
+    gap: clamp(14px, 2vw, 28px);
+    padding: clamp(14px, 2vw, 28px);
+    background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(0, 120, 190, 0.2), transparent 70%), #08142a;
+}
+
+.people-purpose-screen::after {
+    display: none;
+}
+
+.people-panel {
+    border-radius: 22px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+.people-purpose-dim {
+    background: linear-gradient(180deg, rgba(6, 12, 20, 0.05) 0%, rgba(6, 12, 20, 0.12) 45%, rgba(6, 12, 20, 0.78) 100%);
+}
+
+.people-ost-line {
+    left: 5%;
+    right: 5%;
+    bottom: 6%;
+    min-height: 0;
+    justify-content: flex-start;
+    text-align: left;
+    padding: clamp(12px, 1.4vw, 20px) clamp(16px, 1.8vw, 26px);
+    font-size: clamp(18px, 2vw, 28px);
+    font-weight: 600;
+    background: rgba(8, 20, 40, 0.58);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-left: 4px solid #E2B84A;
+    border-radius: 14px;
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+}
+
+/* ---- 3. Regional footprint -------------------------------------------- */
+.footprint-screen {
+    background: #071225;
+}
+
+.footprint-map-wrap {
+    width: auto;
+    margin: clamp(12px, 1.6vw, 22px) clamp(14px, 2vw, 28px) 0;
+    border-radius: 22px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), 0 0 0 5px rgba(255, 255, 255, 0.05);
+}
+
+.footprint-copy {
+    background: transparent;
+    padding: clamp(12px, 1.4vw, 20px) clamp(14px, 2vw, 28px) clamp(14px, 1.8vw, 24px);
+}
+
+.footprint-ost-slot {
+    box-sizing: border-box;
+    max-width: 1040px;
+    min-height: 4em;
+    border-radius: 18px;
+    border: 1px solid rgba(226, 184, 74, 0.4);
+    border-left: 4px solid #E2B84A;
+    background: linear-gradient(150deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03));
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+}
+
+.footprint-ost {
+    left: clamp(16px, 2vw, 30px);
+    right: clamp(16px, 2vw, 30px);
+    color: #ffffff;
+    font-weight: 600;
+    font-size: clamp(14px, 1.6vw, 22px);
+}
+
+/* ---- 4. Entry into Vision, Mission & Values --------------------------- */
+.vmv-poster-hotspot {
+    background: rgba(5, 12, 24, 0.8);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+}
+
+.vmv-poster-frame {
+    border-radius: 22px;
+    border: 2px solid rgba(226, 184, 74, 0.85);
+    box-shadow:
+        0 0 0 6px rgba(226, 184, 74, 0.12),
+        0 28px 70px rgba(0, 0, 0, 0.6),
+        0 0 60px rgba(0, 150, 220, 0.25);
+    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease;
+}
+
+.vmv-poster-hotspot:hover .vmv-poster-frame {
+    transform: scale(1.03);
+    box-shadow:
+        0 0 0 6px rgba(226, 184, 74, 0.25),
+        0 34px 80px rgba(0, 0, 0, 0.65),
+        0 0 80px rgba(0, 150, 220, 0.4);
+}
+
+.vmv-poster-caption {
+    padding: 14px 12px;
+    color: #E2B84A;
+}
+
+/* fallback arrow no longer sits on top of the footprint caption */
+.values-entry-arrow {
+    left: auto;
+    right: clamp(20px, 3vw, 44px);
+    bottom: clamp(96px, 14vh, 130px);
+    transform: none;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.values-entry-arrow:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 32px rgba(226, 184, 74, 0.4);
+}
+
+.timeline-beat-graphic {
+    box-sizing: border-box;
+    padding: clamp(6px, 0.8vw, 12px);
+    background: #ffffff;
+    border-radius: 14px;
+    object-position: center;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(226, 184, 74, 0.4);
+}
+
+/* ==========================================================================
+   Vision & Mission redesign — same layout and positions as before;
+   new visual language (glass cards, accent badges, pill actions) shared
+   with the Values, Vault and Summary screens. Copy and flow unchanged.
+   ========================================================================== */
+.vmv-frame {
+    background:
+        radial-gradient(ellipse 55% 60% at 50% 40%, rgba(0, 120, 190, 0.26), transparent 70%),
+        radial-gradient(ellipse 45% 55% at 92% 95%, rgba(201, 160, 48, 0.12), transparent 70%),
+        linear-gradient(160deg, rgba(6, 16, 34, 0.93), rgba(10, 24, 48, 0.9)),
+        url("../assets/images/vmv_lobby.png") center / cover no-repeat;
+}
+
+/* waterline as a soft glowing horizon */
+.vmv-waterline {
+    height: 2px;
+    background: linear-gradient(90deg, transparent 0%, rgba(124, 200, 234, 0.85) 18%, rgba(124, 200, 234, 0.85) 82%, transparent 100%);
+    box-shadow: 0 0 14px rgba(124, 200, 234, 0.55);
+}
+
+/* iceberg as a framed poster */
+.vmv-board:not(.vmv-values) .vmv-iceberg {
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid rgba(168, 216, 234, 0.4);
+    box-shadow: 0 0 0 6px rgba(168, 216, 234, 0.06), 0 24px 60px rgba(0, 0, 0, 0.5), 0 0 70px rgba(0, 150, 220, 0.25);
+}
+
+.vmv-board:not(.vmv-values) .vmv-iceberg img {
+    object-fit: cover;
+    object-position: center;
+}
+
+/* ---- Vision / Mission panels ------------------------------------------ */
+.vmv-board .vmv-panel {
+    --pa: #E2B84A;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 3.2% 3.4%;
+    border-radius: 18px;
+    color: #ffffff;
+    border: 1px solid color-mix(in srgb, var(--pa) 55%, transparent);
+    background:
+        radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--pa) 24%, transparent), transparent 62%),
+        linear-gradient(150deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.03));
+    box-shadow: 0 16px 38px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    transition: opacity 0.4s ease, filter 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+.vmv-board .vmv-panel.vmv-mission { --pa: #34D1BF; }
+
+.vmv-board .vmv-panel::before {
+    left: 0;
+    right: auto;
+    top: 16%;
+    bottom: 16%;
+    width: 4px;
+    height: auto;
+    border-radius: 0 4px 4px 0;
+    background: var(--pa);
+    box-shadow: 0 0 14px var(--pa);
+}
+
+.vmv-board .vmv-vision,
+.vmv-board .vmv-mission {
+    border: 1px solid color-mix(in srgb, var(--pa) 55%, transparent);
+}
+
+/* dimmed / quiet states fade the whole card instead of greying the text */
+.vmv-board .vmv-mission.is-dim,
+.vmv-board .vmv-vision.is-quiet,
+.vmv-board.is-mission .vmv-vision {
+    opacity: 0.5;
+    filter: saturate(0.45);
+    background:
+        radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--pa) 18%, transparent), transparent 62%),
+        linear-gradient(150deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+    border: 1px solid color-mix(in srgb, var(--pa) 35%, transparent);
+}
+
+.vmv-board .vmv-mission.is-dim::before,
+.vmv-board.is-mission .vmv-vision::before {
+    display: block;
+}
+
+.vmv-board .vmv-mission.is-dim .vmv-kicker,
+.vmv-board.is-mission .vmv-vision .vmv-kicker {
+    color: var(--pa);
+}
+
+.vmv-board .vmv-mission.is-dim .vmv-statement,
+.vmv-board.is-mission .vmv-vision .vmv-statement {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.vmv-board .vmv-mission.is-live {
+    border: 1px solid var(--pa);
+    box-shadow: 0 16px 38px rgba(0, 0, 0, 0.38), 0 0 34px color-mix(in srgb, var(--pa) 30%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.vmv-board .vmv-mission.is-live .vmv-statement {
+    color: #ffffff;
+}
+
+.vmv-board .vmv-kicker {
+    margin: 0 0 clamp(6px, 0.8vw, 12px);
+    gap: 0.6em;
+    color: var(--pa);
+    font-size: clamp(12px, 1.4vw, 20px);
+    letter-spacing: 0.14em;
+}
+
+.vmv-board .vmv-mission.is-live .vmv-kicker {
+    color: var(--pa);
+}
+
+.vmv-board .vmv-kicker-icon {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2em;
+    height: 2em;
+    border-radius: 50%;
+    color: var(--pa);
+    background: color-mix(in srgb, var(--pa) 16%, rgba(6, 16, 34, 0.6));
+    border: 1.5px solid color-mix(in srgb, var(--pa) 70%, transparent);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--pa) 10%, transparent);
+}
+
+.vmv-kicker-svg {
+    display: block;
+    width: 62%;
+    height: 62%;
+}
+
+.vmv-board .vmv-statement {
+    font-size: clamp(12px, 1.35vw, 20px);
+    line-height: 1.45;
+}
+
+.vmv-board .vmv-kicker .vmv-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5em;
+    height: 1.5em;
+    border-radius: 50%;
+    font-size: 0.8em;
+    letter-spacing: 0;
+    color: #06240f;
+    background: #34C79A;
+}
+
+/* ---- Supporting images under Vision ----------------------------------- */
+.vmv-support-slot {
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+    transition: opacity 0.4s ease, filter 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+.vmv-support-slot img {
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.vmv-support-slot figcaption {
+    gap: 8px;
+    padding: 6px 12px;
+    font-size: clamp(10px, 1.05vw, 14px);
+    color: #ffffff;
+    background: linear-gradient(0deg, rgba(5, 12, 24, 0.9), rgba(5, 12, 24, 0.55));
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+}
+
+.vmv-support-slot.is-active {
+    background: rgba(226, 184, 74, 0.1);
+    border: 1.5px solid #E2B84A;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35), 0 0 26px rgba(226, 184, 74, 0.35);
+}
+
+.vmv-support-slot.is-active figcaption {
+    color: #E2B84A;
+}
+
+.vmv-support-slot.is-done {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    filter: saturate(0.6);
+}
+
+.vmv-support-slot.is-done figcaption {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.vmv-support-slot.is-pending {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1.5px dashed rgba(255, 255, 255, 0.28);
+    box-shadow: none;
+}
+
+.vmv-support-slot.is-pending figcaption {
+    color: rgba(255, 255, 255, 0.6);
+    background: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+}
+
+/* ---- Mission hotspots -------------------------------------------------- */
+.vmv-hotspots {
+    gap: 2.2%;
+}
+
+.vmv-hotspot {
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 14px;
+    color: rgba(255, 255, 255, 0.85);
+    background: linear-gradient(150deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.03));
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    font-size: clamp(11px, 1.2vw, 17px);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    transition: opacity 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease, transform 0.25s ease;
+}
+
+.vmv-hotspot.is-dim {
+    color: rgba(255, 255, 255, 0.7);
+    opacity: 0.55;
+}
+
+.vmv-hotspot.is-done {
+    opacity: 0.7;
+}
+
+.vmv-hotspot.is-active {
+    color: #ffffff;
+    background:
+        radial-gradient(circle at 0% 0%, rgba(52, 209, 191, 0.26), transparent 65%),
+        linear-gradient(150deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
+    border: 1.5px solid #34D1BF;
+    box-shadow: 0 0 28px rgba(52, 209, 191, 0.3), 0 12px 28px rgba(0, 0, 0, 0.35);
+}
+
+.vmv-hotspot:not(:disabled):hover {
+    transform: translateY(-2px);
+    border-color: #34D1BF;
+}
+
+.vmv-hotspot .vmv-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.9em;
+    height: 1.9em;
+    border-radius: 50%;
+    font-size: 0.85em;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.vmv-hotspot.is-active .vmv-mark {
+    color: #06241f;
+    background: #34D1BF;
+    border-color: #34D1BF;
+}
+
+.vmv-hotspot.is-done .vmv-mark {
+    color: #06240f;
+    background: #34C79A;
+    border-color: #34C79A;
+}
+
+.vmv-hotspot-lead {
+    font-weight: 500;
+}
+
+.vmv-hotspot ul {
+    margin: 8px 0 0;
+    padding-left: 18px;
+    font-size: clamp(11px, 1.05vw, 15px);
+    line-height: 1.5;
+    font-weight: 500;
+}
+
+.vmv-hotspot li::marker {
+    color: #34D1BF;
+}
+
+/* ---- Prompts and actions as pills ------------------------------------- */
+.vmv-board.is-vision .vmv-footer-prompt,
+.vmv-board.is-mission .vmv-below-q {
+    left: 50%;
+    right: auto;
+    bottom: 2.6%;
+    width: auto;
+    max-width: 90%;
+    height: auto;
+    transform: translateX(-50%);
+    padding: clamp(10px, 1.1vw, 16px) clamp(20px, 2.4vw, 36px);
+    border-radius: 999px;
+    border: 1px solid rgba(226, 184, 74, 0.7);
+    background: linear-gradient(90deg, rgba(226, 184, 74, 0.22), rgba(226, 184, 74, 0.08));
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.32), 0 0 24px rgba(226, 184, 74, 0.18);
+    font-size: clamp(12px, 1.5vw, 21px);
+    white-space: nowrap;
+}
+
+.vmv-board.is-vision .vmv-footer-prompt::after {
+    content: "\2192";
+    margin-left: 0.8em;
+    color: #E2B84A;
+    font-size: 1.2em;
+    line-height: 1;
+    transition: transform 0.25s ease;
+}
+
+.vmv-board.is-vision .vmv-footer-prompt:hover {
+    background: linear-gradient(90deg, rgba(226, 184, 74, 0.36), rgba(226, 184, 74, 0.14));
+}
+
+.vmv-board.is-vision .vmv-footer-prompt:hover::after {
+    transform: translateX(4px);
+}
+
+.vmv-board.is-mission .vmv-below-q {
+    border-color: rgba(255, 255, 255, 0.25);
+    background: rgba(8, 20, 40, 0.55);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.3);
+}
+
+.vmv-below {
+    border-radius: 999px;
+    border: 1px solid rgba(52, 209, 191, 0.85);
+    background: linear-gradient(90deg, rgba(52, 209, 191, 0.3), rgba(52, 209, 191, 0.12));
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.32), 0 0 26px rgba(52, 209, 191, 0.28);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+
+.vmv-below:hover {
+    transform: translateY(-2px);
+    background: linear-gradient(90deg, rgba(52, 209, 191, 0.45), rgba(52, 209, 191, 0.2));
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.38), 0 0 34px rgba(52, 209, 191, 0.4);
+}
+
+/* Supporting images: clear gap below the waterline and between each other
+   (they used to touch the horizon line and each other) */
+.vmv-board.is-vision .vmv-support-slot.office,
+.vmv-board.is-vision .vmv-support-slot.plant,
+.vmv-board.is-vision .vmv-support-slot.lab {
+    height: 14.5%;
+}
+
+.vmv-board.is-vision .vmv-support-slot.office {
+    left: 1.8%;
+    top: 42.2%;
+    width: 13.9%;
+}
+
+.vmv-board.is-vision .vmv-support-slot.plant {
+    left: 17.075%;
+    top: 42.2%;
+    width: 13.9%;
+}
+
+.vmv-board.is-vision .vmv-support-slot.lab {
+    left: 1.8%;
+    top: 58.7%;
+    width: 29.175%;
+}

@@ -464,14 +464,14 @@
                     </figure>
                     <article class="vmv-panel vmv-vision">
                         <h2 class="vmv-kicker">
-                            <span class="vmv-kicker-icon" aria-hidden="true">👁</span>
+                            <span class="vmv-kicker-icon" aria-hidden="true"><svg class="vmv-kicker-svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2 12 C4.8 7.4 8.2 5.2 12 5.2 C15.8 5.2 19.2 7.4 22 12 C19.2 16.6 15.8 18.8 12 18.8 C8.2 18.8 4.8 16.6 2 12 Z" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><circle cx="12" cy="12" r="3.2" stroke="currentColor" stroke-width="1.9"/></svg></span>
                             Vision
                         </h2>
                         <p class="vmv-statement">${esc(VISION)}</p>
                     </article>
                     <article class="vmv-panel vmv-mission ${missionLive ? 'is-live' : 'is-dim'}">
                         <h2 class="vmv-kicker">
-                            <span class="vmv-kicker-icon" aria-hidden="true">🎯</span>
+                            <span class="vmv-kicker-icon" aria-hidden="true"><svg class="vmv-kicker-svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.9"/><circle cx="12" cy="12" r="4.6" stroke="currentColor" stroke-width="1.9"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg></span>
                             ${missionLive ? 'Mission →' : 'Mission'}
                         </h2>
                         <p class="vmv-statement">${esc(MISSION_SHORT)}</p>
@@ -509,14 +509,14 @@
                     </figure>
                     <article class="vmv-panel vmv-vision is-quiet">
                         <h2 class="vmv-kicker">
-                            <span class="vmv-kicker-icon" aria-hidden="true">👁</span>
+                            <span class="vmv-kicker-icon" aria-hidden="true"><svg class="vmv-kicker-svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2 12 C4.8 7.4 8.2 5.2 12 5.2 C15.8 5.2 19.2 7.4 22 12 C19.2 16.6 15.8 18.8 12 18.8 C8.2 18.8 4.8 16.6 2 12 Z" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><circle cx="12" cy="12" r="3.2" stroke="currentColor" stroke-width="1.9"/></svg></span>
                             Vision <span class="vmv-check">✓</span>
                         </h2>
                         <p class="vmv-statement">${esc(VISION)}</p>
                     </article>
                     <article class="vmv-panel vmv-mission is-live">
                         <h2 class="vmv-kicker">
-                            <span class="vmv-kicker-icon" aria-hidden="true">🎯</span>
+                            <span class="vmv-kicker-icon" aria-hidden="true"><svg class="vmv-kicker-svg" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.9"/><circle cx="12" cy="12" r="4.6" stroke="currentColor" stroke-width="1.9"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg></span>
                             Mission
                         </h2>
                         <p class="vmv-statement">${esc(MISSION_FULL)}</p>
@@ -532,11 +532,16 @@
                     <figure class="vmv-iceberg">
                         <img src="assets/images/vmv_iceberg.png" alt="">
                     </figure>
-                    ${VALUES.map((value) => `
-                        <article class="vmv-value-card vmv-value-${value.id}">
-                            <h3>${esc(value.name)}</h3>
-                            <p>${esc(value.short)}</p>
-                        </article>`).join('')}
+                    <div class="vmv-values-grid">
+                        ${VALUES.map((value, index) => `
+                            <article class="vmv-value-card vmv-value-${value.id}" style="--i:${index}">
+                                <span class="vmv-value-badge" aria-hidden="true">${VALUE_ICONS[value.id]}</span>
+                                <div class="vmv-value-copy">
+                                    <h3>${esc(value.name)}</h3>
+                                    <p>${esc(value.short)}</p>
+                                </div>
+                            </article>`).join('')}
+                    </div>
                     <button type="button" class="vmv-footer-prompt" data-action="vault">These values guide how we work at Tabuk.</button>
                 </div>`;
         }
@@ -544,14 +549,16 @@
         _htmlVaultIntro() {
             return `
                 <div class="vmv-board vmv-vault">
-                    <div class="vmv-vault-head">
-                        <h2>The Values Vault</h2>
-                        <p>Four values power everything at Tabuk.<br>Can you unlock them all?</p>
-                        <div class="vmv-progress-track" aria-hidden="true"><span style="width:${(this.unlocked.size / 4) * 100}%"></span></div>
-                        <p class="vmv-progress">${this.unlocked.size} / 4  unlocked</p>
+                    <div class="vmv-vault-side">
+                        <div class="vmv-vault-head">
+                            <h2>The Values Vault</h2>
+                            <p>Four values power everything at Tabuk.<br>Can you unlock them all?</p>
+                            <div class="vmv-progress-track" aria-hidden="true"><span style="width:${(this.unlocked.size / 4) * 100}%"></span></div>
+                            <p class="vmv-progress">${this.unlocked.size} / 4  unlocked</p>
+                        </div>
+                        <button type="button" class="vmv-instruction-bar" data-action="begin">Read each scenario card, then DRAG it onto the correct value panel to unlock it</button>
                     </div>
                     ${this._htmlPanels()}
-                    <button type="button" class="vmv-instruction-bar" data-action="begin">Read each scenario card, then DRAG it onto the correct value panel to unlock it</button>
                 </div>`;
         }
 
@@ -596,19 +603,21 @@
             }
             return `
                 <div class="vmv-board vmv-vault is-scenario ${isCorrect ? 'is-correct' : ''} ${isWrong ? 'is-wrong' : ''} ${scenario.final ? 'is-final-round' : ''}">
-                    <div class="vmv-vault-head">
-                        <h2>The Values Vault</h2>
-                        <div class="vmv-progress-track" aria-hidden="true"><span style="width:${(this.unlocked.size / 4) * 100}%"></span></div>
-                        <p class="vmv-progress">${this.unlocked.size} / 4  unlocked</p>
-                        ${scenario.final && !isCorrect ? '<p class="vmv-final">Final vault</p>' : ''}
+                    <div class="vmv-vault-side">
+                        <div class="vmv-vault-head">
+                            <h2>The Values Vault</h2>
+                            <div class="vmv-progress-track" aria-hidden="true"><span style="width:${(this.unlocked.size / 4) * 100}%"></span></div>
+                            <p class="vmv-progress">${this.unlocked.size} / 4  unlocked</p>
+                            ${scenario.final && !isCorrect ? '<p class="vmv-final">Final vault</p>' : ''}
+                        </div>
+                        ${banner}
+                        ${statusLabel}
+                        ${scenarioCard}
+                        ${dragBar}
+                        ${extra}
+                        ${errorBar}
                     </div>
-                    ${banner}
-                    ${statusLabel}
-                    ${scenarioCard}
-                    ${dragBar}
-                    ${extra}
                     ${this._htmlPanels()}
-                    ${errorBar}
                 </div>`;
         }
 
@@ -632,15 +641,22 @@
         _htmlSummary() {
             return `
                 <div class="vmv-board vmv-summary">
-                    <p class="vmv-guide">These values guide how we work at Tabuk.</p>
-                    <p class="vmv-question">As you begin your journey here, which value will guide the way you work?</p>
-                    ${VALUES.map((value) => `
-                        <article class="vmv-value-card vmv-value-${value.id} is-done">
-                            <span class="vmv-check">✓</span>
-                            <h3>${esc(value.name)}</h3>
-                            <p>${esc(value.summary || value.short)}</p>
-                        </article>`).join('')}
-                    <p class="vmv-dots" aria-hidden="true">● ● ● ●</p>
+                    <div class="vmv-summary-head">
+                        <p class="vmv-guide">These values guide how we work at Tabuk.</p>
+                        <p class="vmv-question">As you begin your journey here, which value will guide the way you work?</p>
+                    </div>
+                    <div class="vmv-summary-grid">
+                        ${VALUES.map((value, index) => `
+                            <article class="vmv-value-card vmv-value-${value.id} is-done" style="--i:${index}">
+                                <span class="vmv-check" aria-hidden="true">\u2713</span>
+                                <span class="vmv-value-badge" aria-hidden="true">${VALUE_ICONS[value.id]}</span>
+                                <div class="vmv-value-copy">
+                                    <h3>${esc(value.name)}</h3>
+                                    <p>${esc(value.summary || value.short)}</p>
+                                </div>
+                            </article>`).join('')}
+                    </div>
+                    <p class="vmv-dots" aria-hidden="true">\u25CF \u25CF \u25CF \u25CF</p>
                     <button type="button" class="vmv-lift" data-action="lift">Lift</button>
                 </div>`;
         }
