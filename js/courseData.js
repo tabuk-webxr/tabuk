@@ -67,11 +67,11 @@ window.COURSE_DATA = {
             envType: "intro",
             bgVideo: "Videos/51_D_4k.mov",
             bgImage: "assets/images/scene0_exterior.jpg",
-            initialPitch: -3,
-            initialYaw: 174,
+            initialPitch: 1,
+            initialYaw: 164,
             sphereYaw: 0,
             cardText: "Corporate Reception\nFind the marker to continue",
-            // Glue Who We Are onto the TV in the 360 video — pin 4 corners in DEV
+            // Glue panels onto screens in the 360 — pin 4 corners in DEV
             screenOverlays: [
                 {
                     id: "who_we_are_tv",
@@ -83,22 +83,43 @@ window.COURSE_DATA = {
                         br: { pitch: -3.9, yaw: 216.3 },
                         bl: { pitch: -4.6, yaw: 207.0 }
                     }
+                },
+                {
+                    // Behind Vision / Mission / Values play hotspot (lift area)
+                    id: "vmv_board",
+                    image: "assets/images/vmv_iceberg_board.png",
+                    radius: 272.5,
+                    corners: {
+                        tl: { pitch: 5.8, yaw: 137.4 },
+                        tr: { pitch: 6.2, yaw: 193.3 },
+                        br: { pitch: -31.0, yaw: 194.8 },
+                        bl: { pitch: -31.6, yaw: 137.7 }
+                    }
                 }
             ],
             hotspots: [
                 {
                     id: "welcome_guide",
                     type: "avatar",
+                    model: "assets/models/welcome_guide.glb?v=6",
+                    // PNG fallback if GLB fails to load
                     image: "assets/images/welcome_tip_avatar.png?v=4",
                     label: "Welcome Guide",
-                    // Glued to 360 sphere at pitch/yaw (3D plane — sticks like gum)
-                    pitch: -28,
-                    yaw: 118,
+                    // Level 1 — centered on welcome-guide spot
+                    pitch: -27.5,
+                    yaw: 118.5,
+                    // Level 2 start — feet on floor by reception desk
+                    level2Pitch: -27.5,
+                    level2Yaw: 126.5,
                     interactive: false,
-                    radius: 345,
-                    worldHeight: 162,
-                    worldWidth: 58,
-                    worldRot: -6
+                    radius: 291,
+                    offsetY: 3,
+                    worldHeight: 128,
+                    worldWidth: 20,
+                    modelScale: 0.89,
+                    worldRotX: 0,
+                    worldRot: 26,
+                    worldRotZ: 0
                 },
                 {
                     id: "welcome_guide_name",
@@ -107,6 +128,8 @@ window.COURSE_DATA = {
                     // Floating HTML name pill — follows look L/R like hotspots
                     pitch: -18,
                     yaw: 124,
+                    level2Pitch: -18,
+                    level2Yaw: 130,
                     rot: 0,
                     interactive: false
                 },
@@ -158,9 +181,10 @@ window.COURSE_DATA = {
                     arrowYaw: 0,
                     promptOffsetY: 6,
                     arrowScale: 0.7,
+                    // Stay on reception 51_D — no white_360 swap
                     stayInScene: true,
-                    transitionVideo: "Videos/white_360.mp4",
-                    transitionIs360: true
+                    lookPitch: -1,
+                    lookYaw: 212
                 },
                 {
                     // Play control on the reception TV — Slide 9 Who We Are entry
@@ -175,35 +199,68 @@ window.COURSE_DATA = {
                     playOffsetY: 0
                 },
                 {
-                    // After Who We Are cinematic — 360 arrow near TV + guide opens Vision / Mission / Values
+                    // After Who We Are — turn to VMV board in reception 51_D_4k
                     id: "discover_what_guides",
                     type: "portal",
                     icon: "arrow",
                     label: "Discover what guides us",
                     prompt: "Follow the arrow to discover what guides us.",
-                    pitch: -11,
-                    yaw: 217,
+                    pitch: -3,
+                    yaw: 177,
                     arrowYaw: 0,
                     promptOffsetY: 6,
                     arrowScale: 0.7,
-                    stayInScene: true,
+                    // Play lift 360, then show VMV board + play hotspot
+                    transitionVideo: "Videos/Lift_4k.mov",
+                    transitionIs360: true,
+                    arriveLiftVmv: true,
+                    // Camera when this arrow appears (after Who We Are)
+                    revealPitch: 1,
+                    revealYaw: 188,
+                    // Camera after click — lift / VMV board view
+                    lookPitch: 1,
+                    lookYaw: 164
+                },
+                {
+                    // At the lift area — single entry into Vision → Mission → Values
+                    id: "vision_mission_values",
+                    type: "portal",
+                    icon: "arrow",
+                    label: "Vision, Mission & Values",
+                    prompt: "Tap to explore Vision, Mission & Values",
+                    pitch: -15,
+                    yaw: 127,
+                    arrowYaw: 0,
+                    promptOffsetY: 6,
+                    arrowScale: 0.7,
+                    showPlay: true,
+                    hideArrow: true,
                     openValuesExperience: true
                 },
                 {
-                    // Lift arrow (previous enter_hq stays locked)
-                    id: "next_destination",
+                    // Level 2 reception — digital kiosk (journey ends here for now)
+                    id: "level2_kiosk",
                     type: "portal",
-                    icon: "arrow",
-                    label: "Next — Lift",
-                    pitch: -4,
-                    yaw: 176,
-                    arrowYaw: 0,
-                    promptOffsetY: 6,
-                    arrowScale: 0.7,
-                    targetScene: "riyadh_elevator",
-                    // 360 lift walkthrough — plays in the sphere, then opens elevator scene
-                    transitionVideo: "Videos/Lift_4k.mov",
-                    transitionIs360: true
+                    glue: true,
+                    image: "assets/images/level2_kiosk.png",
+                    label: "Level 2",
+                    prompt: "Select the marked location to move to Level 2.",
+                    pitch: -19.5,
+                    yaw: 268,
+                    // Scene 360 look when Level 2 / kiosk is active
+                    revealPitch: 0,
+                    revealYaw: -92,
+                    radius: 266,
+                    offsetY: -20,
+                    worldHeight: 150,
+                    worldWidth: 127,
+                    modelScale: 1.92,
+                    worldRotX: 0,
+                    worldRot: 0,
+                    worldRotZ: 0,
+                    flipX: true,
+                    promptOffsetX: -74,
+                    promptOffsetY: -32
                 }
             ]
         },
@@ -285,22 +342,8 @@ window.COURSE_DATA = {
             initialYaw: 76,
             sphereYaw: 0,
             cardText: "Next stop: The Dammam Plant.\nLet’s see where Tabuk’s medicines are made.",
-            // Slide 35 — marked location to begin Level 2 (Dammam)
-            hotspots: [
-                {
-                    id: "level2_dammam",
-                    type: "portal",
-                    icon: "arrow",
-                    label: "Level 2 — Dammam Plant",
-                    prompt: "Select the marked location to move to Level 2.",
-                    pitch: -8,
-                    yaw: 76,
-                    arrowYaw: 0,
-                    promptOffsetY: 6,
-                    arrowScale: 0.85,
-                    targetScene: "dammam_reception"
-                }
-            ]
+            // Level 2 onward (Dammam / quizzes) removed from active path
+            hotspots: []
         },
         "dammam_reception": {
             id: "dammam_reception",
@@ -311,26 +354,34 @@ window.COURSE_DATA = {
             initialPitch: -1,
             initialYaw: 0,
             cardText: "Work in Action\nDammam Plant",
+            // Level 2 drop — reception area with 3D guide + name only
             hotspots: [
                 {
-                    id: "dammam_overview",
-                    type: "info",
-                    icon: "factory",
-                    label: "Dammam Facility",
-                    pitch: -4,
-                    yaw: 0,
-                    title: "Dammam Production Center",
-                    text: "The Dammam site is a state-of-the-art pharmaceutical manufacturing and testing hub equipped with high-speed sterile filling, solids, and semi-solids lines meeting rigorous international GMP standards.",
-                    bullets: ["High-speed sterile filling", "International GMP compliance", "Rapid packaging lines"]
+                    id: "dammam_guide",
+                    type: "avatar",
+                    model: "assets/models/welcome_guide.glb?v=6",
+                    image: "assets/images/welcome_tip_avatar.png?v=4",
+                    label: "Site Guide",
+                    pitch: -22,
+                    yaw: 8,
+                    interactive: false,
+                    radius: 280,
+                    offsetY: 3,
+                    worldHeight: 128,
+                    worldWidth: 20,
+                    modelScale: 0.89,
+                    worldRotX: 0,
+                    worldRot: 0,
+                    worldRotZ: 0
                 },
                 {
-                    id: "nav_to_lab",
-                    type: "portal",
-                    icon: "arrow",
-                    label: "Enter QC & Formulation Lab",
-                    pitch: -18,
-                    yaw: -25,
-                    targetScene: "dammam_lab"
+                    id: "dammam_guide_name",
+                    type: "nametag",
+                    label: "Tariq",
+                    pitch: -12,
+                    yaw: 10,
+                    rot: 0,
+                    interactive: false
                 }
             ]
         },

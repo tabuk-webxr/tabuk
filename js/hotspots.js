@@ -26,9 +26,7 @@ class HotspotManager {
         }
 
         this.hotspots.forEach(data => {
-            // Avatars live as 3D planes on the sphere — no floating HTML billboard
-            if (data.type === 'avatar') return;
-
+            // 3D GLB/PNG avatar still gets a small HTML pin so DEV Pitch/Yaw placement works like other hotspots
             const el = this.createHotspotElement(data);
             this.container.appendChild(el);
             this.elements.push({ data, el });
@@ -66,7 +64,15 @@ class HotspotManager {
             }
         }
 
-        if (data.type === 'nametag') {
+        if (data.type === 'avatar') {
+            // Placement pin only — the real avatar is the 3D mesh in the panorama
+            wrapper.innerHTML = `
+                <div class="hotspot-avatar-pin" title="${data.label || 'Avatar'}">
+                    <span class="hotspot-avatar-pin-dot"></span>
+                    <span class="hotspot-avatar-pin-label">${data.label || 'Avatar'}</span>
+                </div>
+            `;
+        } else if (data.type === 'nametag') {
             const rot = typeof data.rot === 'number' ? data.rot : 0;
             wrapper.style.setProperty('--name-rot', `${rot}deg`);
             wrapper.innerHTML = `
@@ -93,20 +99,61 @@ class HotspotManager {
 
             // Default stays "Follow the arrow"; CEO/CHRO set an explicit prompt
             const promptText = data.prompt || 'Follow the arrow';
-            wrapper.innerHTML = `
-                <div class="portal-indicator" style="--arrow-yaw: ${yawRot}deg;">
-                    <div class="portal-arrow-prompt">${promptText}</div>
-                    <div class="portal-arrow-stage">
-                        <div class="portal-arrow-3d">
-                            <div class="portal-arrow-motion">
-                                ${chevronSvg('a')}
-                                ${chevronSvg('b')}
-                                ${chevronSvg('c')}
+            // Glued image prop (e.g. Level 2 kiosk) — 3D mesh is the marker; HTML = prompt + hit
+            if (data.glue && data.image) {
+                const promptX = typeof data.promptOffsetX === 'number' ? data.promptOffsetX : 0;
+                const promptY = typeof data.promptOffsetY === 'number' ? data.promptOffsetY : 0;
+                wrapper.classList.add('hotspot-portal-kiosk');
+                wrapper.style.setProperty('--prompt-offset-x', `${promptX}px`);
+                wrapper.style.setProperty('--prompt-offset-y', `${promptY}px`);
+                wrapper.innerHTML = `
+                    <div class="portal-indicator portal-kiosk-indicator">
+                        <div class="portal-arrow-prompt">${promptText}</div>
+                        <div class="hotspot-kiosk-hit" aria-hidden="true"></div>
+                    </div>
+                `;
+            // Play-only portal (e.g. Vision / Mission / Values) — same marker as play hotspots
+            } else if (data.showPlay && data.hideArrow) {
+                wrapper.classList.add('hotspot-portal-play-only');
+                wrapper.setAttribute('data-icon', 'play');
+                wrapper.innerHTML = `
+                    <div class="portal-indicator portal-play-only-indicator">
+                        <div class="hotspot-marker">
+                            <div class="hotspot-pulse-ring" aria-hidden="true"></div>
+                            <div class="hotspot-pulse-ring-outer" aria-hidden="true"></div>
+                            <div class="hotspot-inner-circle">
+                                <svg class="hotspot-play-icon" viewBox="0 0 24 24" width="20" height="20" fill="#ffffff" aria-hidden="true">
+                                    <path d="M8.5 5.8v12.4L19 12 8.5 5.8z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="portal-arrow-prompt">${promptText}</div>
+                    </div>
+                `;
+            } else {
+                const playBtn = data.showPlay
+                    ? `<div class="portal-video-btn" aria-hidden="true">
+                            <svg class="hotspot-play-icon" viewBox="0 0 24 24" width="16" height="16" fill="#ffffff">
+                                <path d="M8.5 5.8v12.4L19 12 8.5 5.8z"/>
+                            </svg>
+                       </div>`
+                    : '';
+                wrapper.innerHTML = `
+                    <div class="portal-indicator" style="--arrow-yaw: ${yawRot}deg;">
+                        ${playBtn}
+                        <div class="portal-arrow-prompt">${promptText}</div>
+                        <div class="portal-arrow-stage">
+                            <div class="portal-arrow-3d">
+                                <div class="portal-arrow-motion">
+                                    ${chevronSvg('a')}
+                                    ${chevronSvg('b')}
+                                    ${chevronSvg('c')}
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            `;
+                `;
+            }
         } else if (data.icon === 'monitor' || data.icon === 'ipad') {
             // Glued 3D tablet — play on screen + name box above (offsets from courseData / DEV)
             const labelY = typeof data.labelOffsetY === 'number' ? data.labelOffsetY : -36;
@@ -118,6 +165,9 @@ class HotspotManager {
             const tooltip = data.hideLabel
                 ? ''
                 : `<div class="hotspot-tooltip"><span class="tooltip-title">${data.label}</span></div>`;
+            const promptHtml = data.prompt
+                ? `<div class="hotspot-monitor-prompt">${data.prompt}</div>`
+                : '';
             wrapper.innerHTML = `
                 <div class="hotspot-monitor-hit" aria-hidden="true">
                     <div class="hotspot-monitor-play">
@@ -126,6 +176,7 @@ class HotspotManager {
                         </svg>
                     </div>
                 </div>
+                ${promptHtml}
                 ${tooltip}
             `;
         } else {
@@ -246,6 +297,31 @@ class HotspotManager {
         if (entry) {
             entry.data.promptOffsetY = promptOffsetY;
             entry.el.style.setProperty('--arrow-prompt-gap', `${promptOffsetY}px`);
+            if (hotspot.glue && hotspot.image) {
+                entry.el.style.setProperty('--prompt-offset-y', `${promptOffsetY}px`);
+            }
+        }
+        return true;
+    }
+
+    /** Level 2 kiosk text box — absolute X/Y from the hotspot anchor */
+    setKioskPromptOffset(id, { promptOffsetX, promptOffsetY } = {}) {
+        const hotspot = this.getHotspotById(id);
+        const entry = this.elements.find((e) => e.data.id === id);
+        if (!hotspot || hotspot.type !== 'portal' || !(hotspot.glue && hotspot.image)) return false;
+        if (typeof promptOffsetX === 'number') {
+            hotspot.promptOffsetX = promptOffsetX;
+            if (entry) {
+                entry.data.promptOffsetX = promptOffsetX;
+                entry.el.style.setProperty('--prompt-offset-x', `${promptOffsetX}px`);
+            }
+        }
+        if (typeof promptOffsetY === 'number') {
+            hotspot.promptOffsetY = promptOffsetY;
+            if (entry) {
+                entry.data.promptOffsetY = promptOffsetY;
+                entry.el.style.setProperty('--prompt-offset-y', `${promptOffsetY}px`);
+            }
         }
         return true;
     }

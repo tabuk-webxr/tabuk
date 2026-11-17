@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TABUK PHARMACEUTICALS · INDUCTION</title>
     <meta name="description" content="Interactive WebXR Employee Induction Experience for Tabuk Pharmaceuticals covering Riyadh HQ, Dammam Plant, Tabuk Campus, and Final Assessment.">
-    <link rel="stylesheet" href="css/style.css?v=21.45">
+    <link rel="stylesheet" href="css/style.css?v=21.53">
 </head>
 <body>
 
@@ -275,29 +275,9 @@
                 <span class="scene-nav-name">1. Riyadh HQ</span>
                 <span class="scene-nav-sub">Arrival & Welcome</span>
             </div>
-            <div class="scene-nav-item" onclick="window.app.goToScene('riyadh_elevator')">
-                <span class="scene-nav-name">1b. Elevator Foyer</span>
-                <span class="scene-nav-sub">Vision, Mission & Values</span>
-            </div>
-            <div class="scene-nav-item" onclick="window.app.goToScene('dammam_reception')">
-                <span class="scene-nav-name">2. Dammam Plant</span>
-                <span class="scene-nav-sub">Work in Action</span>
-            </div>
-            <div class="scene-nav-item" onclick="window.app.goToScene('dammam_lab')">
-                <span class="scene-nav-name">2b. QC & Formulation Lab</span>
-                <span class="scene-nav-sub">Scale & Sites Network</span>
-            </div>
-            <div class="scene-nav-item" onclick="window.app.goToScene('tabuk_plant')">
-                <span class="scene-nav-name">3. Tabuk Campus</span>
-                <span class="scene-nav-sub">People & Culture</span>
-            </div>
-            <div class="scene-nav-item" onclick="window.app.goToScene('tabuk_boardroom')">
-                <span class="scene-nav-name">3b. Executive Boardroom</span>
-                <span class="scene-nav-sub">Our Leadership Team</span>
-            </div>
-            <div class="scene-nav-item" onclick="window.app.goToScene('assessment_hub')">
-                <span class="scene-nav-name">4. Final Assessment</span>
-                <span class="scene-nav-sub">Induction Knowledge Check</span>
+            <div class="scene-nav-item" onclick="window.app.goToScene('completion')">
+                <span class="scene-nav-name">Completion</span>
+                <span class="scene-nav-sub">End of current journey</span>
             </div>
         </div>
 
@@ -312,6 +292,12 @@
         <button type="button" id="dev-slide-prev-fab" class="dev-slide-nav-btn" aria-label="Previous slide">← Prev</button>
         <span id="dev-slide-nav-label" class="dev-slide-nav-label">Slide: —</span>
         <button type="button" id="dev-slide-next-fab" class="dev-slide-nav-btn" aria-label="Next slide">Next →</button>
+    </div>
+
+    <!-- DEV ONLY: click-to-place crosshair for 3D model -->
+    <div id="dev-model-place-overlay" class="dev-model-place-overlay" hidden>
+        <div class="dev-model-place-crosshair" aria-hidden="true"></div>
+        <p class="dev-model-place-hint">Click the 360 to place the 3D model · Esc to cancel</p>
     </div>
 
     <!-- DEV ONLY: 360 alignment + hotspot placement (Space to toggle) -->
@@ -362,6 +348,17 @@
             <input type="range" id="dev-prompt-gap" min="-40" max="80" step="1" value="6">
         </label>
 
+        <div class="dev-section-title">Kiosk Prompt Box</div>
+        <p class="dev-space-hint" style="margin:0 0 8px;opacity:0.75;">Select Level 2 kiosk — move the text box</p>
+        <label class="dev-orientation-label">
+            Prompt Box X <strong id="dev-kiosk-prompt-x-val">0px</strong>
+            <input type="range" id="dev-kiosk-prompt-x" min="-200" max="200" step="1" value="0">
+        </label>
+        <label class="dev-orientation-label">
+            Prompt Box Y <strong id="dev-kiosk-prompt-y-val">0px</strong>
+            <input type="range" id="dev-kiosk-prompt-y" min="-200" max="200" step="1" value="0">
+        </label>
+
         <div class="dev-section-title">Tablet Name Box</div>
         <p class="dev-space-hint" style="margin:0 0 8px;opacity:0.75;">Select CEO/CHRO tablet — play on screen, label above</p>
         <label class="dev-orientation-label">
@@ -377,24 +374,62 @@
             <input type="range" id="dev-label-x" min="-120" max="120" step="1" value="0">
         </label>
 
-        <div class="dev-section-title">Scene Avatar Image</div>
-        <p class="dev-space-hint" style="margin:0 0 8px;opacity:0.75;">Select Welcome Guide hotspot, then size it</p>
+        <div class="dev-section-title">3D Model Placement</div>
+        <p class="dev-space-hint" style="margin:0 0 8px;opacity:0.75;">Drag the 3D model (or gold pin) in the 360 to place it · or use Click to place</p>
         <label class="dev-orientation-label">
-            Image Height <strong id="dev-avatar-height-val">150</strong>
-            <input type="range" id="dev-avatar-height" min="40" max="320" step="2" value="150">
+            Model
+            <select id="dev-model-select" class="dev-select"></select>
+        </label>
+        <div class="dev-foot-dock">
+            <button type="button" id="dev-model-place-mode" class="dev-secondary-btn">Click to place</button>
+            <button type="button" id="dev-model-place-view" class="dev-secondary-btn">At view center</button>
+        </div>
+        <div class="dev-foot-dock">
+            <button type="button" id="dev-model-look" class="dev-secondary-btn">Look at model</button>
+            <button type="button" id="dev-model-reload" class="dev-secondary-btn">Reload GLB</button>
+        </div>
+        <label class="dev-orientation-label">
+            Pitch <strong id="dev-model-pitch-val">-28°</strong>
+            <input type="range" id="dev-model-pitch" min="-85" max="85" step="0.5" value="-28">
         </label>
         <label class="dev-orientation-label">
-            Image Width <strong id="dev-avatar-width-val">52</strong>
-            <input type="range" id="dev-avatar-width" min="20" max="200" step="2" value="52">
+            Yaw <strong id="dev-model-yaw-val">118°</strong>
+            <input type="range" id="dev-model-yaw" min="0" max="360" step="0.5" value="118">
         </label>
         <label class="dev-orientation-label">
-            Distance <strong id="dev-avatar-radius-val">430</strong>
-            <input type="range" id="dev-avatar-radius" min="200" max="490" step="5" value="430">
+            Distance <strong id="dev-avatar-radius-val">345</strong>
+            <input type="range" id="dev-avatar-radius" min="120" max="490" step="1" value="345">
         </label>
         <label class="dev-orientation-label">
-            Rotation <strong id="dev-avatar-rot-val">0°</strong>
-            <input type="range" id="dev-avatar-rot" min="-180" max="180" step="1" value="0">
+            Offset Y <strong id="dev-avatar-offset-y-val">0</strong>
+            <input type="range" id="dev-avatar-offset-y" min="-120" max="120" step="1" value="0">
         </label>
+        <label class="dev-orientation-label">
+            Rot X <strong id="dev-avatar-rot-x-val">0°</strong>
+            <input type="range" id="dev-avatar-rot-x" min="-180" max="180" step="1" value="0">
+        </label>
+        <label class="dev-orientation-label">
+            Rot Y <strong id="dev-avatar-rot-val">-6°</strong>
+            <input type="range" id="dev-avatar-rot" min="-180" max="180" step="1" value="-6">
+        </label>
+        <label class="dev-orientation-label">
+            Rot Z <strong id="dev-avatar-rot-z-val">0°</strong>
+            <input type="range" id="dev-avatar-rot-z" min="-180" max="180" step="1" value="0">
+        </label>
+        <label class="dev-orientation-label">
+            Scale % <strong id="dev-avatar-scale-val">100%</strong>
+            <input type="range" id="dev-avatar-scale" min="20" max="400" step="1" value="100">
+        </label>
+        <label class="dev-orientation-label">
+            Base Height <strong id="dev-avatar-height-val">162</strong>
+            <input type="range" id="dev-avatar-height" min="40" max="400" step="2" value="162">
+        </label>
+        <label class="dev-orientation-label">
+            Width <strong id="dev-avatar-width-val">70</strong>
+            <input type="range" id="dev-avatar-width" min="20" max="200" step="1" value="70">
+        </label>
+        <pre id="dev-model-export" class="dev-orientation-values" style="max-height:110px;">model: —</pre>
+        <button type="button" id="dev-model-copy" class="dev-copy-btn">Copy model values</button>
 
         <div class="dev-section-title">Name Tag (Tariq)</div>
         <p class="dev-space-hint" style="margin:0 0 8px;opacity:0.75;">Floating — pitch/yaw/rotation like a hotspot</p>
@@ -413,7 +448,7 @@
         <button type="button" id="dev-place-name-at-view" class="dev-secondary-btn">Place name tag at view center</button>
 
         <div class="dev-section-title">TV Screen Overlay (4 corners)</div>
-        <p class="dev-space-hint" style="margin:0 0 8px;opacity:0.75;">Pin Who We Are onto the TV — aim view, place each corner</p>
+        <p class="dev-space-hint" style="margin:0 0 8px;opacity:0.75;">Pin Who We Are or VMV iceberg board — pick overlay, aim view, place each corner</p>
         <label class="dev-orientation-label">
             Overlay
             <select id="dev-screen-select" class="dev-select"></select>
@@ -470,7 +505,7 @@
         <button type="button" id="dev-tip-reset" class="dev-secondary-btn">Reset tip placement</button>
 
         <div class="dev-section-title">Full flow · Prev / Next</div>
-        <p class="dev-space-hint" style="margin:0 0 8px;opacity:0.75;">01 Approach → 29 Completion · ← → when DEV open</p>
+        <p class="dev-space-hint" style="margin:0 0 8px;opacity:0.75;">01 Approach → 24 Level 2 kiosk · ← → when DEV open</p>
         <div class="dev-slide-label" id="dev-slide-label">Slide: —</div>
         <label class="dev-orientation-label">
             Jump to
@@ -545,15 +580,19 @@ tipAvatar: —</pre>
 
     <!-- Application Scripts -->
     <script src="assets/lib/three.min.js"></script>
+    <script src="assets/lib/GLTFLoader.js"></script>
+    <script src="assets/lib/RGBELoader.js"></script>
     <script src="js/scorm.js?v=12.6"></script>
-    <script src="js/courseData.js?v=20.36"></script>
-    <script src="js/assetLoader.js?v=20.10"></script>
-    <script src="js/viewer.js?v=20.25"></script>
-    <script src="js/hotspots.js?v=20.20"></script>
+    <script src="js/courseData.js?v=20.54"></script>
+    <script src="js/assetLoader.js?v=20.12"></script>
+    <script src="js/lipsync.js?v=1.1"></script>
+    <script src="js/gestures.js?v=1.2"></script>
+    <script src="js/viewer.js?v=20.68"></script>
+    <script src="js/hotspots.js?v=20.23"></script>
     <script src="js/modal.js?v=14.4"></script>
     <script src="js/assessment.js?v=12.6"></script>
     <script src="js/valuesExperience.js?v=34"></script>
-    <script src="js/app.js?v=20.70"></script>
+    <script src="js/app.js?v=20.84"></script>
 
 </body>
 </html>

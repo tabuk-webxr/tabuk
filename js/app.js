@@ -17,39 +17,37 @@ class WebXRApp {
         this.receptionRightUnlocked = false;
         this.receptionRightArrived = false;
         this.receptionVmvEntryUnlocked = false;
+        this.receptionLiftAreaArrived = false;
         this.receptionLiftUnlocked = false;
+        this.receptionLevel2Active = false;
         this._devSlideIndex = -1;
+        this._devModelPlaceMode = false;
         // Full induction scrubber — start → end (Level 1 + Level 2 scenes)
         this._devSlides = [
             { id: 'approach', label: '01 Approach', kind: 'scene', scene: 'approach' },
             { id: 'welcome', label: '02 Welcome ENTER', kind: 'scene', scene: 'welcome', gates: { welcomeModal: true, welcomePortal: false } },
             { id: 'welcome_portal', label: '03 Welcome → Reception', kind: 'scene', scene: 'welcome', gates: { welcomeModal: false, welcomePortal: true } },
-            { id: 'reception_ceo', label: '04 Reception CEO', kind: 'scene', scene: 'reception', gates: { chro: false, right: false, rightArrived: false, vmv: false, lift: false, tip: 'ceo' } },
-            { id: 'reception_chro', label: '05 Reception CHRO', kind: 'scene', scene: 'reception', gates: { chro: true, right: false, rightArrived: false, vmv: false, lift: false, tip: 'chro' } },
-            { id: 'reception_who_arrow', label: '06 Who We Are arrow', kind: 'scene', scene: 'reception', gates: { chro: true, right: true, rightArrived: false, vmv: false, lift: false } },
-            { id: 'reception_tv', label: '07 TV Play Who We Are', kind: 'scene', scene: 'reception', gates: { chro: true, right: true, rightArrived: true, vmv: false, lift: false } },
+            { id: 'reception_ceo', label: '04 Reception CEO', kind: 'scene', scene: 'reception', gates: { chro: false, right: false, rightArrived: false, vmv: false, liftArea: false, lift: false, tip: 'ceo' } },
+            { id: 'reception_chro', label: '05 Reception CHRO', kind: 'scene', scene: 'reception', gates: { chro: true, right: false, rightArrived: false, vmv: false, liftArea: false, lift: false, tip: 'chro' } },
+            { id: 'reception_who_arrow', label: '06 Who We Are arrow', kind: 'scene', scene: 'reception', gates: { chro: true, right: true, rightArrived: false, vmv: false, liftArea: false, lift: false } },
+            { id: 'reception_tv', label: '07 TV Play Who We Are', kind: 'scene', scene: 'reception', gates: { chro: true, right: true, rightArrived: true, vmv: false, liftArea: false, lift: false } },
             { id: 'timeline', label: '08 Timeline', kind: 'cinematic', mode: 'timeline' },
             { id: 'people', label: '09 People', kind: 'cinematic', mode: 'people' },
             { id: 'footprint', label: '10 Footprint', kind: 'cinematic', mode: 'footprint' },
             { id: 'scale', label: '11 Scale', kind: 'cinematic', mode: 'scale' },
-            { id: 'reception_guides', label: '12 Discover guides arrow', kind: 'scene', scene: 'reception', gates: { chro: true, right: true, rightArrived: true, vmv: true, lift: false } },
-            { id: 'vision', label: '13 Vision', kind: 'values', mode: 'vision' },
-            { id: 'mission', label: '14 Mission', kind: 'values', mode: 'mission' },
-            { id: 'values', label: '15 Values intro', kind: 'values', mode: 'values' },
-            { id: 'vault', label: '16 Vault intro', kind: 'values', mode: 'vault' },
-            { id: 'scenario1', label: '17 Vault scenario 1', kind: 'values', mode: 'scenario:0' },
-            { id: 'scenario2', label: '18 Vault scenario 2', kind: 'values', mode: 'scenario:1' },
-            { id: 'scenario3', label: '19 Vault scenario 3', kind: 'values', mode: 'scenario:2' },
-            { id: 'scenario4', label: '20 Vault scenario 4', kind: 'values', mode: 'scenario:3' },
-            { id: 'summary', label: '21 Summary → Level 2', kind: 'values', mode: 'summary' },
-            { id: 'reception_lift', label: '22 Lift unlocked', kind: 'scene', scene: 'reception', gates: { chro: true, right: true, rightArrived: true, vmv: true, lift: true } },
-            { id: 'elevator', label: '23 Elevator Level 2', kind: 'scene', scene: 'riyadh_elevator' },
-            { id: 'dammam', label: '24 Dammam plant', kind: 'scene', scene: 'dammam_reception' },
-            { id: 'lab', label: '25 QC Lab', kind: 'scene', scene: 'dammam_lab' },
-            { id: 'campus', label: '26 Tabuk campus', kind: 'scene', scene: 'tabuk_plant' },
-            { id: 'boardroom', label: '27 Boardroom', kind: 'scene', scene: 'tabuk_boardroom' },
-            { id: 'assessment', label: '28 Assessment', kind: 'scene', scene: 'assessment_hub' },
-            { id: 'completion', label: '29 Completion', kind: 'scene', scene: 'completion' }
+            { id: 'reception_guides', label: '12 Discover guides arrow', kind: 'scene', scene: 'reception', gates: { chro: true, right: true, rightArrived: true, vmv: true, liftArea: false, lift: false } },
+            { id: 'reception_lift_vmv', label: '13 Lift area · VMV hotspot', kind: 'scene', scene: 'reception', gates: { chro: true, right: true, rightArrived: true, vmv: true, liftArea: true, lift: false } },
+            { id: 'vision', label: '14 Vision', kind: 'values', mode: 'vision' },
+            { id: 'mission', label: '15 Mission', kind: 'values', mode: 'mission' },
+            { id: 'values', label: '16 Values intro', kind: 'values', mode: 'values' },
+            { id: 'vault', label: '17 Vault intro', kind: 'values', mode: 'vault' },
+            { id: 'scenario1', label: '18 Vault scenario 1', kind: 'values', mode: 'scenario:0' },
+            { id: 'scenario2', label: '19 Vault scenario 2', kind: 'values', mode: 'scenario:1' },
+            { id: 'scenario3', label: '20 Vault scenario 3', kind: 'values', mode: 'scenario:2' },
+            { id: 'scenario4', label: '21 Vault scenario 4', kind: 'values', mode: 'scenario:3' },
+            { id: 'summary', label: '22 Summary → Level 2', kind: 'values', mode: 'summary' },
+            { id: 'reception_lift', label: '23 Lift unlocked', kind: 'scene', scene: 'reception', gates: { chro: true, right: true, rightArrived: true, vmv: true, liftArea: true, lift: true } },
+            { id: 'reception_level2', label: '24 Level 2 reception · kiosk', kind: 'scene', scene: 'reception', gates: { chro: true, right: true, rightArrived: true, vmv: true, liftArea: true, lift: true, level2: true } }
         ];
         this.welcomePortalUnlocked = false;
         this._receptionTipTimer = null;
@@ -289,7 +287,7 @@ class WebXRApp {
 
         const timelineClose = document.getElementById('timeline-cinematic-close');
         if (timelineClose) {
-            timelineClose.addEventListener('click', () => this.hideTimelineCinematic());
+            timelineClose.addEventListener('click', () => this.closeWhoWeAreCinematic());
         }
 
         const valuesEntry = document.getElementById('values-entry-arrow');
@@ -390,7 +388,19 @@ class WebXRApp {
         const avatarHeight = document.getElementById('dev-avatar-height');
         const avatarWidth = document.getElementById('dev-avatar-width');
         const avatarRadius = document.getElementById('dev-avatar-radius');
+        const avatarOffsetY = document.getElementById('dev-avatar-offset-y');
         const avatarRot = document.getElementById('dev-avatar-rot');
+        const avatarRotX = document.getElementById('dev-avatar-rot-x');
+        const avatarRotZ = document.getElementById('dev-avatar-rot-z');
+        const avatarScale = document.getElementById('dev-avatar-scale');
+        const modelPitch = document.getElementById('dev-model-pitch');
+        const modelYaw = document.getElementById('dev-model-yaw');
+        const modelSelect = document.getElementById('dev-model-select');
+        const modelPlaceModeBtn = document.getElementById('dev-model-place-mode');
+        const modelPlaceViewBtn = document.getElementById('dev-model-place-view');
+        const modelLookBtn = document.getElementById('dev-model-look');
+        const modelReloadBtn = document.getElementById('dev-model-reload');
+        const modelCopyBtn = document.getElementById('dev-model-copy');
         const namePitch = document.getElementById('dev-name-pitch');
         const nameYaw = document.getElementById('dev-name-yaw');
         const nameRot = document.getElementById('dev-name-rot');
@@ -406,6 +416,8 @@ class WebXRApp {
         const playY = document.getElementById('dev-play-y');
         const promptGap = document.getElementById('dev-prompt-gap');
         const arrowScaleEl = document.getElementById('dev-arrow-scale');
+        const kioskPromptX = document.getElementById('dev-kiosk-prompt-x');
+        const kioskPromptY = document.getElementById('dev-kiosk-prompt-y');
         if (!panel || !sphereYaw || !camPitch || !camYaw) return;
 
         const applyOrientation = () => {
@@ -419,32 +431,73 @@ class WebXRApp {
             const pitch = Number(hotPitch.value);
             let yaw = Number(hotYaw.value);
             yaw = ((yaw % 360) + 360) % 360;
-            this.hotspots.setHotspotCoords(hotSelect.value, pitch, yaw);
-            this.persistHotspotCoords(hotSelect.value, pitch, yaw);
+            const id = hotSelect.value;
+            this.hotspots.setHotspotCoords(id, pitch, yaw);
+            this.persistHotspotCoords(id, pitch, yaw);
+            // Keep 3D avatar mesh in sync when Welcome Guide is selected
+            const h = this.hotspots.getHotspotById(id);
+            if (h && (h.type === 'avatar' || h.glue) && this.viewer) {
+                if (!this.viewer.getSceneAvatarSettings(id)) {
+                    this.viewer.addSceneAvatar(h);
+                } else {
+                    this.viewer.setSceneAvatarCoords(id, pitch, yaw);
+                }
+            }
             document.getElementById('dev-hot-pitch-val').textContent = `${Math.round(pitch)}°`;
             document.getElementById('dev-hot-yaw-val').textContent = `${Math.round(yaw)}°`;
             this.updateDevOrientationReadout();
         };
 
         const applySceneAvatarImage = () => {
-            const id = this.getSelectedAvatarHotspotId();
-            if (!id || !avatarHeight || !avatarWidth || !avatarRadius) return;
-            const worldHeight = Number(avatarHeight.value);
-            const worldWidth = Number(avatarWidth.value);
+            const id = this.getSelectedModelHotspotId();
+            if (!id || !avatarRadius || !this.hotspots) return;
+            const h = this.hotspots.getHotspotById(id);
+            if (!h || (h.type !== 'avatar' && !h.glue)) return;
+
+            const pitch = modelPitch ? Number(modelPitch.value) : h.pitch;
+            let yaw = modelYaw ? Number(modelYaw.value) : h.yaw;
+            yaw = ((yaw % 360) + 360) % 360;
+            const worldHeight = avatarHeight ? Number(avatarHeight.value) : undefined;
+            const worldWidth = avatarWidth ? Number(avatarWidth.value) : undefined;
             const radius = Number(avatarRadius.value);
+            const offsetY = avatarOffsetY ? Number(avatarOffsetY.value) : 0;
             const worldRot = avatarRot ? Number(avatarRot.value) : 0;
-            this.viewer.setSceneAvatarSize(id, { worldHeight, worldWidth, radius, worldRot });
-            this.persistAvatarImageSettings(id, { worldHeight, worldWidth, radius, worldRot });
-            const hVal = document.getElementById('dev-avatar-height-val');
-            const wVal = document.getElementById('dev-avatar-width-val');
-            const rVal = document.getElementById('dev-avatar-radius-val');
-            const rotVal = document.getElementById('dev-avatar-rot-val');
-            if (hVal) hVal.textContent = String(Math.round(worldHeight));
-            if (wVal) wVal.textContent = String(Math.round(worldWidth));
-            if (rVal) rVal.textContent = String(Math.round(radius));
-            if (rotVal) rotVal.textContent = `${Math.round(worldRot)}°`;
+            const worldRotX = avatarRotX ? Number(avatarRotX.value) : 0;
+            const worldRotZ = avatarRotZ ? Number(avatarRotZ.value) : 0;
+            const modelScale = avatarScale ? Number(avatarScale.value) / 100 : 1;
+
+            this.hotspots.setHotspotCoords(id, pitch, yaw);
+            if (!this.viewer.getSceneAvatarSettings(id)) {
+                this.viewer.addSceneAvatar({ ...h, pitch, yaw });
+            }
+            this.viewer.setSceneAvatarTransform(id, {
+                pitch, yaw, worldHeight, worldWidth, radius,
+                worldRot, worldRotX, worldRotZ, modelScale, offsetY
+            });
+            this.persistAvatarImageSettings(id, {
+                pitch, yaw, worldHeight, worldWidth, radius,
+                worldRot, worldRotX, worldRotZ, modelScale, offsetY
+            });
+
+            const setTxt = (elId, text) => {
+                const el = document.getElementById(elId);
+                if (el) el.textContent = text;
+            };
+            setTxt('dev-model-pitch-val', `${Math.round(pitch * 10) / 10}°`);
+            setTxt('dev-model-yaw-val', `${Math.round(yaw * 10) / 10}°`);
+            setTxt('dev-avatar-radius-val', String(Math.round(radius)));
+            setTxt('dev-avatar-offset-y-val', String(Math.round(offsetY)));
+            setTxt('dev-avatar-rot-val', `${Math.round(worldRot)}°`);
+            setTxt('dev-avatar-rot-x-val', `${Math.round(worldRotX)}°`);
+            setTxt('dev-avatar-rot-z-val', `${Math.round(worldRotZ)}°`);
+            setTxt('dev-avatar-scale-val', `${Math.round(modelScale * 100)}%`);
+            if (typeof worldHeight === 'number') setTxt('dev-avatar-height-val', String(Math.round(worldHeight)));
+            if (typeof worldWidth === 'number') setTxt('dev-avatar-width-val', String(Math.round(worldWidth)));
+            this.updateDevModelExport();
             this.updateDevOrientationReadout();
         };
+
+        this._applySceneAvatarImage = applySceneAvatarImage;
 
         const applyNameTag = () => {
             const id = this.getNameTagHotspotId();
@@ -503,7 +556,8 @@ class WebXRApp {
             if (!hotSelect || !hotSelect.value || !labelY || !labelX) return;
             const id = hotSelect.value;
             const h = this.hotspots.getHotspotById(id);
-            if (!h || !(h.icon === 'monitor' || h.icon === 'ipad' || h.glue)) return;
+            // Tablets only — not Level 2 kiosk (glue portal image)
+            if (!h || !(h.icon === 'monitor' || h.icon === 'ipad')) return;
             const labelOffsetY = Number(labelY.value);
             const labelOffsetX = Number(labelX.value);
             const playOffsetY = playY ? Number(playY.value) : -48;
@@ -522,12 +576,28 @@ class WebXRApp {
             if (!hotSelect || !hotSelect.value || !promptGap) return;
             const id = hotSelect.value;
             const h = this.hotspots.getHotspotById(id);
-            if (!h || h.type !== 'portal') return;
+            if (!h || h.type !== 'portal' || (h.glue && h.image)) return;
             const promptOffsetY = Number(promptGap.value);
             this.hotspots.setPromptOffsetY(id, promptOffsetY);
             this.persistArrowPromptOffset(id, { promptOffsetY });
             const gVal = document.getElementById('dev-prompt-gap-val');
             if (gVal) gVal.textContent = `${Math.round(promptOffsetY)}px`;
+            this.updateDevOrientationReadout();
+        };
+
+        const applyKioskPromptBox = () => {
+            if (!hotSelect || !hotSelect.value || !kioskPromptX || !kioskPromptY) return;
+            const id = hotSelect.value;
+            const h = this.hotspots.getHotspotById(id);
+            if (!h || h.type !== 'portal' || !(h.glue && h.image)) return;
+            const promptOffsetX = Number(kioskPromptX.value);
+            const promptOffsetY = Number(kioskPromptY.value);
+            this.hotspots.setKioskPromptOffset(id, { promptOffsetX, promptOffsetY });
+            this.persistArrowPromptOffset(id, { promptOffsetX, promptOffsetY });
+            const xVal = document.getElementById('dev-kiosk-prompt-x-val');
+            const yVal = document.getElementById('dev-kiosk-prompt-y-val');
+            if (xVal) xVal.textContent = `${Math.round(promptOffsetX)}px`;
+            if (yVal) yVal.textContent = `${Math.round(promptOffsetY)}px`;
             this.updateDevOrientationReadout();
         };
 
@@ -549,10 +619,80 @@ class WebXRApp {
         camYaw.addEventListener('input', applyOrientation);
         if (hotPitch) hotPitch.addEventListener('input', applyHotspot);
         if (hotYaw) hotYaw.addEventListener('input', applyHotspot);
+        if (modelPitch) modelPitch.addEventListener('input', applySceneAvatarImage);
+        if (modelYaw) modelYaw.addEventListener('input', applySceneAvatarImage);
         if (avatarHeight) avatarHeight.addEventListener('input', applySceneAvatarImage);
         if (avatarWidth) avatarWidth.addEventListener('input', applySceneAvatarImage);
         if (avatarRadius) avatarRadius.addEventListener('input', applySceneAvatarImage);
+        if (avatarOffsetY) avatarOffsetY.addEventListener('input', applySceneAvatarImage);
         if (avatarRot) avatarRot.addEventListener('input', applySceneAvatarImage);
+        if (avatarRotX) avatarRotX.addEventListener('input', applySceneAvatarImage);
+        if (avatarRotZ) avatarRotZ.addEventListener('input', applySceneAvatarImage);
+        if (avatarScale) avatarScale.addEventListener('input', applySceneAvatarImage);
+        if (modelSelect) {
+            modelSelect.addEventListener('change', () => {
+                this.loadAvatarImageSettingsIntoDevSliders();
+                this.updateDevModelExport();
+            });
+        }
+        if (modelPlaceModeBtn) {
+            modelPlaceModeBtn.addEventListener('click', () => this.toggleDevModelPlaceMode());
+        }
+        if (modelPlaceViewBtn) {
+            modelPlaceViewBtn.addEventListener('click', () => {
+                if (!this.viewer || !modelPitch || !modelYaw) return;
+                const pitch = Math.round(this.viewer.targetPitch * 10) / 10;
+                let yaw = Math.round(this.viewer.targetYaw * 10) / 10;
+                yaw = ((yaw % 360) + 360) % 360;
+                modelPitch.value = String(pitch);
+                modelYaw.value = String(yaw);
+                applySceneAvatarImage();
+                this.playTone(620, 'sine', 0.1);
+            });
+        }
+        if (modelLookBtn) {
+            modelLookBtn.addEventListener('click', () => {
+                const id = this.getSelectedModelHotspotId();
+                const s = id && this.viewer ? this.viewer.getSceneAvatarSettings(id) : null;
+                if (!s) return;
+                this.viewer.setLookAt(s.pitch, s.yaw);
+                this.syncDevOrientationPanel();
+            });
+        }
+        if (modelReloadBtn) {
+            modelReloadBtn.addEventListener('click', () => this.reloadSelectedModelAvatar());
+        }
+        if (modelCopyBtn) {
+            modelCopyBtn.addEventListener('click', async () => {
+                const pre = document.getElementById('dev-model-export');
+                const text = pre ? pre.textContent : '';
+                try {
+                    await navigator.clipboard.writeText(text);
+                    modelCopyBtn.textContent = 'Copied!';
+                    setTimeout(() => { modelCopyBtn.textContent = 'Copy model values'; }, 1200);
+                } catch (err) {
+                    prompt('Copy these values:', text);
+                }
+            });
+        }
+
+        this._onDevModelPlaceClick = (event) => {
+            if (!this._devModelPlaceMode || !this.viewer) return;
+            event.preventDefault();
+            event.stopPropagation();
+            const coords = this.viewer.screenToPitchYaw(event.clientX, event.clientY);
+            if (!coords) return;
+            if (modelPitch) modelPitch.value = String(coords.pitch);
+            if (modelYaw) modelYaw.value = String(coords.yaw);
+            applySceneAvatarImage();
+            this.setDevModelPlaceMode(false);
+            this.playTone(720, 'sine', 0.12);
+        };
+        this._onDevModelPlaceKey = (event) => {
+            if (event.key === 'Escape' && this._devModelPlaceMode) {
+                this.setDevModelPlaceMode(false);
+            }
+        };
         if (namePitch) namePitch.addEventListener('input', applyNameTag);
         if (nameYaw) nameYaw.addEventListener('input', applyNameTag);
         if (nameRot) nameRot.addEventListener('input', applyNameTag);
@@ -575,6 +715,8 @@ class WebXRApp {
         if (labelX) labelX.addEventListener('input', applyTabletLabelOffset);
         if (playY) playY.addEventListener('input', applyTabletLabelOffset);
         if (promptGap) promptGap.addEventListener('input', applyArrowPromptGap);
+        if (kioskPromptX) kioskPromptX.addEventListener('input', applyKioskPromptBox);
+        if (kioskPromptY) kioskPromptY.addEventListener('input', applyKioskPromptBox);
         if (arrowScaleEl) arrowScaleEl.addEventListener('input', applyArrowScale);
 
         if (hotSelect) {
@@ -584,6 +726,7 @@ class WebXRApp {
                 this.loadNameTagSettingsIntoDevSliders();
                 this.loadTabletLabelOffsetIntoDevSliders();
                 this.loadArrowPromptGapIntoDevSliders();
+                this.loadKioskPromptBoxIntoDevSliders();
             });
         }
 
@@ -790,7 +933,9 @@ class WebXRApp {
         if (typeof gates.right === 'boolean') this.receptionRightUnlocked = gates.right;
         if (typeof gates.rightArrived === 'boolean') this.receptionRightArrived = gates.rightArrived;
         if (typeof gates.vmv === 'boolean') this.receptionVmvEntryUnlocked = gates.vmv;
+        if (typeof gates.liftArea === 'boolean') this.receptionLiftAreaArrived = gates.liftArea;
         if (typeof gates.lift === 'boolean') this.receptionLiftUnlocked = gates.lift;
+        if (typeof gates.level2 === 'boolean') this.receptionLevel2Active = gates.level2;
 
         const welcomeOverlay = document.getElementById('welcome-modal-overlay');
         if (welcomeOverlay && typeof gates.welcomeModal === 'boolean') {
@@ -806,7 +951,10 @@ class WebXRApp {
                 this.viewer.syncScreenOverlays(this._visibleScreenOverlays(scene));
             }
         }
-        if (this.devPanelOpen) this.refreshDevHotspotList();
+        if (this.devPanelOpen) {
+            this.refreshDevHotspotList();
+            this.refreshDevScreenOverlayList();
+        }
 
         if (gates.tip === 'ceo') {
             this.showReceptionTip(
@@ -823,18 +971,31 @@ class WebXRApp {
             this.stopCeoIntroAudio();
             this.stopChroIntroAudio();
         }
+
+        // DEV: when Discover guides arrow is shown, face 1° / 188°
+        if (
+            this.currentSceneId === 'reception'
+            && gates.vmv
+            && !gates.liftArea
+            && !gates.lift
+            && scene
+        ) {
+            this._lookAtGuidesHotspotReveal(scene);
+        }
     }
 
     _devGotoScene(sceneId, gates = {}) {
         this._devCloseExperiences();
         // Pre-set gates so _finishSceneUI tip logic sees them when landing on reception
-        if (gates.chro !== undefined || gates.right !== undefined || gates.lift !== undefined) {
+        if (gates.chro !== undefined || gates.right !== undefined || gates.lift !== undefined || gates.liftArea !== undefined || gates.level2 !== undefined) {
             this._devApplyGates({
                 chro: !!gates.chro,
                 right: !!gates.right,
                 rightArrived: !!gates.rightArrived,
                 vmv: !!gates.vmv,
-                lift: !!gates.lift
+                liftArea: !!gates.liftArea,
+                lift: !!gates.lift,
+                level2: !!gates.level2
             });
         }
         const alreadyThere = this.currentSceneId === sceneId;
@@ -1487,6 +1648,7 @@ class WebXRApp {
         panel.style.display = this.devPanelOpen ? 'block' : 'none';
         if (this.devPanelOpen) {
             this.refreshDevHotspotList();
+            this.refreshDevScreenOverlayList();
             this.syncDevOrientationPanel();
             this.syncDevTipPlacementSliders();
             this.applyTipPlacementStyles();
@@ -1495,8 +1657,102 @@ class WebXRApp {
             this.applyDevPanelSide();
             this._updateDevSlideLabel();
         }
+        // Re-apply gated overlays when leaving DEV (Who We Are vs VMV board)
+        const scene = window.COURSE_DATA && window.COURSE_DATA.scenes[this.currentSceneId];
+        if (scene && this.viewer && typeof this.viewer.syncScreenOverlays === 'function') {
+            this.viewer.syncScreenOverlays(this._visibleScreenOverlays(scene));
+        }
         this._syncDevSlideNavVisibility();
+        if (!this.devPanelOpen && this._devModelPlaceMode) {
+            this.setDevModelPlaceMode(false);
+        }
+        this._syncDevAvatarDrag();
         this._syncDevFootprintClass();
+    }
+
+    _syncDevAvatarDrag() {
+        if (!this.viewer) return;
+        this.viewer.avatarDragEnabled = !!this.devPanelOpen;
+        if (!this.devPanelOpen) {
+            this.viewer._avatarDragId = null;
+            document.body.classList.remove('is-dragging-avatar');
+        }
+        this.viewer.onAvatarDrag = (id, pitch, yaw) => {
+            this._onDevAvatarDrag(id, pitch, yaw, false);
+        };
+        this.viewer.onAvatarDragEnd = (id, pitch, yaw) => {
+            this._onDevAvatarDrag(id, pitch, yaw, true);
+            this.playTone(660, 'sine', 0.08);
+        };
+        this._syncDevAvatarPinDrag();
+    }
+
+    _onDevAvatarDrag(id, pitch, yaw, ended) {
+        if (!id) return;
+        if (this.hotspots) {
+            const h = this.hotspots.getHotspotById(id);
+            if (h) {
+                h.pitch = pitch;
+                h.yaw = yaw;
+            }
+            this.hotspots.updatePositions();
+        }
+        this.persistHotspotCoords(id, pitch, yaw);
+        this.persistAvatarImageSettings(id, { pitch, yaw });
+
+        const modelSelect = document.getElementById('dev-model-select');
+        if (modelSelect && modelSelect.value !== id) modelSelect.value = id;
+
+        const pitchEl = document.getElementById('dev-model-pitch');
+        const yawEl = document.getElementById('dev-model-yaw');
+        const hotPitch = document.getElementById('dev-hot-pitch');
+        const hotYaw = document.getElementById('dev-hot-yaw');
+        if (pitchEl) pitchEl.value = String(pitch);
+        if (yawEl) yawEl.value = String(yaw);
+        if (hotPitch) hotPitch.value = String(Math.round(pitch));
+        if (hotYaw) hotYaw.value = String(Math.round(yaw));
+        const setTxt = (elId, text) => {
+            const el = document.getElementById(elId);
+            if (el) el.textContent = text;
+        };
+        setTxt('dev-model-pitch-val', `${Math.round(pitch * 10) / 10}°`);
+        setTxt('dev-model-yaw-val', `${Math.round(yaw * 10) / 10}°`);
+        setTxt('dev-hot-pitch-val', `${Math.round(pitch)}°`);
+        setTxt('dev-hot-yaw-val', `${Math.round(yaw)}°`);
+        if (ended) this.updateDevModelExport();
+        this.updateDevOrientationReadout();
+    }
+
+    _syncDevAvatarPinDrag() {
+        if (!this.hotspots) return;
+        (this.hotspots.elements || []).forEach(({ data, el }) => {
+            if (!data || data.type !== 'avatar' || !el) return;
+            if (this.devPanelOpen) {
+                el.style.pointerEvents = 'auto';
+                el.style.cursor = 'grab';
+                el.classList.add('is-dev-draggable');
+                el.title = 'Drag to place 3D model';
+                if (!el._devDragBound) {
+                    el._devDragBound = true;
+                    el.addEventListener('pointerdown', (event) => this._onAvatarPinPointerDown(event, data.id));
+                }
+            } else {
+                el.style.pointerEvents = 'none';
+                el.style.cursor = 'default';
+                el.classList.remove('is-dev-draggable');
+                el.removeAttribute('title');
+            }
+        });
+    }
+
+    _onAvatarPinPointerDown(event, id) {
+        if (!this.devPanelOpen || !this.viewer || !id) return;
+        event.preventDefault();
+        event.stopPropagation();
+        this.viewer._avatarDragId = id;
+        this.viewer.isUserInteracting = false;
+        document.body.classList.add('is-dragging-avatar');
+        try { event.currentTarget.setPointerCapture(event.pointerId); } catch (e) { /* ignore */ }
     }
 
     persistHotspotCoords(id, pitch, yaw) {
@@ -1509,17 +1765,26 @@ class WebXRApp {
         }
     }
 
-    persistAvatarImageSettings(id, { worldHeight, worldWidth, radius, worldRot }) {
+    persistAvatarImageSettings(id, {
+        pitch, yaw, worldHeight, worldWidth, radius,
+        worldRot, worldRotX, worldRotZ, modelScale, offsetY
+    } = {}) {
         const scene = window.COURSE_DATA.scenes[this.currentSceneId];
         if (!scene || !scene.hotspots) return;
         const source = scene.hotspots.find((h) => h.id === id);
         const live = this.hotspots ? this.hotspots.getHotspotById(id) : null;
         [source, live].forEach((h) => {
             if (!h) return;
+            if (typeof pitch === 'number') h.pitch = pitch;
+            if (typeof yaw === 'number') h.yaw = yaw;
             if (typeof worldHeight === 'number') h.worldHeight = worldHeight;
             if (typeof worldWidth === 'number') h.worldWidth = worldWidth;
             if (typeof radius === 'number') h.radius = radius;
             if (typeof worldRot === 'number') h.worldRot = worldRot;
+            if (typeof worldRotX === 'number') h.worldRotX = worldRotX;
+            if (typeof worldRotZ === 'number') h.worldRotZ = worldRotZ;
+            if (typeof modelScale === 'number') h.modelScale = modelScale;
+            if (typeof offsetY === 'number') h.offsetY = offsetY;
         });
     }
 
@@ -1536,13 +1801,14 @@ class WebXRApp {
         });
     }
 
-    persistArrowPromptOffset(id, { promptOffsetY, arrowScale } = {}) {
+    persistArrowPromptOffset(id, { promptOffsetX, promptOffsetY, arrowScale } = {}) {
         const scene = window.COURSE_DATA.scenes[this.currentSceneId];
         if (!scene || !scene.hotspots) return;
         const source = scene.hotspots.find((h) => h.id === id);
         const live = this.hotspots ? this.hotspots.getHotspotById(id) : null;
         [source, live].forEach((h) => {
             if (!h || h.type !== 'portal') return;
+            if (typeof promptOffsetX === 'number') h.promptOffsetX = promptOffsetX;
             if (typeof promptOffsetY === 'number') h.promptOffsetY = promptOffsetY;
             if (typeof arrowScale === 'number') h.arrowScale = arrowScale;
         });
@@ -1586,13 +1852,129 @@ class WebXRApp {
     }
 
     getSelectedAvatarHotspotId() {
+        return this.getSelectedModelHotspotId();
+    }
+
+    getSelectedModelHotspotId() {
+        if (!this.hotspots) return null;
+        const modelSelect = document.getElementById('dev-model-select');
+        if (modelSelect && modelSelect.value) {
+            const h = this.hotspots.getHotspotById(modelSelect.value);
+            if (h && (h.type === 'avatar' || h.glue)) return h.id;
+        }
         const hotSelect = document.getElementById('dev-hotspot-select');
-        if (!hotSelect || !hotSelect.value || !this.hotspots) return null;
-        const h = this.hotspots.getHotspotById(hotSelect.value);
-        // Avatars + glued tablet/monitor props share the same size controls
-        if (h && (h.type === 'avatar' || h.glue)) return h.id;
-        const avatar = (this.hotspots.hotspots || []).find((x) => x.type === 'avatar' || x.glue);
+        if (hotSelect && hotSelect.value) {
+            const h = this.hotspots.getHotspotById(hotSelect.value);
+            if (h && (h.type === 'avatar' || h.glue)) return h.id;
+        }
+        const avatar = (this.hotspots.hotspots || []).find((x) => x.type === 'avatar' && x.model)
+            || (this.hotspots.hotspots || []).find((x) => x.type === 'avatar' || x.glue);
         return avatar ? avatar.id : null;
+    }
+
+    refreshDevModelList() {
+        const modelSelect = document.getElementById('dev-model-select');
+        if (!modelSelect || !this.hotspots) return;
+        const list = (this.hotspots.hotspots || []).filter((h) => h.type === 'avatar' || h.glue);
+        const prev = modelSelect.value;
+        modelSelect.innerHTML = '';
+        if (!list.length) {
+            const opt = document.createElement('option');
+            opt.value = '';
+            opt.textContent = '(no 3D / avatar in this scene)';
+            modelSelect.appendChild(opt);
+            modelSelect.disabled = true;
+            return;
+        }
+        modelSelect.disabled = false;
+        list.forEach((h) => {
+            const opt = document.createElement('option');
+            opt.value = h.id;
+            opt.textContent = h.model
+                ? `${h.label || h.id} [GLB]`
+                : `${h.label || h.id} [${h.glue ? 'tablet' : 'image'}]`;
+            modelSelect.appendChild(opt);
+        });
+        const prefer = list.find((h) => h.model) || list[0];
+        if (prev && list.some((h) => h.id === prev)) modelSelect.value = prev;
+        else if (prefer) modelSelect.value = prefer.id;
+    }
+
+    toggleDevModelPlaceMode() {
+        this.setDevModelPlaceMode(!this._devModelPlaceMode);
+    }
+
+    setDevModelPlaceMode(on) {
+        this._devModelPlaceMode = !!on;
+        const overlay = document.getElementById('dev-model-place-overlay');
+        const btn = document.getElementById('dev-model-place-mode');
+        if (overlay) overlay.hidden = !this._devModelPlaceMode;
+        if (btn) btn.classList.toggle('is-active', this._devModelPlaceMode);
+        if (this._devModelPlaceMode) {
+            window.addEventListener('pointerdown', this._onDevModelPlaceClick, true);
+            window.addEventListener('keydown', this._onDevModelPlaceKey, true);
+        } else {
+            window.removeEventListener('pointerdown', this._onDevModelPlaceClick, true);
+            window.removeEventListener('keydown', this._onDevModelPlaceKey, true);
+        }
+    }
+
+    reloadSelectedModelAvatar() {
+        const id = this.getSelectedModelHotspotId();
+        if (!id || !this.hotspots || !this.viewer) return;
+        const h = this.hotspots.getHotspotById(id);
+        if (!h) return;
+        // Drop existing mesh then recreate from current hotspot data
+        const settings = this.viewer.getSceneAvatarSettings(id);
+        if (settings && this.viewer._sceneAvatars) {
+            const idx = this.viewer._sceneAvatars.findIndex((a) => a.id === id);
+            if (idx >= 0) {
+                const entry = this.viewer._sceneAvatars[idx];
+                if (entry.mixer) {
+                    try { entry.mixer.stopAllAction(); } catch (e) { /* ignore */ }
+                }
+                if (entry.mesh && entry.mesh.parent) entry.mesh.parent.remove(entry.mesh);
+                this.viewer._sceneAvatars.splice(idx, 1);
+            }
+        }
+        this.viewer.addSceneAvatar({ ...h });
+        if (typeof this._applySceneAvatarImage === 'function') this._applySceneAvatarImage();
+        this.playTone(520, 'sine', 0.1);
+    }
+
+    updateDevModelExport() {
+        const pre = document.getElementById('dev-model-export');
+        if (!pre) return;
+        const id = this.getSelectedModelHotspotId();
+        const h = id && this.hotspots ? this.hotspots.getHotspotById(id) : null;
+        const s = id && this.viewer ? this.viewer.getSceneAvatarSettings(id) : null;
+        if (!h && !s) {
+            pre.textContent = 'model: —';
+            return;
+        }
+        const pitch = (s && s.pitch) ?? h.pitch;
+        const yaw = (s && s.yaw) ?? h.yaw;
+        const radius = (s && s.radius) ?? h.radius ?? 345;
+        const offsetY = (s && s.offsetY) ?? h.offsetY ?? 0;
+        const worldHeight = (s && s.worldHeight) ?? h.worldHeight ?? 162;
+        const worldWidth = (s && s.worldWidth) ?? h.worldWidth ?? Math.round(worldHeight * 0.35);
+        const modelScale = (s && s.modelScale) ?? h.modelScale ?? 1;
+        const worldRotX = (s && s.worldRotX) ?? h.worldRotX ?? 0;
+        const worldRot = (s && s.worldRot) ?? h.worldRot ?? 0;
+        const worldRotZ = (s && s.worldRotZ) ?? h.worldRotZ ?? 0;
+        pre.textContent =
+            `id: ${id}\n` +
+            `model: "${h && h.model ? h.model : ''}"\n` +
+            `pitch: ${Math.round(pitch * 10) / 10}\n` +
+            `yaw: ${Math.round(yaw * 10) / 10}\n` +
+            `radius: ${Math.round(radius)}\n` +
+            `offsetY: ${Math.round(offsetY)}\n` +
+            `worldHeight: ${Math.round(worldHeight)}\n` +
+            `worldWidth: ${Math.round(worldWidth)}\n` +
+            `modelScale: ${Math.round(modelScale * 100) / 100}\n` +
+            `worldRotX: ${Math.round(worldRotX)}\n` +
+            `worldRot: ${Math.round(worldRot)}\n` +
+            `worldRotZ: ${Math.round(worldRotZ)}`;
     }
 
     getNameTagHotspotId() {
@@ -1622,7 +2004,7 @@ class WebXRApp {
             const opt = document.createElement('option');
             opt.value = h.id;
             const kind = h.type === 'avatar'
-                ? 'image'
+                ? (h.model ? '3D' : 'image')
                 : h.type === 'nametag'
                     ? 'name'
                     : h.glue
@@ -1637,26 +2019,33 @@ class WebXRApp {
             const avatar = list.find((h) => h.type === 'avatar');
             if (avatar) hotSelect.value = avatar.id;
         }
+        this.refreshDevModelList();
         this.loadSelectedHotspotIntoDevSliders();
         this.loadAvatarImageSettingsIntoDevSliders();
         this.loadNameTagSettingsIntoDevSliders();
         this.loadTabletLabelOffsetIntoDevSliders();
         this.loadArrowPromptGapIntoDevSliders();
+        this.loadKioskPromptBoxIntoDevSliders();
         this.refreshDevScreenOverlayList();
+        this.updateDevModelExport();
+        this._syncDevAvatarPinDrag();
     }
 
     refreshDevScreenOverlayList() {
         const screenSelect = document.getElementById('dev-screen-select');
         if (!screenSelect || !this.viewer) return;
         const scene = window.COURSE_DATA.scenes[this.currentSceneId];
-        const list = (scene && scene.screenOverlays) || [];
+        const all = (scene && scene.screenOverlays) || [];
+        // Only overlays visible on this slide/gates (hide TV when not on TV slide)
+        const visibleIds = new Set(this._visibleScreenOverlays(scene).map((o) => o.id));
+        const list = all.filter((o) => visibleIds.has(o.id));
         const prev = screenSelect.value;
         screenSelect.innerHTML = '';
 
         if (!list.length) {
             const opt = document.createElement('option');
             opt.value = '';
-            opt.textContent = '(no TV overlay in this scene)';
+            opt.textContent = '(no overlay on this slide)';
             screenSelect.appendChild(opt);
             screenSelect.disabled = true;
             return;
@@ -1717,6 +2106,7 @@ class WebXRApp {
         document.getElementById('dev-hot-yaw-val').textContent = `${yaw}°`;
         this.loadTabletLabelOffsetIntoDevSliders();
         this.loadArrowPromptGapIntoDevSliders();
+        this.loadKioskPromptBoxIntoDevSliders();
     }
 
     loadArrowPromptGapIntoDevSliders() {
@@ -1730,16 +2120,39 @@ class WebXRApp {
         const h = hotSelect && hotSelect.value && this.hotspots
             ? this.hotspots.getHotspotById(hotSelect.value)
             : null;
-        const isPortal = !!(h && h.type === 'portal');
-        if (promptGap) promptGap.disabled = !isPortal;
-        if (arrowScaleEl) arrowScaleEl.disabled = !isPortal;
+        const isArrowPortal = !!(h && h.type === 'portal' && !(h.glue && h.image));
+        if (promptGap) promptGap.disabled = !isArrowPortal;
+        if (arrowScaleEl) arrowScaleEl.disabled = !isArrowPortal;
 
-        const promptOffsetY = isPortal && typeof h.promptOffsetY === 'number' ? h.promptOffsetY : 6;
-        const arrowScale = isPortal && typeof h.arrowScale === 'number' ? h.arrowScale : 1;
+        const promptOffsetY = isArrowPortal && typeof h.promptOffsetY === 'number' ? h.promptOffsetY : 6;
+        const arrowScale = isArrowPortal && typeof h.arrowScale === 'number' ? h.arrowScale : 1;
         if (promptGap) promptGap.value = String(Math.round(promptOffsetY));
         if (arrowScaleEl) arrowScaleEl.value = String(Math.round(arrowScale * 100));
         if (gVal) gVal.textContent = `${Math.round(promptOffsetY)}px`;
         if (sVal) sVal.textContent = `${Math.round(arrowScale * 100)}%`;
+    }
+
+    loadKioskPromptBoxIntoDevSliders() {
+        const hotSelect = document.getElementById('dev-hotspot-select');
+        const promptX = document.getElementById('dev-kiosk-prompt-x');
+        const promptY = document.getElementById('dev-kiosk-prompt-y');
+        const xVal = document.getElementById('dev-kiosk-prompt-x-val');
+        const yVal = document.getElementById('dev-kiosk-prompt-y-val');
+        if (!promptX || !promptY) return;
+
+        const h = hotSelect && hotSelect.value && this.hotspots
+            ? this.hotspots.getHotspotById(hotSelect.value)
+            : null;
+        const isKiosk = !!(h && h.type === 'portal' && h.glue && h.image);
+        promptX.disabled = !isKiosk;
+        promptY.disabled = !isKiosk;
+
+        const promptOffsetX = isKiosk && typeof h.promptOffsetX === 'number' ? h.promptOffsetX : 0;
+        const promptOffsetY = isKiosk && typeof h.promptOffsetY === 'number' ? h.promptOffsetY : 0;
+        promptX.value = String(Math.round(promptOffsetX));
+        promptY.value = String(Math.round(promptOffsetY));
+        if (xVal) xVal.textContent = `${Math.round(promptOffsetX)}px`;
+        if (yVal) yVal.textContent = `${Math.round(promptOffsetY)}px`;
     }
 
     loadTabletLabelOffsetIntoDevSliders() {
@@ -1755,7 +2168,7 @@ class WebXRApp {
         const h = hotSelect && hotSelect.value && this.hotspots
             ? this.hotspots.getHotspotById(hotSelect.value)
             : null;
-        const isTablet = !!(h && (h.icon === 'monitor' || h.icon === 'ipad' || h.glue));
+        const isTablet = !!(h && (h.icon === 'monitor' || h.icon === 'ipad'));
         labelY.disabled = !isTablet;
         labelX.disabled = !isTablet;
         if (playY) playY.disabled = !isTablet;
@@ -1772,34 +2185,64 @@ class WebXRApp {
     }
 
     loadAvatarImageSettingsIntoDevSliders() {
-        const id = this.getSelectedAvatarHotspotId();
+        const id = this.getSelectedModelHotspotId();
+        const pitchEl = document.getElementById('dev-model-pitch');
+        const yawEl = document.getElementById('dev-model-yaw');
         const heightEl = document.getElementById('dev-avatar-height');
         const widthEl = document.getElementById('dev-avatar-width');
         const radiusEl = document.getElementById('dev-avatar-radius');
+        const offsetEl = document.getElementById('dev-avatar-offset-y');
         const rotEl = document.getElementById('dev-avatar-rot');
-        if (!heightEl || !widthEl || !radiusEl) return;
+        const rotXEl = document.getElementById('dev-avatar-rot-x');
+        const rotZEl = document.getElementById('dev-avatar-rot-z');
+        const scaleEl = document.getElementById('dev-avatar-scale');
+        if (!radiusEl) return;
 
         const h = id && this.hotspots ? this.hotspots.getHotspotById(id) : null;
         const live = id && this.viewer ? this.viewer.getSceneAvatarSettings(id) : null;
-        const worldHeight = (live && live.worldHeight) || (h && h.worldHeight) || 150;
-        const worldWidth = (live && live.worldWidth) || (h && h.worldWidth) || Math.round(worldHeight * 0.35);
-        const radius = (live && live.radius) || (h && h.radius) || 430;
-        const worldRot = (live && typeof live.worldRot === 'number')
-            ? live.worldRot
-            : ((h && typeof h.worldRot === 'number') ? h.worldRot : 0);
+        const pick = (key, fallback) => {
+            if (live && typeof live[key] === 'number') return live[key];
+            if (h && typeof h[key] === 'number') return h[key];
+            return fallback;
+        };
 
-        heightEl.value = String(Math.round(worldHeight));
-        widthEl.value = String(Math.round(worldWidth));
+        const pitch = pick('pitch', (h && h.pitch) || -28);
+        const yaw = ((pick('yaw', (h && h.yaw) || 118) % 360) + 360) % 360;
+        const worldHeight = pick('worldHeight', (h && h.worldHeight) || 162);
+        const worldWidth = pick('worldWidth', (h && h.worldWidth) || Math.round(worldHeight * 0.35));
+        const radius = pick('radius', (h && h.radius) || 345);
+        const offsetY = pick('offsetY', (h && h.offsetY) || 0);
+        const worldRot = pick('worldRot', (h && h.worldRot) || 0);
+        const worldRotX = pick('worldRotX', (h && h.worldRotX) || 0);
+        const worldRotZ = pick('worldRotZ', (h && h.worldRotZ) || 0);
+        const modelScale = pick('modelScale', (h && h.modelScale) || 1);
+
+        if (pitchEl) pitchEl.value = String(pitch);
+        if (yawEl) yawEl.value = String(yaw);
+        if (heightEl) heightEl.value = String(Math.round(worldHeight));
+        if (widthEl) widthEl.value = String(Math.round(worldWidth));
         radiusEl.value = String(Math.round(radius));
+        if (offsetEl) offsetEl.value = String(Math.round(offsetY));
         if (rotEl) rotEl.value = String(Math.round(worldRot));
-        const hVal = document.getElementById('dev-avatar-height-val');
-        const wVal = document.getElementById('dev-avatar-width-val');
-        const rVal = document.getElementById('dev-avatar-radius-val');
-        const rotVal = document.getElementById('dev-avatar-rot-val');
-        if (hVal) hVal.textContent = String(Math.round(worldHeight));
-        if (wVal) wVal.textContent = String(Math.round(worldWidth));
-        if (rVal) rVal.textContent = String(Math.round(radius));
-        if (rotVal) rotVal.textContent = `${Math.round(worldRot)}°`;
+        if (rotXEl) rotXEl.value = String(Math.round(worldRotX));
+        if (rotZEl) rotZEl.value = String(Math.round(worldRotZ));
+        if (scaleEl) scaleEl.value = String(Math.round(modelScale * 100));
+
+        const setTxt = (elId, text) => {
+            const el = document.getElementById(elId);
+            if (el) el.textContent = text;
+        };
+        setTxt('dev-model-pitch-val', `${Math.round(pitch * 10) / 10}°`);
+        setTxt('dev-model-yaw-val', `${Math.round(yaw * 10) / 10}°`);
+        setTxt('dev-avatar-height-val', String(Math.round(worldHeight)));
+        setTxt('dev-avatar-width-val', String(Math.round(worldWidth)));
+        setTxt('dev-avatar-radius-val', String(Math.round(radius)));
+        setTxt('dev-avatar-offset-y-val', String(Math.round(offsetY)));
+        setTxt('dev-avatar-rot-val', `${Math.round(worldRot)}°`);
+        setTxt('dev-avatar-rot-x-val', `${Math.round(worldRotX)}°`);
+        setTxt('dev-avatar-rot-z-val', `${Math.round(worldRotZ)}°`);
+        setTxt('dev-avatar-scale-val', `${Math.round(modelScale * 100)}%`);
+        this.updateDevModelExport();
     }
 
     loadNameTagSettingsIntoDevSliders() {
@@ -1863,12 +2306,16 @@ class WebXRApp {
                     const live = this.hotspots.getHotspotById(h.id);
                     if (live && live.type === 'avatar') {
                         const s = this.viewer.getSceneAvatarSettings(h.id) || {};
+                        const scale = typeof s.modelScale === 'number' ? s.modelScale : (live.modelScale || 1);
                         return (
-                            `  - ${h.id}: pitch ${h.pitch}, yaw ${h.yaw}` +
-                            `, worldHeight ${Math.round(s.worldHeight || live.worldHeight || 150)}` +
-                            `, worldWidth ${Math.round(s.worldWidth || live.worldWidth || 52)}` +
-                            `, radius ${Math.round(s.radius || live.radius || 430)}` +
-                            `, worldRot ${Math.round(typeof s.worldRot === 'number' ? s.worldRot : (live.worldRot || 0))}`
+                            `  - ${h.id}: pitch ${s.pitch ?? h.pitch}, yaw ${s.yaw ?? h.yaw}` +
+                            `, radius ${Math.round(s.radius || live.radius || 345)}` +
+                            `, offsetY ${Math.round(typeof s.offsetY === 'number' ? s.offsetY : (live.offsetY || 0))}` +
+                            `, worldHeight ${Math.round(s.worldHeight || live.worldHeight || 162)}` +
+                            `, modelScale ${Math.round(scale * 100) / 100}` +
+                            `, worldRotX ${Math.round(typeof s.worldRotX === 'number' ? s.worldRotX : (live.worldRotX || 0))}` +
+                            `, worldRot ${Math.round(typeof s.worldRot === 'number' ? s.worldRot : (live.worldRot || 0))}` +
+                            `, worldRotZ ${Math.round(typeof s.worldRotZ === 'number' ? s.worldRotZ : (live.worldRotZ || 0))}`
                         );
                     }
                     if (live && live.glue) {
@@ -1889,7 +2336,16 @@ class WebXRApp {
                     }
                     if (live && live.type === 'portal') {
                         const gap = typeof live.promptOffsetY === 'number' ? live.promptOffsetY : 6;
+                        const ox = typeof live.promptOffsetX === 'number' ? live.promptOffsetX : 0;
                         const scale = typeof live.arrowScale === 'number' ? live.arrowScale : 1;
+                        if (live.glue && live.image) {
+                            return (
+                                `  - ${h.id}: pitch ${h.pitch}, yaw ${h.yaw}` +
+                                `, promptOffsetX ${Math.round(ox)}` +
+                                `, promptOffsetY ${Math.round(gap)}` +
+                                (live.flipX ? ', flipX true' : '')
+                            );
+                        }
                         return (
                             `  - ${h.id}: pitch ${h.pitch}, yaw ${h.yaw}` +
                             `, promptOffsetY ${Math.round(gap)}` +
@@ -1973,6 +2429,20 @@ class WebXRApp {
             });
         }
         if (scene.id === 'reception') {
+            // Level 2 — reception portal drop: Tariq + name + Level 2 kiosk
+            if (this.receptionLevel2Active) {
+                hotspotList = hotspotList.map((h) => {
+                    if (h.id === 'welcome_guide' || h.id === 'welcome_guide_name') {
+                        const pitch = typeof h.level2Pitch === 'number' ? h.level2Pitch : h.pitch;
+                        const yaw = typeof h.level2Yaw === 'number' ? h.level2Yaw : h.yaw;
+                        return { ...h, pitch, yaw, hidden: false };
+                    }
+                    if (h.id === 'level2_kiosk') {
+                        return { ...h, hidden: false };
+                    }
+                    return { ...h, hidden: true };
+                });
+            } else {
             hotspotList = hotspotList.map((h) => {
                 if (h.id === 'video_welcome') {
                     return { ...h, hidden: this.receptionRightArrived };
@@ -1985,7 +2455,7 @@ class WebXRApp {
                     return { ...h, hidden: this.receptionRightArrived, locked: true };
                 }
                 if (h.id === 'reception_right_video') {
-                    // Hide TV play once Who We Are cinematic is done (VMV entry arrow takes over)
+                    // Who We Are TV — hide once guides arrow unlocks
                     return {
                         ...h,
                         hidden: !this.receptionRightArrived || this.receptionVmvEntryUnlocked
@@ -1999,31 +2469,56 @@ class WebXRApp {
                         locked: !this.receptionRightUnlocked
                     };
                 }
-                // After Who We Are cinematic — arrow in 360 to open Vision / Mission / Values
+                // After Who We Are — arrow walks you into the lift area
                 if (h.id === 'discover_what_guides') {
                     return {
                         ...h,
-                        hidden: !this.receptionVmvEntryUnlocked || this.receptionLiftUnlocked,
-                        locked: !this.receptionVmvEntryUnlocked
+                        hidden: !this.receptionVmvEntryUnlocked || this.receptionLiftAreaArrived || this.receptionLiftUnlocked
                     };
                 }
-                // Lift arrow only after the right-reception click
-                if (h.id === 'next_destination') {
+                // At the lift — single Vision / Mission / Values entry
+                if (h.id === 'vision_mission_values') {
                     return {
                         ...h,
-                        hidden: !this.receptionLiftUnlocked,
-                        locked: !this.receptionLiftUnlocked
+                        hidden: !this.receptionLiftAreaArrived || this.receptionLiftUnlocked
                     };
+                }
+                // Hide Tariq + name while the VMV hotspot is showing
+                if (h.id === 'welcome_guide' || h.id === 'welcome_guide_name') {
+                    return {
+                        ...h,
+                        hidden: !!this.receptionLiftAreaArrived
+                    };
+                }
+                // Level 2 kiosk only on Level 2 reception
+                if (h.id === 'level2_kiosk') {
+                    return { ...h, hidden: true };
                 }
                 return { ...h };
             });
+            }
         }
         return hotspotList;
     }
 
     _visibleScreenOverlays(scene) {
-        if (!scene) return [];
-        return scene.screenOverlays || [];
+        if (!scene || !scene.screenOverlays) return [];
+        if (scene.id !== 'reception') return scene.screenOverlays;
+
+        // Who We Are TV on the reception wall screen until VMV / Level 2
+        // VMV iceberg board only on the lift-area step
+        return scene.screenOverlays.filter((overlay) => {
+            if (overlay.id === 'who_we_are_tv') {
+                return !this.receptionLiftAreaArrived
+                    && !this.receptionLevel2Active;
+            }
+            if (overlay.id === 'vmv_board') {
+                return this.receptionLiftAreaArrived
+                    && !this.receptionLiftUnlocked
+                    && !this.receptionLevel2Active;
+            }
+            return true;
+        });
     }
 
     /**
@@ -2045,6 +2540,30 @@ class WebXRApp {
     }
 
     _sceneOrientation(scene) {
+        if (scene && scene.id === 'reception') {
+            // Level 2 — scene look for the digital kiosk (revealPitch / revealYaw)
+            if (this.receptionLevel2Active) {
+                const kiosk = (scene.hotspots || []).find((h) => h.id === 'level2_kiosk');
+                return {
+                    pitch: kiosk && typeof kiosk.revealPitch === 'number' ? kiosk.revealPitch : 0,
+                    yaw: kiosk && typeof kiosk.revealYaw === 'number' ? kiosk.revealYaw : -92,
+                    sphereYaw: typeof scene.sphereYaw === 'number' ? scene.sphereYaw : 0
+                };
+            }
+            // When Discover guides arrow is active, face its reveal view (1 / 188)
+            if (
+                this.receptionVmvEntryUnlocked
+                && !this.receptionLiftAreaArrived
+                && !this.receptionLiftUnlocked
+            ) {
+                const guides = (scene.hotspots || []).find((h) => h.id === 'discover_what_guides');
+                return {
+                    pitch: guides && typeof guides.revealPitch === 'number' ? guides.revealPitch : 1,
+                    yaw: guides && typeof guides.revealYaw === 'number' ? guides.revealYaw : 188,
+                    sphereYaw: typeof scene.sphereYaw === 'number' ? scene.sphereYaw : 0
+                };
+            }
+        }
         return {
             pitch: typeof scene.initialPitch === 'number' ? scene.initialPitch : 0,
             yaw: typeof scene.initialYaw === 'number' ? scene.initialYaw : 0,
@@ -2217,12 +2736,17 @@ class WebXRApp {
             { showAvatar: false }
         );
         this._speakCinematicLine(
-            'Now that you have heard from our leaders, let\'s take a closer look at Tabuk. Follow the arrow to discover our story and our presence across the region.'
+            'Now that you have heard from our leaders, let\'s take a closer look at Tabuk. Follow the arrow to discover our story and our presence across the region.',
+            null,
+            { avatar: true }
         );
     }
 
     revealReceptionRightArrival() {
         this.receptionRightArrived = true;
+        // Ensure Who We Are TV can show (not stuck from a later DEV slide)
+        this.receptionLiftAreaArrived = false;
+        this.receptionLevel2Active = false;
         // Lift stays locked until Vision/Mission/Values completes (slide 35).
         const scene = window.COURSE_DATA.scenes.reception;
         if (!scene || this.currentSceneId !== 'reception' || !this.hotspots) return;
@@ -2236,8 +2760,8 @@ class WebXRApp {
             this.refreshDevScreenOverlayList();
         }
         this.syncDevOrientationPanel();
-        // Slide 9 — prompt to play Who We Are on the TV
-        this.showReceptionTip('Click Play to discover who we are.', { showAvatar: false });
+        // Slide 9 — tip lives under the TV play button (hotspot.prompt), not the tip bar
+        this.hideReceptionTip();
     }
 
     openValuesExperienceFromPoster() {
@@ -2274,8 +2798,31 @@ class WebXRApp {
      * Stays on that 360 — does not auto-advance to another scene.
      */
     playPortalTransitionVideo(hotspot) {
-        if (!hotspot || !hotspot.transitionVideo) return;
+        if (!hotspot) return;
         if (this._sceneTransitioning || (this.viewer && this.viewer.isTransitioning())) return;
+
+        // Stay on current 360 — no media swap (only when there is no transition video)
+        if ((hotspot.stayInScene || hotspot.arriveLiftVmv) && !hotspot.transitionVideo) {
+            const scene = window.COURSE_DATA && window.COURSE_DATA.scenes[this.currentSceneId];
+            const orient = scene ? this._sceneOrientation(scene) : null;
+            const lookPitch = typeof hotspot.lookPitch === 'number'
+                ? hotspot.lookPitch
+                : (orient ? orient.pitch : (typeof hotspot.pitch === 'number' ? hotspot.pitch : -1));
+            const lookYaw = typeof hotspot.lookYaw === 'number'
+                ? hotspot.lookYaw
+                : (orient ? orient.yaw : (typeof hotspot.yaw === 'number' ? hotspot.yaw : 212));
+            if (this.viewer && typeof this.viewer.setLookAt === 'function') {
+                this.viewer.setLookAt(lookPitch, lookYaw);
+            }
+            if (hotspot.arriveLiftVmv) {
+                this.revealLiftAreaForVmv(hotspot);
+            } else {
+                this.revealReceptionRightArrival();
+            }
+            return;
+        }
+
+        if (!hotspot.transitionVideo) return;
 
         this._sceneTransitioning = true;
         this.hotspots.setHotspots([]);
@@ -2289,10 +2836,21 @@ class WebXRApp {
         this.stopChroIntroAudio();
 
         const stayInScene = !!hotspot.stayInScene;
+        const arriveLiftVmv = !!hotspot.arriveLiftVmv;
         const arriveAtTargetScene = () => {
             this._sceneTransitioning = false;
+            if (arriveLiftVmv) {
+                // Keep Lift_4k looping; reveal VMV hotspot + iceberg board on it
+                this.revealLiftAreaForVmv(hotspot);
+                return;
+            }
             if (stayInScene) {
                 this.revealReceptionRightArrival();
+                return;
+            }
+            // Level 2 — drop into target reception (load scene media + hotspots)
+            if (hotspot.targetScene && hotspot.loadTargetScene) {
+                this.goToScene(hotspot.targetScene, { fromHotspot: hotspot });
                 return;
             }
             // Update scene state / HUD only — keep the lift 360 playing (no media swap)
@@ -2313,16 +2871,19 @@ class WebXRApp {
             }
         };
 
-        const targetScene = !stayInScene && hotspot.targetScene
+        const lookPitch = typeof hotspot.lookPitch === 'number'
+            ? hotspot.lookPitch
+            : (typeof hotspot.pitch === 'number' ? hotspot.pitch : 0);
+        const lookYaw = typeof hotspot.lookYaw === 'number'
+            ? hotspot.lookYaw
+            : (typeof hotspot.yaw === 'number' ? hotspot.yaw : 0);
+
+        const targetScene = !stayInScene && !arriveLiftVmv && hotspot.targetScene
             ? window.COURSE_DATA.scenes[hotspot.targetScene]
             : window.COURSE_DATA.scenes[this.currentSceneId];
-        const orient = targetScene
-            ? this._sceneOrientation(targetScene)
-            : {
-                pitch: typeof hotspot.pitch === 'number' ? hotspot.pitch : 0,
-                yaw: typeof hotspot.yaw === 'number' ? hotspot.yaw : 0,
-                sphereYaw: 0
-            };
+        const orient = (arriveLiftVmv || !targetScene)
+            ? { pitch: lookPitch, yaw: lookYaw, sphereYaw: 0 }
+            : this._sceneOrientation(targetScene);
 
         this.viewer.setMinZoom();
         this.viewer.loadVideo(
@@ -2331,7 +2892,8 @@ class WebXRApp {
                 if (!video) {
                     console.warn('360 transition video failed');
                     this._sceneTransitioning = false;
-                    if (stayInScene) this.revealReceptionRightArrival();
+                    if (arriveLiftVmv) this.revealLiftAreaForVmv(hotspot);
+                    else if (stayInScene) this.revealReceptionRightArrival();
                     return;
                 }
                 // Keep looping on the lift — no auto jump to the next still scene
@@ -2354,6 +2916,43 @@ class WebXRApp {
                 targetFov: this.viewer.maxFov
             }
         );
+    }
+
+    /** Show Vision / Mission / Values hotspot on reception 51_D (scene orientation) */
+    revealLiftAreaForVmv(hotspot) {
+        this.receptionLiftAreaArrived = true;
+        this.receptionRightArrived = true;
+        const scene = window.COURSE_DATA && window.COURSE_DATA.scenes.reception;
+        const orient = scene ? this._sceneOrientation(scene) : { pitch: 1, yaw: 164 };
+        if (this.viewer && typeof this.viewer.setLookAt === 'function') {
+            const pitch = typeof hotspot?.lookPitch === 'number'
+                ? hotspot.lookPitch
+                : orient.pitch;
+            const yaw = typeof hotspot?.lookYaw === 'number'
+                ? hotspot.lookYaw
+                : orient.yaw;
+            this.viewer.setLookAt(pitch, yaw);
+        }
+        if (scene && this.hotspots) {
+            // Hide Tariq + name while the VMV play hotspot is on screen
+            const list = this._buildHotspotList(scene).map((h) => {
+                if (h.id === 'welcome_guide' || h.id === 'welcome_guide_name') {
+                    return { ...h, hidden: true };
+                }
+                return h;
+            });
+            this.hotspots.setHotspots(list);
+        }
+        if (this.viewer && typeof this.viewer.syncScreenOverlays === 'function' && scene) {
+            this.viewer.syncScreenOverlays(this._visibleScreenOverlays(scene));
+        }
+        this.hideGuideCharacter(true);
+        if (this.devPanelOpen) {
+            this.refreshDevHotspotList();
+            this.refreshDevScreenOverlayList();
+        }
+        this.syncDevOrientationPanel();
+        this.hideReceptionTip();
     }
 
     showReceptionTip(html, { animate = true, showAvatar = false } = {}) {
@@ -2485,6 +3084,7 @@ class WebXRApp {
 
     stopChroIntroAudio() {
         if (this._chroIntroAudio) {
+            this._lipsyncStopClip(this._chroIntroAudio);
             this._chroIntroAudio.pause();
             this._chroIntroAudio.onended = null;
             this._chroIntroAudio.onerror = null;
@@ -2515,8 +3115,20 @@ class WebXRApp {
         });
     }
 
+    /** Lip-sync the Welcome Guide to a narration clip (reception only). */
+    _lipsyncClip(audio, url) {
+        const lip = this.viewer && this.viewer.lipsync;
+        if (lip && this.currentSceneId === 'reception') lip.attachClip(audio, url);
+    }
+
+    _lipsyncStopClip(audio) {
+        const lip = this.viewer && this.viewer.lipsync;
+        if (lip) lip.stopClip(audio);
+    }
+
     stopCeoIntroAudio() {
         if (this._ceoIntroAudio) {
+            this._lipsyncStopClip(this._ceoIntroAudio);
             this._ceoIntroAudio.pause();
             this._ceoIntroAudio.onended = null;
             this._ceoIntroAudio.onerror = null;
@@ -2526,9 +3138,11 @@ class WebXRApp {
 
     playCeoIntroAudio() {
         this.stopCeoIntroAudio();
-        const audio = new Audio(this.resolveMediaUrl('Audios/Welcome Notes.mp3'));
+        const url = this.resolveMediaUrl('Audios/Welcome Notes.mp3');
+        const audio = new Audio(url);
         this._ceoIntroAudio = audio;
         audio.preload = 'auto';
+        this._lipsyncClip(audio, url);
         audio.play().catch(() => {
             // Autoplay may be blocked until a further gesture
         });
@@ -2544,9 +3158,11 @@ class WebXRApp {
         });
         this.stopChroIntroAudio();
 
-        const audio = new Audio(this.resolveMediaUrl('Audios/CHRO_Intro.mp3'));
+        const chroUrl = this.resolveMediaUrl('Audios/CHRO_Intro.mp3');
+        const audio = new Audio(chroUrl);
         this._chroIntroAudio = audio;
         audio.preload = 'auto';
+        this._lipsyncClip(audio, chroUrl);
 
         const finish = () => {
             if (this._chroIntroAudio !== audio) return;
@@ -2625,7 +3241,9 @@ class WebXRApp {
         this.stopChroIntroAudio();
         this.stopCeoIntroAudio();
         if (scene.id === 'reception') {
-            if (!this.receptionChroUnlocked) {
+            if (this.receptionLevel2Active) {
+                this.hideReceptionTip();
+            } else if (!this.receptionChroUnlocked) {
                 this.showReceptionTip(
                     'Welcome to Tabuk Pharmaceuticals!<br><em>Your journey starts here.</em>',
                     { showAvatar: false }
@@ -2644,7 +3262,9 @@ class WebXRApp {
             this.receptionRightUnlocked = false;
             this.receptionRightArrived = false;
             this.receptionVmvEntryUnlocked = false;
+            this.receptionLiftAreaArrived = false;
             this.receptionLiftUnlocked = false;
+            this.receptionLevel2Active = false;
         }
 
         // Welcome / ENTER TABUK screen narration
@@ -2750,6 +3370,88 @@ class WebXRApp {
             "What began as a family-led vision in Riyadh, KSA, has grown into a company committed to improving patients' lives across the region. At Tabuk, that sense of responsibility continues to guide how we work — with care, integrity, and a focus on quality.",
             () => this._revealPeoplePurposeScreen(overlay)
         );
+    }
+
+    /** Level 2 CTA — move user into reception 360 with Tariq + Level 2 kiosk */
+    enterLevel2Reception() {
+        this.receptionLevel2Active = true;
+        this.receptionLiftUnlocked = true;
+        this.receptionLiftAreaArrived = true;
+        this._sceneTransitioning = false;
+        if (this.viewer) this.viewer._transitioning = false;
+
+        this.hideReceptionTip();
+        this.stopTipAvatar();
+        this.stopCeoIntroAudio();
+        this.stopChroIntroAudio();
+
+        const scene = window.COURSE_DATA && window.COURSE_DATA.scenes.reception;
+        if (!scene || !this.viewer) {
+            this.goToScene('reception');
+            return;
+        }
+
+        this.currentSceneId = 'reception';
+        this.visitedScenes.add('reception');
+
+        // Level 2 start — use kiosk reveal look (0 / -92)
+        const { pitch: lookPitch, yaw: lookYaw, sphereYaw } = this._sceneOrientation(scene);
+
+        // Force-load reception 360 even if we were still on Lift_4k
+        this.viewer.setMinZoom();
+        this.viewer.loadVideo(scene.bgVideo || 'Videos/51_D_4k.mov', () => {
+            this._applySceneMediaReady(scene);
+        }, {
+            sphereYaw,
+            targetPitch: lookPitch,
+            targetYaw: lookYaw,
+            targetFov: this.viewer.maxFov
+        });
+
+        this._finishSceneUI(scene);
+        this.hideGuideCharacter(false);
+    }
+
+    /** Hide / show Tariq 3D guide + name tag (HTML pin + GLB) */
+    hideGuideCharacter(hidden) {
+        if (!this.hotspots) return;
+        ['welcome_guide', 'welcome_guide_name', 'dammam_guide', 'dammam_guide_name'].forEach((id) => {
+            this.hotspots.setHotspotHidden(id, !!hidden);
+        });
+        this.stopTipAvatar();
+        this.stopCeoIntroAudio();
+        this.stopChroIntroAudio();
+    }
+
+    /** Close Who We Are (X) — return to 360 and reveal "discover what guides us" */
+    closeWhoWeAreCinematic() {
+        if (this.receptionRightArrived) {
+            this.receptionVmvEntryUnlocked = true;
+            this.receptionRightArrived = true;
+            this.receptionLiftAreaArrived = false;
+        }
+        this.hideTimelineCinematic({ restoreScene: true });
+        if (this.currentSceneId === 'reception' && this.hotspots && window.COURSE_DATA) {
+            const scene = window.COURSE_DATA.scenes.reception;
+            if (scene) {
+                this.hotspots.setHotspots(this._buildHotspotList(scene));
+                if (this.viewer && typeof this.viewer.syncScreenOverlays === 'function') {
+                    this.viewer.syncScreenOverlays(this._visibleScreenOverlays(scene));
+                }
+                this._lookAtGuidesHotspotReveal(scene);
+            }
+        }
+        this.hideReceptionTip();
+    }
+
+    /** Face the Discover what guides us arrow when it unlocks */
+    _lookAtGuidesHotspotReveal(scene) {
+        if (!this.viewer || typeof this.viewer.setLookAt !== 'function') return;
+        const guides = (scene && scene.hotspots || []).find((h) => h.id === 'discover_what_guides');
+        const pitch = guides && typeof guides.revealPitch === 'number' ? guides.revealPitch : 1;
+        const yaw = guides && typeof guides.revealYaw === 'number' ? guides.revealYaw : 188;
+        this.viewer.setLookAt(pitch, yaw);
+        this.syncDevOrientationPanel();
     }
 
     hideTimelineCinematic(options = {}) {
@@ -2898,14 +3600,24 @@ class WebXRApp {
 
     _returnToWhoWeAreForVmvEntry() {
         this.receptionVmvEntryUnlocked = true;
-        // Keep right-side Who We Are context (TV + guide) when returning to 360
+        // Keep right-side context; TV graphic hides once guides unlock
         this.receptionRightArrived = true;
+        this.receptionLiftAreaArrived = false;
         this.hideTimelineCinematic({ restoreScene: true });
         if (this.currentSceneId !== 'reception') {
             this.goToScene('reception');
+            const scene = window.COURSE_DATA && window.COURSE_DATA.scenes.reception;
+            // After scene settle, face the guides arrow
+            setTimeout(() => this._lookAtGuidesHotspotReveal(scene), 120);
         } else if (this.hotspots && window.COURSE_DATA) {
             const scene = window.COURSE_DATA.scenes.reception;
-            if (scene) this.hotspots.setHotspots(this._buildHotspotList(scene));
+            if (scene) {
+                this.hotspots.setHotspots(this._buildHotspotList(scene));
+                if (this.viewer && typeof this.viewer.syncScreenOverlays === 'function') {
+                    this.viewer.syncScreenOverlays(this._visibleScreenOverlays(scene));
+                }
+                this._lookAtGuidesHotspotReveal(scene);
+            }
         }
         this.hideReceptionTip();
     }
@@ -2942,6 +3654,7 @@ class WebXRApp {
             this._speechKeepAlive = null;
         }
         this._cinematicSpeech = null;
+        if (this.viewer && this.viewer.lipsync) this.viewer.lipsync.stopSpeech();
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
         }
@@ -2963,7 +3676,12 @@ class WebXRApp {
         return voices[0] || null;
     }
 
-    _speakCinematicLine(text, onEnd) {
+    /**
+     * @param {string} text
+     * @param {Function} [onEnd]
+     * @param {{ avatar?: boolean }} [opts] avatar: true → lip-sync the Welcome Guide
+     */
+    _speakCinematicLine(text, onEnd, opts = {}) {
         this._stopCinematicSpeech();
         const finish = () => {
             if (typeof onEnd === 'function') onEnd();
@@ -3003,6 +3721,10 @@ class WebXRApp {
             this._timelineBeatTimers.push(waitId);
         };
         this._cinematicSpeech = utter;
+        if (opts && opts.avatar && this.currentSceneId === 'reception'
+            && this.viewer && this.viewer.lipsync) {
+            this.viewer.lipsync.attachSpeech(utter, text);
+        }
         // Chrome drops the next utterance if speak() follows cancel() in the same tick
         const id = setTimeout(() => {
             if (gen !== this._cinematicSpeechGen) return;
@@ -3040,15 +3762,28 @@ class WebXRApp {
                 window.modalManager.showComplexModal(hotspot.modalId);
                 return;
             }
-            // Who We Are 360 — arrow opens Vision / Mission / Values experience
-            if (hotspot.id === 'discover_what_guides' || hotspot.openValuesExperience) {
+            // Level 2 kiosk — no further scenes yet
+            if (hotspot.id === 'level2_kiosk') {
+                return;
+            }
+            // At lift area — single hotspot opens Vision → Mission → Values
+            if (hotspot.id === 'vision_mission_values' || hotspot.openValuesExperience) {
                 this.hideReceptionTip();
+                this.hideGuideCharacter(true);
                 if (this.valuesExperience) this.valuesExperience.open({ start: 'vision' });
                 return;
             }
-            if (hotspot.transitionVideo) {
+            // Guides arrow — lift 360, then VMV hotspot
+            if (hotspot.id === 'discover_what_guides' || hotspot.arriveLiftVmv) {
                 this.playPortalTransitionVideo(hotspot);
-            } else {
+                return;
+            }
+            // Stay in reception (e.g. right-side Who We Are) — no white_360
+            if (hotspot.stayInScene || hotspot.transitionVideo) {
+                this.playPortalTransitionVideo(hotspot);
+                return;
+            }
+            if (hotspot.targetScene) {
                 this.goToScene(hotspot.targetScene, { fromHotspot: hotspot });
             }
         } else if (hotspot.type === 'modal') {

@@ -10,7 +10,8 @@
         { url: 'Videos/welcome_360_4k.mov', type: 'video', label: 'Welcome 360' },
         { url: 'Videos/51_D_4k.mov', type: 'video', label: 'Reception 360' },
         { url: 'Videos/Lift_4k.mov', type: 'video', label: 'Lift transition' },
-        { url: 'Videos/white_360.mp4', type: 'video', label: 'Reception right (placeholder)' },
+        // Preloaded as a blob so seeking always works (no HTTP Range support needed)
+        { url: 'assets/video/Video1.mp4', type: 'video', label: 'CEO welcome video' },
         { url: 'Audios/Welcome_Enter.mp3', type: 'audio', label: 'Welcome enter' },
         { url: 'Audios/CHRO_Intro.mp3', type: 'audio', label: 'CHRO intro' },
         { url: 'Audios/Welcome Notes.mp3', type: 'audio', label: 'CEO welcome notes' },
@@ -18,7 +19,9 @@
         // Reception glued props + guide (cache so tablets appear instantly)
         { url: 'assets/images/tablet_ceo.png', type: 'image', label: 'CEO tablet' },
         { url: 'assets/images/tablet_chro.png', type: 'image', label: 'CHRO tablet' },
-        { url: 'assets/images/welcome_tip_avatar.png', type: 'image', label: 'Welcome guide' },
+        { url: 'assets/images/welcome_tip_avatar.png', type: 'image', label: 'Welcome guide PNG' },
+        { url: 'assets/images/level2_kiosk.png', type: 'image', label: 'Level 2 kiosk' },
+        { url: 'assets/models/welcome_guide.glb', type: 'model', label: 'Welcome guide 3D' },
         { url: 'assets/images/video_chro_welcome.png', type: 'image', label: 'CEO welcome portrait' },
         { url: 'assets/images/video_executive_welcome.png', type: 'image', label: 'CHRO welcome portrait' },
         { url: 'assets/images/timeline_beat_1994.png', type: 'image', label: 'Timeline 1994 graphic' },

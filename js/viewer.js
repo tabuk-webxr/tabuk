@@ -17,6 +17,13 @@ class PanoramaViewer {
         this.renderer = null;
         this.sphere = null;
         this.textureLoader = new THREE.TextureLoader();
+        this.gltfLoader = (typeof THREE !== 'undefined' && THREE.GLTFLoader)
+            ? new THREE.GLTFLoader()
+            : null;
+        this._avatarClock = new THREE.Clock();
+        // Mouth animation for the Welcome Guide's narration (clip + TTS)
+        this.lipsync = window.AvatarLipSync ? new window.AvatarLipSync(this) : null;
+        this.gestures = window.AvatarGestures ? new window.AvatarGestures(this) : null;
         this.activeVideo = null;
         this.activeVideoTexture = null;
         
@@ -48,6 +55,12 @@ class PanoramaViewer {
         this._cameraAnimRaf = null;
         this._sceneAvatars = [];
         this._screenOverlays = [];
+        this._raycaster = new THREE.Raycaster();
+        this._pointerNdc = new THREE.Vector2();
+        this.avatarDragEnabled = false;
+        this._avatarDragId = null;
+        this.onAvatarDrag = null;     // (id, pitch, yaw) while dragging
+        this.onAvatarDragEnd = null;  // (id, pitch, yaw) on release
         this.init();
     }
 
@@ -75,6 +88,20 @@ class PanoramaViewer {
         this.sphere = new THREE.Mesh(geometry, material);
         this.sphereRotationY = 0;
         this.scene.add(this.sphere);
+
+        // Soft lights for cloth/shoes only (skin stays MeshBasic / unlit)
+        this.avatarAmbient = new THREE.AmbientLight(0xfff6ee, 0.45);
+        this.avatarHemi = new THREE.HemisphereLight(0xfff2e4, 0x2c3544, 0.55);
+        this.avatarKeyLight = new THREE.DirectionalLight(0xfff5e8, 0.95);
+        this.avatarKeyLight.position.set(0.25, 1.8, 0.9);
+        this.avatarFillLight = new THREE.DirectionalLight(0xe8f0ff, 0.28);
+        this.avatarFillLight.position.set(-0.55, 0.6, -0.35);
+        this.scene.add(this.avatarAmbient);
+        this.scene.add(this.avatarHemi);
+        this.scene.add(this.avatarKeyLight);
+        this.scene.add(this.avatarFillLight);
+        this.scene.add(this.avatarKeyLight.target);
+        this.scene.add(this.avatarFillLight.target);
 
         // WebGL Renderer — original video colors, no tone-mapping darkening
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
@@ -208,6 +235,10 @@ class PanoramaViewer {
     }
 
     _resolveMediaUrl(url) {
+        // GLB: keep path for GLTFLoader (no blob:). Preserve ?v= cache-bust query.
+        const raw = String(url || '');
+        const bare = raw.split('?')[0];
+        if (/\.glb$/i.test(bare) || /\.gltf$/i.test(bare)) return raw;
         return (window.app && window.app.assets) ? window.app.assets.getUrl(url) : url;
     }
 
@@ -623,39 +654,93 @@ class PanoramaViewer {
      * Stick avatar images onto the 360 sphere (true 3D — moves with look like gum on glass).
      * Parent to sphere so sphereYaw keeps them glued to the panorama.
      */
-    clearSceneAvatars() {
-        if (!this._sceneAvatars || !this._sceneAvatars.length) {
-            this._sceneAvatars = [];
-            return;
+    _disposeSceneAvatar(entry) {
+        if (!entry) return;
+        if (entry.mixer) {
+            try { entry.mixer.stopAllAction(); } catch (e) { /* ignore */ }
+            entry.mixer = null;
         }
-        this._sceneAvatars.forEach((entry) => {
-            if (entry.mesh && entry.mesh.parent) {
-                entry.mesh.parent.remove(entry.mesh);
-            }
-            if (entry.mesh) {
-                if (entry.mesh.geometry) entry.mesh.geometry.dispose();
-                if (entry.mesh.material) {
-                    if (entry.mesh.material.map) entry.mesh.material.map.dispose();
-                    entry.mesh.material.dispose();
-                }
-            }
-        });
+        if (entry.mesh && entry.mesh.parent) {
+            entry.mesh.parent.remove(entry.mesh);
+        }
+        if (entry.mesh) {
+            entry.mesh.traverse((child) => {
+                if (child.geometry) child.geometry.dispose();
+                const mats = child.material
+                    ? (Array.isArray(child.material) ? child.material : [child.material])
+                    : [];
+                mats.forEach((mat) => {
+                    if (!mat) return;
+                    if (mat.map) mat.map.dispose();
+                    mat.dispose();
+                });
+            });
+        }
+    }
+
+    clearSceneAvatars() {
+        (this._sceneAvatars || []).forEach((entry) => this._disposeSceneAvatar(entry));
         this._sceneAvatars = [];
     }
 
+    /** Placement/appearance fingerprint — identical → the live avatar can be kept as is. */
+    _avatarSignature(h) {
+        return JSON.stringify([
+            h.type, h.model || null, h.image || null, h.glue || null, h.anchor || null,
+            h.pitch, h.yaw, h.radius, h.worldHeight, h.worldWidth, h.modelScale,
+            h.worldRot, h.worldRotX, h.worldRotZ, h.offsetY, !!h.flipX
+        ]);
+    }
+
+    /**
+     * Diff-based sync: avatars whose data did not change are KEPT (no dispose / GLB
+     * reload / idle restart), so unlocking hotspots mid-narration doesn't make the
+     * guide vanish, T-pose or snap back to frame 0 of his animation.
+     */
     syncSceneAvatars(hotspotList = []) {
-        this.clearSceneAvatars();
-        (hotspotList || []).forEach((h) => {
-            if (!h || h.hidden) return;
-            // Full-body guides + glued props (e.g. CEO/CHRO monitors)
-            if (h.type === 'avatar' || (h.glue && h.image)) {
-                this.addSceneAvatar(h);
+        const wanted = (hotspotList || []).filter((h) => h && !h.hidden
+            && (h.type === 'avatar' || (h.glue && h.image)));
+        const existing = this._sceneAvatars || [];
+        const kept = new Set();
+        const toAdd = [];
+
+        wanted.forEach((h) => {
+            const sig = this._avatarSignature(h);
+            const match = existing.find((e) => !kept.has(e) && e.id === h.id && e.sig === sig);
+            if (match) {
+                kept.add(match);
+                if (match.mesh) match.mesh.visible = match.isModel ? (!!match.modelRoot && !h.hidden) : !h.hidden;
+            } else {
+                toAdd.push({ h, sig });
             }
         });
+
+        existing.forEach((e) => { if (!kept.has(e)) this._disposeSceneAvatar(e); });
+        this._sceneAvatars = existing.filter((e) => kept.has(e));
+
+        toAdd.forEach(({ h, sig }) => {
+            const entry = this.addSceneAvatar(h);
+            if (entry) entry.sig = sig;
+        });
+        // Rebuilt avatar → ease gestures in instead of popping to full pose
+        if (toAdd.length && this.gestures && this.gestures.resetBlend) this.gestures.resetBlend();
     }
 
     addSceneAvatar(data) {
+        const entry = this._addSceneAvatarImpl(data);
+        if (entry && data) entry.sig = this._avatarSignature(data);
+        return entry;
+    }
+
+    _addSceneAvatarImpl(data) {
         if (!data || !this.scene || !window.THREE) return null;
+
+        const modelUrl = data.model
+            ? this._resolveMediaUrl(data.model)
+            : null;
+        if (modelUrl) {
+            return this._addSceneAvatarModel(data, modelUrl);
+        }
 
         const imageUrl = this._resolveMediaUrl(data.image || 'assets/images/welcome_tip_avatar.png');
         const pitch = typeof data.pitch === 'number' ? data.pitch : 0;
@@ -694,9 +779,11 @@ class PanoramaViewer {
             radius,
             height,
             width,
+            isModel: false,
             // Monitors / props: center on pitch/yaw. Avatars: feet on mark.
             anchor: data.anchor || (isGluedProp ? 'center' : 'feet'),
             worldRot: typeof data.worldRot === 'number' ? data.worldRot : 0,
+            flipX: !!data.flipX,
             mesh
         };
 
@@ -720,6 +807,12 @@ class PanoramaViewer {
                 } else if ('colorSpace' in texture && THREE.LinearSRGBColorSpace !== undefined) {
                     texture.colorSpace = THREE.LinearSRGBColorSpace;
                 }
+                // Horizontal mirror for glued props (e.g. Level 2 kiosk)
+                if (entry.flipX) {
+                    texture.wrapS = THREE.RepeatWrapping;
+                    texture.repeat.x = -1;
+                    texture.offset.x = 1;
+                }
                 material.color.set(0xffffff);
                 material.map = texture;
                 material.needsUpdate = true;
@@ -732,25 +825,328 @@ class PanoramaViewer {
         return entry;
     }
 
+    _addSceneAvatarModel(data, modelUrl) {
+        if (!this.gltfLoader) {
+            console.warn('GLTFLoader missing — falling back to image avatar');
+            if (data.image) {
+                const fallback = { ...data, model: null };
+                return this.addSceneAvatar(fallback);
+            }
+            return null;
+        }
+
+        const pitch = typeof data.pitch === 'number' ? data.pitch : 0;
+        const yaw = typeof data.yaw === 'number' ? data.yaw : 0;
+        const radius = typeof data.radius === 'number' ? data.radius : 430;
+        const height = typeof data.worldHeight === 'number' ? data.worldHeight : 162;
+        const width = typeof data.worldWidth === 'number' ? data.worldWidth : height * 0.4;
+
+        const root = new THREE.Group();
+        root.name = `scene-avatar-${data.id || 'model'}`;
+        root.frustumCulled = false;
+        root.visible = false;
+        root.renderOrder = 10;
+
+        const entry = {
+            id: data.id,
+            pitch,
+            yaw,
+            radius,
+            height,
+            width,
+            isModel: true,
+            // Ground = model feet sit on pitch/yaw mark (local y=0 after fit)
+            anchor: data.anchor || 'ground',
+            worldRot: typeof data.worldRot === 'number' ? data.worldRot : 0,
+            worldRotX: typeof data.worldRotX === 'number' ? data.worldRotX : 0,
+            worldRotZ: typeof data.worldRotZ === 'number' ? data.worldRotZ : 0,
+            modelScale: typeof data.modelScale === 'number' ? data.modelScale : 1,
+            offsetY: typeof data.offsetY === 'number' ? data.offsetY : 0,
+            mesh: root,
+            modelRoot: null,
+            mixer: null,
+            baseModelHeight: 1
+        };
+
+        this.scene.add(root);
+        this._placeSceneAvatar(entry);
+        this._sceneAvatars.push(entry);
+
+        this.gltfLoader.load(
+            modelUrl,
+            (gltf) => {
+                // Drop if this avatar was cleared while loading
+                if (!(this._sceneAvatars || []).includes(entry)) {
+                    if (gltf.scene && gltf.scene.parent) gltf.scene.parent.remove(gltf.scene);
+                    return;
+                }
+                const model = gltf.scene || gltf.scenes?.[0];
+                if (!model) {
+                    console.warn('GLB had no scene:', modelUrl);
+                    return;
+                }
+
+                model.traverse((child) => {
+                    if (!child.isMesh) return;
+                    child.frustumCulled = false;
+                    child.castShadow = false;
+                    child.receiveShadow = false;
+                    child.renderOrder = 10;
+                    const meshHint = child.name || '';
+                    if (Array.isArray(child.material)) {
+                        child.material = child.material.map((m) => this._prepareAvatarMaterial(m, meshHint));
+                    } else {
+                        child.material = this._prepareAvatarMaterial(child.material, meshHint);
+                    }
+                });
+
+                entry.modelRoot = model;
+                root.add(model);
+                this._fitAvatarModel(entry);
+                this._placeSceneAvatar(entry);
+                root.visible = !data.hidden;
+
+                if (gltf.animations && gltf.animations.length) {
+                    entry.mixer = new THREE.AnimationMixer(model);
+                    // Prefer a calm idle if named; otherwise first clip
+                    const clip = gltf.animations.find((c) => /idle|stand|avaturn/i.test(c.name))
+                        || gltf.animations[0];
+                    const action = entry.mixer.clipAction(clip);
+                    action.reset();
+                    action.play();
+                }
+            },
+            undefined,
+            (err) => {
+                console.warn('Scene avatar GLB failed:', modelUrl, err);
+                // Fall back to PNG plate if provided
+                if (data.image) {
+                    const idx = (this._sceneAvatars || []).indexOf(entry);
+                    if (idx >= 0) this._sceneAvatars.splice(idx, 1);
+                    if (root.parent) root.parent.remove(root);
+                    const fallback = { ...data };
+                    delete fallback.model;
+                    this.addSceneAvatar(fallback);
+                }
+            }
+        );
+
+        return entry;
+    }
+
+    /**
+     * Body + cloth + shoes: lit Standard (keeps base/normal/metal/rough maps).
+     * Head / eyes / teeth stay unlit MeshBasic.
+     */
+    _prepareAvatarMaterial(mat, meshHint = '') {
+        if (!mat) return mat;
+        const needsSkin = !!mat.skinning;
+        const needsMorph = !!mat.morphTargets;
+        const map = mat.map || null;
+        const color = mat.color ? mat.color.clone() : new THREE.Color(0xffffff);
+        const opacity = typeof mat.opacity === 'number' ? mat.opacity : 1;
+        const alphaTest = typeof mat.alphaTest === 'number' ? mat.alphaTest : 0;
+        const nameHint = `${mat.name || ''} ${meshHint}`;
+        const isCloth = /look|cloth|outfit|garment|shoe|avaturn_look|avaturn_shoes/i.test(nameHint);
+        const isBody = /(^|[^a-z])body([^a-z]|$)|Body_Mesh/i.test(nameHint);
+        const useLit = isCloth || isBody;
+        const isTransparent = !!mat.transparent || opacity < 0.98
+            || /eyelash|eyeao|hair|alpha/i.test(nameHint);
+        const isHair = /hair/i.test(nameHint);
+
+        if (map) {
+            if (THREE.sRGBEncoding !== undefined) map.encoding = THREE.sRGBEncoding;
+            if (!isHair && !useLit) {
+                map.generateMipmaps = false;
+                map.minFilter = THREE.LinearFilter;
+            }
+            map.needsUpdate = true;
+        }
+
+        // Body / cloth / shoes — keep lit PBR so all authored maps are used
+        if (useLit) {
+            if (mat.isMeshStandardMaterial || mat.isMeshPhysicalMaterial) {
+                // Skin / fabric should not read as metal
+                if (isBody) {
+                    mat.metalness = 0;
+                    mat.roughness = Math.max(typeof mat.roughness === 'number' ? mat.roughness : 0.85, 0.7);
+                } else {
+                    mat.metalness = Math.min(typeof mat.metalness === 'number' ? mat.metalness : 0, 0.15);
+                    mat.roughness = Math.max(typeof mat.roughness === 'number' ? mat.roughness : 0.75, 0.55);
+                }
+                mat.envMapIntensity = 0;
+                mat.depthTest = true;
+                mat.depthWrite = !isTransparent;
+                mat.side = isTransparent ? THREE.DoubleSide : (isBody ? THREE.DoubleSide : THREE.FrontSide);
+                mat.transparent = isTransparent;
+                if (isTransparent && alphaTest < 0.01) mat.alphaTest = 0.12;
+                mat.needsUpdate = true;
+                return mat;
+            }
+            const lit = new THREE.MeshStandardMaterial({
+                map,
+                color,
+                metalness: 0,
+                roughness: isBody ? 0.85 : 0.78,
+                transparent: isTransparent,
+                opacity,
+                alphaTest: isTransparent ? Math.max(alphaTest, 0.12) : alphaTest,
+                side: isTransparent || isBody ? THREE.DoubleSide : THREE.FrontSide,
+                depthTest: true,
+                depthWrite: !isTransparent,
+                skinning: needsSkin,
+                morphTargets: needsMorph
+            });
+            if (mat.normalMap) lit.normalMap = mat.normalMap;
+            if (mat.roughnessMap) lit.roughnessMap = mat.roughnessMap;
+            if (mat.metalnessMap) lit.metalnessMap = mat.metalnessMap;
+            if (mat.aoMap) {
+                lit.aoMap = mat.aoMap;
+                lit.aoMapIntensity = typeof mat.aoMapIntensity === 'number' ? mat.aoMapIntensity : 1;
+            }
+            lit.name = mat.name || (isBody ? 'avatar-body-lit' : 'avatar-cloth-lit');
+            try { mat.dispose(); } catch (e) { /* ignore */ }
+            return lit;
+        }
+
+        if (mat.isMeshBasicMaterial) {
+            mat.depthTest = true;
+            mat.depthWrite = !isTransparent;
+            mat.side = isTransparent ? THREE.DoubleSide : THREE.FrontSide;
+            mat.transparent = isTransparent;
+            if (isTransparent && alphaTest < 0.01) mat.alphaTest = 0.12;
+            mat.needsUpdate = true;
+            return mat;
+        }
+
+        const basic = new THREE.MeshBasicMaterial({
+            map,
+            color,
+            transparent: isTransparent,
+            opacity,
+            alphaTest: isTransparent ? Math.max(alphaTest, 0.12) : alphaTest,
+            side: isTransparent ? THREE.DoubleSide : THREE.FrontSide,
+            depthTest: true,
+            depthWrite: !isTransparent,
+            skinning: needsSkin,
+            morphTargets: needsMorph
+        });
+        basic.name = mat.name || 'avatar-unlit';
+        try { mat.dispose(); } catch (e) { /* ignore */ }
+        return basic;
+    }
+
+    /** Aim cloth key/fill at the avatar chest so fabric shading stays on-character. */
+    _aimAvatarLights(entry) {
+        if (!entry || !entry.mesh || !this.avatarKeyLight) return;
+        const chest = entry.mesh.position.clone();
+        chest.y += (entry.height || 160) * 0.55;
+        this.avatarKeyLight.target.position.copy(chest);
+        this.avatarKeyLight.target.updateMatrixWorld();
+        if (this.avatarFillLight) {
+            this.avatarFillLight.target.position.copy(chest);
+            this.avatarFillLight.target.updateMatrixWorld();
+        }
+        // Keep lights near the avatar so intensity doesn't fall off oddly
+        const root = entry.mesh.position;
+        this.avatarKeyLight.position.set(root.x + 40, root.y + 120, root.z + 70);
+        this.avatarFillLight.position.set(root.x - 55, root.y + 50, root.z - 40);
+    }
+
+    _fitAvatarModel(entry) {
+        if (!entry || !entry.modelRoot || !entry.mesh) return;
+        const model = entry.modelRoot;
+        const root = entry.mesh;
+
+        // Measure in root-local space. Root may already sit on the pin — never
+        // subtract raw world XZ into model.position (that drifts the avatar off-pin).
+        const prevPos = root.position.clone();
+        const prevRot = root.rotation.clone();
+        root.position.set(0, 0, 0);
+        root.rotation.set(0, 0, 0);
+        model.position.set(0, 0, 0);
+        model.rotation.set(0, 0, 0);
+        model.scale.set(1, 1, 1);
+        root.updateMatrixWorld(true);
+
+        // Skinned Avaturn meshes: geometry AABB is bind-pose junk (~cube).
+        // Prefer Hips height → standing height (~1.75–1.85 m).
+        let srcH = 1.8;
+        const hips = model.getObjectByName('Hips');
+        if (hips) {
+            const hp = new THREE.Vector3();
+            hips.getWorldPosition(hp);
+            if (hp.y > 0.3) srcH = Math.max(1.55, Math.min(2.05, hp.y / 0.55));
+        } else {
+            model.traverse((child) => {
+                if (child.isSkinnedMesh && child.skeleton) child.skeleton.update();
+            });
+            const box = new THREE.Box3().setFromObject(model);
+            const size = new THREE.Vector3();
+            box.getSize(size);
+            if (size.y > 0.8 && size.y < 2.6) srcH = size.y;
+        }
+        entry.baseModelHeight = srcH;
+
+        const targetH = entry.height || 162;
+        const scaleMul = typeof entry.modelScale === 'number' ? entry.modelScale : 1;
+        const s = (targetH / srcH) * scaleMul;
+        model.scale.setScalar(s);
+        model.updateMatrixWorld(true);
+
+        // Center on XZ using Hips; keep feet at local y=0 (Avaturn armature is already grounded)
+        if (hips) {
+            const hp = new THREE.Vector3();
+            hips.getWorldPosition(hp);
+            model.position.x -= hp.x;
+            model.position.z -= hp.z;
+        }
+        model.updateMatrixWorld(true);
+
+        root.position.copy(prevPos);
+        root.rotation.copy(prevRot);
+        root.updateMatrixWorld(true);
+    }
+
     _placeSceneAvatar(entry) {
         if (!entry || !entry.mesh) return;
         const pos = this.coordsToVector3(entry.pitch, entry.yaw);
         const scale = (entry.radius || 430) / 500;
         pos.multiplyScalar(scale);
 
-        // Feet anchor: pitch/yaw = standing mark. Center anchor: pitch/yaw = plate center.
-        if (entry.anchor !== 'center') {
+        // Feet/plate: lift so mark is under feet. Ground (GLB): position is feet.
+        if (entry.anchor === 'feet') {
+            pos.y += (entry.height || 150) * 0.48;
+        } else if (entry.anchor !== 'center' && entry.anchor !== 'ground') {
             pos.y += (entry.height || 150) * 0.48;
         }
 
+        if (typeof entry.offsetY === 'number') {
+            pos.y += entry.offsetY;
+        }
         entry.mesh.position.copy(pos);
-        // Face the camera at the origin (inside the panorama)
-        entry.mesh.lookAt(0, 0, 0);
-        entry.mesh.rotateY(Math.PI);
-        // Extra turn around vertical (DEV rotation) — 180 flips front/back
-        const rot = typeof entry.worldRot === 'number' ? entry.worldRot : 0;
-        if (rot) {
-            entry.mesh.rotateY(THREE.MathUtils.degToRad(rot));
+
+        const rotX = typeof entry.worldRotX === 'number' ? entry.worldRotX : 0;
+        const rotY = typeof entry.worldRot === 'number' ? entry.worldRot : 0;
+        const rotZ = typeof entry.worldRotZ === 'number' ? entry.worldRotZ : 0;
+
+        if (entry.isModel) {
+            // Upright only — yaw toward camera. Never pitch/roll via lookAt.
+            const faceYaw = Math.atan2(pos.x, pos.z) + Math.PI;
+            entry.mesh.rotation.order = 'YXZ';
+            entry.mesh.rotation.set(
+                THREE.MathUtils.degToRad(rotX),
+                faceYaw + THREE.MathUtils.degToRad(rotY),
+                THREE.MathUtils.degToRad(rotZ)
+            );
+            this._aimAvatarLights(entry);
+        } else {
+            // Flat PNG / tablet plates still billboard toward the camera
+            entry.mesh.lookAt(0, 0, 0);
+            entry.mesh.rotateY(Math.PI);
+            if (rotX) entry.mesh.rotateX(THREE.MathUtils.degToRad(rotX));
+            if (rotY) entry.mesh.rotateY(THREE.MathUtils.degToRad(rotY));
+            if (rotZ) entry.mesh.rotateZ(THREE.MathUtils.degToRad(rotZ));
         }
         entry.mesh.updateMatrixWorld(true);
     }
@@ -764,7 +1160,9 @@ class PanoramaViewer {
         return true;
     }
 
-    setSceneAvatarSize(id, { worldHeight, worldWidth, radius, worldRot } = {}) {
+    setSceneAvatarSize(id, {
+        worldHeight, worldWidth, radius, worldRot, worldRotX, worldRotZ, modelScale, offsetY
+    } = {}) {
         const entry = (this._sceneAvatars || []).find((a) => a.id === id);
         if (!entry || !entry.mesh) return false;
 
@@ -772,10 +1170,20 @@ class PanoramaViewer {
         if (typeof worldHeight === 'number') entry.height = worldHeight;
         if (typeof worldWidth === 'number') {
             entry.width = worldWidth;
-        } else if (typeof worldHeight === 'number') {
+        } else if (typeof worldHeight === 'number' && !entry.isModel) {
             entry.width = worldHeight * 0.35;
         }
         if (typeof worldRot === 'number') entry.worldRot = worldRot;
+        if (typeof worldRotX === 'number') entry.worldRotX = worldRotX;
+        if (typeof worldRotZ === 'number') entry.worldRotZ = worldRotZ;
+        if (typeof modelScale === 'number') entry.modelScale = modelScale;
+        if (typeof offsetY === 'number') entry.offsetY = offsetY;
+
+        if (entry.isModel) {
+            if (entry.modelRoot) this._fitAvatarModel(entry);
+            this._placeSceneAvatar(entry);
+            return true;
+        }
 
         const nextW = entry.width || entry.height * 0.35;
         const nextH = entry.height || 150;
@@ -785,6 +1193,14 @@ class PanoramaViewer {
 
         this._placeSceneAvatar(entry);
         return true;
+    }
+
+    setSceneAvatarTransform(id, opts = {}) {
+        const entry = (this._sceneAvatars || []).find((a) => a.id === id);
+        if (!entry || !entry.mesh) return false;
+        if (typeof opts.pitch === 'number') entry.pitch = opts.pitch;
+        if (typeof opts.yaw === 'number') entry.yaw = opts.yaw;
+        return this.setSceneAvatarSize(id, opts);
     }
 
     setSceneAvatarRotation(id, worldRot) {
@@ -805,7 +1221,12 @@ class PanoramaViewer {
             radius: entry.radius,
             worldHeight: entry.height,
             worldWidth: entry.width || entry.height * 0.35,
-            worldRot: typeof entry.worldRot === 'number' ? entry.worldRot : 0
+            worldRot: typeof entry.worldRot === 'number' ? entry.worldRot : 0,
+            worldRotX: typeof entry.worldRotX === 'number' ? entry.worldRotX : 0,
+            worldRotZ: typeof entry.worldRotZ === 'number' ? entry.worldRotZ : 0,
+            modelScale: typeof entry.modelScale === 'number' ? entry.modelScale : 1,
+            offsetY: typeof entry.offsetY === 'number' ? entry.offsetY : 0,
+            isModel: !!entry.isModel
         };
     }
 
@@ -1035,9 +1456,52 @@ class PanoramaViewer {
         }
     }
 
+    /**
+     * Raycast click against 3D scene avatars (GLB / plates).
+     * Returns hotspot id or null.
+     */
+    pickSceneAvatar(clientX, clientY) {
+        if (!this.camera || !this.renderer || !(this._sceneAvatars || []).length) return null;
+        const rect = this.renderer.domElement.getBoundingClientRect();
+        if (rect.width < 1 || rect.height < 1) return null;
+        this._pointerNdc.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+        this._pointerNdc.y = -(((clientY - rect.top) / rect.height) * 2 - 1);
+        this._raycaster.setFromCamera(this._pointerNdc, this.camera);
+
+        let best = null;
+        let bestDist = Infinity;
+        (this._sceneAvatars || []).forEach((entry) => {
+            if (!entry || !entry.mesh || entry.mesh.visible === false) return;
+            const hits = this._raycaster.intersectObject(entry.mesh, true);
+            if (!hits.length) return;
+            const dist = hits[0].distance;
+            if (dist < bestDist) {
+                bestDist = dist;
+                best = entry;
+            }
+        });
+        return best ? best.id : null;
+    }
+
     onPointerDown(event) {
         if (event.isPrimary === false || this._transitioning) return;
         if (event.button != null && event.button > 0) return;
+
+        // DEV: click 3D model to drag-place it (blocks look-drag)
+        if (this.avatarDragEnabled) {
+            const hitId = this.pickSceneAvatar(event.clientX, event.clientY);
+            if (hitId) {
+                this._avatarDragId = hitId;
+                this.isUserInteracting = false;
+                this._lookMoved = false;
+                if (event.cancelable) event.preventDefault();
+                if (typeof event.stopPropagation === 'function') event.stopPropagation();
+                document.body.classList.add('is-dragging-avatar');
+                return;
+            }
+        }
+
+        this._avatarDragId = null;
         this.isUserInteracting = true;
         this._lookMoved = false;
         this.onPointerDownPointerX = event.clientX;
@@ -1047,6 +1511,19 @@ class PanoramaViewer {
     }
 
     onPointerMove(event) {
+        // Drag 3D avatar to a new pitch/yaw on the sphere
+        if (this._avatarDragId) {
+            const coords = this.screenToPitchYaw(event.clientX, event.clientY);
+            if (coords) {
+                this.setSceneAvatarCoords(this._avatarDragId, coords.pitch, coords.yaw);
+                if (typeof this.onAvatarDrag === 'function') {
+                    this.onAvatarDrag(this._avatarDragId, coords.pitch, coords.yaw);
+                }
+            }
+            if (event.cancelable) event.preventDefault();
+            return;
+        }
+
         if (!this.isUserInteracting) return;
         const dx = event.clientX - this.onPointerDownPointerX;
         const dy = event.clientY - this.onPointerDownPointerY;
@@ -1059,6 +1536,16 @@ class PanoramaViewer {
     }
 
     onPointerUp() {
+        if (this._avatarDragId) {
+            const id = this._avatarDragId;
+            const entry = (this._sceneAvatars || []).find((a) => a.id === id);
+            this._avatarDragId = null;
+            document.body.classList.remove('is-dragging-avatar');
+            if (entry && typeof this.onAvatarDragEnd === 'function') {
+                this.onAvatarDragEnd(id, entry.pitch, entry.yaw);
+            }
+            return;
+        }
         this.isUserInteracting = false;
     }
 
@@ -1164,6 +1651,32 @@ class PanoramaViewer {
         return { x, y, visible: !isBehind };
     }
 
+    /**
+     * Convert a click on the canvas to pitch/yaw on the 360 sphere.
+     * clientX/clientY = event.clientX / event.clientY
+     */
+    screenToPitchYaw(clientX, clientY) {
+        if (!this.renderer || !this.camera) return null;
+        const rect = this.renderer.domElement.getBoundingClientRect();
+        if (rect.width < 1 || rect.height < 1) return null;
+        const ndcX = ((clientX - rect.left) / rect.width) * 2 - 1;
+        const ndcY = -(((clientY - rect.top) / rect.height) * 2 - 1);
+        const vec = new THREE.Vector3(ndcX, ndcY, 0.5);
+        vec.unproject(this.camera);
+        const dir = vec.sub(this.camera.position).normalize();
+        // Match coordsToVector3: y = cos(phi), phi = 90° - pitch
+        const clampedY = Math.max(-1, Math.min(1, dir.y));
+        const phi = Math.acos(clampedY);
+        let pitch = 90 - THREE.MathUtils.radToDeg(phi);
+        pitch = Math.max(-85, Math.min(85, pitch));
+        let yaw = THREE.MathUtils.radToDeg(Math.atan2(dir.z, dir.x));
+        yaw = ((yaw % 360) + 360) % 360;
+        return {
+            pitch: Math.round(pitch * 10) / 10,
+            yaw: Math.round(yaw * 10) / 10
+        };
+    }
+
     animate() {
         if (!this.renderer.xr.isPresenting) {
             // Smooth dampening
@@ -1181,6 +1694,17 @@ class PanoramaViewer {
             this.camera.target.z = 500 * Math.sin(phi) * Math.sin(theta);
 
             this.camera.lookAt(this.camera.target);
+        }
+
+        const dt = this._avatarClock ? this._avatarClock.getDelta() : 0;
+        (this._sceneAvatars || []).forEach((entry) => {
+            if (entry.mixer) entry.mixer.update(dt);
+        });
+        // Narration lip-sync (after the idle mixer so morph weights win)
+        if (this.lipsync) this.lipsync.update(dt);
+        // "Explaining" hand gestures while narrating (after mixer so offsets sit on the idle pose)
+        if (this.gestures) {
+            this.gestures.update(dt, !!(this.lipsync && this.lipsync.speaking), this.lipsync ? this.lipsync.level : 0);
         }
 
         this.renderer.render(this.scene, this.camera);

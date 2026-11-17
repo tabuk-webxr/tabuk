@@ -46,9 +46,8 @@ class ModalManager {
                 id: 'ceo',
                 label: 'CEO Welcome — tap to play',
                 speakerTitle: 'Ismail Shehada · Chief Executive Officer · Tabuk Pharmaceuticals',
-                image: 'assets/images/video_chro_welcome.png',
-                audio: 'Audios/Welcome Notes.mp3',
-                duration: 43.47,
+                video: 'assets/video/Video1.mp4',
+                duration: 59.48,
                 captions: null // use getCeoCaptionCues()
             },
             modal_video_chro: {
@@ -331,9 +330,13 @@ class ModalManager {
             const firstCaption = (profile.captions && profile.captions[0])
                 ? profile.captions[0].text
                 : 'Welcome to Tabuk Pharmaceuticals.';
+            const mediaPath = profile.video || profile.image;
             const portraitSrc = (window.app && window.app.assets)
-                ? window.app.assets.getUrl(profile.image)
-                : profile.image;
+                ? window.app.assets.getUrl(mediaPath)
+                : mediaPath;
+            const visualHtml = profile.video
+                ? `<video id="deck-video-element" src="${portraitSrc}" class="deck-video-visual" playsinline preload="auto"></video>`
+                : `<img src="${portraitSrc}" alt="${profile.label}" class="deck-video-visual" />`;
             innerHtml = `
                 <div class="deck-modal-video-player">
                     <div class="video-close-instruction" role="group" aria-label="Close video">
@@ -341,7 +344,7 @@ class ModalManager {
                         <button type="button" class="video-close-btn" onclick="window.modalManager.closeVideoPlayer()" aria-label="Close video">&times;</button>
                     </div>
                     <div class="deck-video-curved-viewport">
-                        <img src="${portraitSrc}" alt="${profile.label}" class="deck-video-visual" />
+                        ${visualHtml}
                         
                         <div class="deck-video-overlay-gradient"></div>
 
@@ -363,7 +366,7 @@ class ModalManager {
                                 </svg>
                             </button>
                             
-                            <div class="video-timeline-wrapper" onclick="window.modalManager.seekVideo(event)">
+                            <div class="video-timeline-wrapper" onpointerdown="window.modalManager.startSeekDrag(event)">
                                 <div class="video-timeline-track">
                                     <div id="video-progress-bar" class="video-timeline-fill" style="width: 0%;"></div>
                                 </div>
@@ -397,14 +400,22 @@ class ModalManager {
     }
 
     ensureWelcomeAudio() {
-        const src = this.activeVideoProfile && this.activeVideoProfile.audio;
+        const profile = this.activeVideoProfile;
+        const src = profile && (profile.video || profile.audio);
         if (!src) return null;
-        if (this.welcomeAudio && this.welcomeAudioSrc === src) return this.welcomeAudio;
+        const domVideo = profile.video ? document.getElementById('deck-video-element') : null;
+        if (profile.video && !domVideo) return null;
+        if (this.welcomeAudio && this.welcomeAudioSrc === src
+            && (!domVideo || this.welcomeAudio === domVideo)) {
+            return this.welcomeAudio;
+        }
 
         if (this.welcomeAudio) {
             this.welcomeAudio.pause();
-            this.welcomeAudio.removeAttribute('src');
-            this.welcomeAudio.load();
+            if (this.welcomeAudio !== domVideo) {
+                this.welcomeAudio.removeAttribute('src');
+                this.welcomeAudio.load();
+            }
             this.welcomeAudio = null;
             this.welcomeAudioSrc = null;
         }
@@ -412,7 +423,7 @@ class ModalManager {
         const resolved = (window.app && window.app.assets)
             ? window.app.assets.getUrl(src)
             : src;
-        const audio = new Audio(resolved);
+        const audio = domVideo || new Audio(resolved);
         audio.preload = 'auto';
         const onMeta = () => {
             if (audio !== this.welcomeAudio) return;
@@ -424,7 +435,7 @@ class ModalManager {
         audio.addEventListener('loadedmetadata', onMeta);
         audio.addEventListener('durationchange', onMeta);
         audio.addEventListener('timeupdate', () => {
-            if (audio !== this.welcomeAudio) return;
+            if (audio !== this.welcomeAudio || this._seekDragging) return;
             this.videoCurrentTime = audio.currentTime;
             this.videoDuration = this.getActiveAudioDuration();
             this.updateVideoUI();
@@ -437,6 +448,15 @@ class ModalManager {
             this.videoCurrentTime = this.videoDuration;
             this.updateVideoPlayIcon();
             this.updateVideoUI();
+            // CEO message: on complete, close player → background brightens →
+            // app fires the CHRO bridge line and activates the CHRO hotspot.
+            if (this.activeVideoProfile && this.activeVideoProfile.id === 'ceo') {
+                setTimeout(() => {
+                    if (this.activeVideoProfile && this.activeVideoProfile.id === 'ceo') {
+                        this.closeVideoPlayer();
+                    }
+                }, 600);
+            }
         });
         this.welcomeAudio = audio;
         this.welcomeAudioSrc = src;
@@ -476,13 +496,40 @@ class ModalManager {
         this.updateVideoPlayIcon();
     }
 
+    // Click or drag on the timeline to scrub
+    startSeekDrag(event) {
+        const wrapper = event.currentTarget;
+        const fill = document.getElementById('video-progress-bar');
+        const audio = this.ensureWelcomeAudio();
+        if (!audio) return;
+        const wasPlaying = this.isVideoPlaying;
+        this._seekDragging = true;
+        if (fill) fill.style.transition = 'none';
+        try { wrapper.setPointerCapture(event.pointerId); } catch (e) { /* ignore */ }
+        const rect = wrapper.getBoundingClientRect();
+        const apply = (e) => this.seekVideo({ clientX: e.clientX, rect });
+        const onMove = (e) => apply(e);
+        const end = (e) => {
+            wrapper.removeEventListener('pointermove', onMove);
+            wrapper.removeEventListener('pointerup', end);
+            wrapper.removeEventListener('pointercancel', end);
+            this._seekDragging = false;
+            if (fill) fill.style.transition = '';
+            if (wasPlaying && audio.paused) audio.play().catch(() => {});
+        };
+        wrapper.addEventListener('pointermove', onMove);
+        wrapper.addEventListener('pointerup', end);
+        wrapper.addEventListener('pointercancel', end);
+        apply(event);
+    }
+
     seekVideo(event) {
         const audio = this.ensureWelcomeAudio();
         if (!audio) return;
         const duration = this.getActiveAudioDuration();
         if (!duration) return;
         this.videoDuration = duration;
-        const track = event.currentTarget.getBoundingClientRect();
+        const track = event.rect || event.currentTarget.getBoundingClientRect();
         const clickX = event.clientX - track.left;
         const pct = Math.max(0, Math.min(1, clickX / track.width));
         this.videoCurrentTime = pct * duration;
@@ -527,20 +574,22 @@ class ModalManager {
     }
 
     getCeoCaptionCues() {
-        // Word-level timings from ElevenLabs Welcome Notes transcript (~43.3s)
+        // Word-level timings from assets/video/Video1_json.json (~59s)
         return [
-            { at: 0.00, text: 'Welcome to Tabuk Pharmaceuticals.' },
-            { at: 2.48, text: 'For over 30 years, this organisation has been built on a single belief' },
-            { at: 7.44, text: 'that every patient deserves access to medicines they can trust.' },
-            { at: 11.52, text: 'That belief is why we exist, and it is what drives every decision we make.' },
-            { at: 16.73, text: 'Today, you join a team of more than 2,400 people working across manufacturing, research, commercial and support functions,' },
-            { at: 26.01, text: 'each one contributing to that same purpose.' },
-            { at: 29.12, text: 'Your role, whatever it is, connects directly to a patient somewhere in our region.' },
-            { at: 34.38, text: 'We are growing.' },
-            { at: 35.58, text: 'We are investing.' },
-            { at: 36.78, text: 'And we are doing it because we believe the best is still ahead of us.' },
-            { at: 40.78, text: 'I\'m glad you\'re here.' },
-            { at: 42.22, text: 'Welcome to Tabuk.' }
+            { at: 0.00, text: 'Welcome to Tabuk Pharma.' },
+            { at: 2.24, text: 'At Tabuk Pharma, we believe meaningful transformation is driven by people,' },
+            { at: 7.36, text: 'and today our journey becomes stronger with you.' },
+            { at: 11.12, text: 'Since 1994, we have grown into a leading pharmaceutical company in the MENA region,' },
+            { at: 17.34, text: 'guided by quality, innovation and our commitment to improving lives through healthcare.' },
+            { at: 23.89, text: 'As healthcare evolves, we see new opportunities to lead,' },
+            { at: 28.27, text: 'innovate and create lasting impact.' },
+            { at: 31.39, text: 'Aligned with the Saudi Vision in 2030,' },
+            { at: 34.03, text: 'we are building a more agile,' },
+            { at: 36.43, text: 'future ready and innovation driven company to better serve patients and communities.' },
+            { at: 43.09, text: 'As you begin your journey with us,' },
+            { at: 45.66, text: 'remember that every contribution matters and every idea has the power to create value.' },
+            { at: 53.05, text: 'Together, we are shaping the future of the healthcare.' },
+            { at: 56.97, text: 'Welcome to Tabuk Pharma.' }
         ];
     }
 

@@ -1,0 +1,865 @@
+{
+  "transcript": "Welcome to Tabuk Pharma. At Tabuk Pharma, we believe meaningful transformation is driven by people, and today our journey becomes stronger with you. Since 1994, we have grown into a leading pharmaceutical company in the MENA region, guided by quality, innovation and our commitment to improving lives through healthcare. As healthcare evolves, we see new opportunities to lead, innovate and create lasting impact. Aligned with the Saudi Vision in 2030, we are building a more agile, future ready and innovation driven company to better serve patients and communities. As you begin your journey with us, remember that every contribution matters and every idea has the power to create value. Together, we are shaping the future of the healthcare. Welcome to Tabooq Pharma.",
+  "duration": 0,
+  "words": [
+    {
+      "word": "welcome",
+      "start": 0.39999998,
+      "end": 0.88,
+      "confidence": 0.97802734,
+      "punctuated_word": "Welcome"
+    },
+    {
+      "word": "to",
+      "start": 0.88,
+      "end": 1.04,
+      "confidence": 1.0,
+      "punctuated_word": "to"
+    },
+    {
+      "word": "tabuk",
+      "start": 1.04,
+      "end": 1.4399999,
+      "confidence": 0.6970215,
+      "punctuated_word": "Tabuk"
+    },
+    {
+      "word": "pharma",
+      "start": 1.4399999,
+      "end": 2.1599998,
+      "confidence": 0.80810547,
+      "punctuated_word": "Pharma."
+    },
+    {
+      "word": "at",
+      "start": 2.24,
+      "end": 2.3999999,
+      "confidence": 0.9970703,
+      "punctuated_word": "At"
+    },
+    {
+      "word": "tabuk",
+      "start": 2.3999999,
+      "end": 2.8,
+      "confidence": 0.9980469,
+      "punctuated_word": "Tabuk"
+    },
+    {
+      "word": "pharma",
+      "start": 2.8,
+      "end": 3.4399998,
+      "confidence": 0.8520508,
+      "punctuated_word": "Pharma,"
+    },
+    {
+      "word": "we",
+      "start": 3.6,
+      "end": 3.84,
+      "confidence": 0.9941406,
+      "punctuated_word": "we"
+    },
+    {
+      "word": "believe",
+      "start": 3.84,
+      "end": 4.08,
+      "confidence": 1.0,
+      "punctuated_word": "believe"
+    },
+    {
+      "word": "meaningful",
+      "start": 4.08,
+      "end": 4.88,
+      "confidence": 0.9873047,
+      "punctuated_word": "meaningful"
+    },
+    {
+      "word": "transformation",
+      "start": 4.88,
+      "end": 5.68,
+      "confidence": 0.99902344,
+      "punctuated_word": "transformation"
+    },
+    {
+      "word": "is",
+      "start": 5.68,
+      "end": 6.08,
+      "confidence": 0.99902344,
+      "punctuated_word": "is"
+    },
+    {
+      "word": "driven",
+      "start": 6.08,
+      "end": 6.48,
+      "confidence": 0.9980469,
+      "punctuated_word": "driven"
+    },
+    {
+      "word": "by",
+      "start": 6.48,
+      "end": 6.64,
+      "confidence": 1.0,
+      "punctuated_word": "by"
+    },
+    {
+      "word": "people",
+      "start": 6.64,
+      "end": 7.28,
+      "confidence": 0.67663574,
+      "punctuated_word": "people,"
+    },
+    {
+      "word": "and",
+      "start": 7.3599997,
+      "end": 7.52,
+      "confidence": 0.9980469,
+      "punctuated_word": "and"
+    },
+    {
+      "word": "today",
+      "start": 7.52,
+      "end": 8.24,
+      "confidence": 0.9980469,
+      "punctuated_word": "today"
+    },
+    {
+      "word": "our",
+      "start": 8.24,
+      "end": 8.559999,
+      "confidence": 0.70458984,
+      "punctuated_word": "our"
+    },
+    {
+      "word": "journey",
+      "start": 8.559999,
+      "end": 9.04,
+      "confidence": 1.0,
+      "punctuated_word": "journey"
+    },
+    {
+      "word": "becomes",
+      "start": 9.04,
+      "end": 9.5199995,
+      "confidence": 0.9970703,
+      "punctuated_word": "becomes"
+    },
+    {
+      "word": "stronger",
+      "start": 9.5199995,
+      "end": 10.08,
+      "confidence": 0.99902344,
+      "punctuated_word": "stronger"
+    },
+    {
+      "word": "with",
+      "start": 10.08,
+      "end": 10.4,
+      "confidence": 0.9980469,
+      "punctuated_word": "with"
+    },
+    {
+      "word": "you",
+      "start": 10.4,
+      "end": 10.879999,
+      "confidence": 0.95703125,
+      "punctuated_word": "you."
+    },
+    {
+      "word": "since",
+      "start": 11.12,
+      "end": 11.36,
+      "confidence": 0.9980469,
+      "punctuated_word": "Since"
+    },
+    {
+      "word": "1994",
+      "start": 11.36,
+      "end": 12.4,
+      "confidence": 0.96394855,
+      "punctuated_word": "1994,"
+    },
+    {
+      "word": "we",
+      "start": 12.934999,
+      "end": 13.175,
+      "confidence": 0.9970703,
+      "punctuated_word": "we"
+    },
+    {
+      "word": "have",
+      "start": 13.175,
+      "end": 13.415,
+      "confidence": 0.9980469,
+      "punctuated_word": "have"
+    },
+    {
+      "word": "grown",
+      "start": 13.415,
+      "end": 13.8949995,
+      "confidence": 0.99316406,
+      "punctuated_word": "grown"
+    },
+    {
+      "word": "into",
+      "start": 13.8949995,
+      "end": 14.295,
+      "confidence": 0.9980469,
+      "punctuated_word": "into"
+    },
+    {
+      "word": "a",
+      "start": 14.295,
+      "end": 14.535,
+      "confidence": 0.99902344,
+      "punctuated_word": "a"
+    },
+    {
+      "word": "leading",
+      "start": 14.535,
+      "end": 14.855,
+      "confidence": 0.99902344,
+      "punctuated_word": "leading"
+    },
+    {
+      "word": "pharmaceutical",
+      "start": 14.855,
+      "end": 15.655,
+      "confidence": 0.9902344,
+      "punctuated_word": "pharmaceutical"
+    },
+    {
+      "word": "company",
+      "start": 15.655,
+      "end": 16.055,
+      "confidence": 0.99902344,
+      "punctuated_word": "company"
+    },
+    {
+      "word": "in",
+      "start": 16.055,
+      "end": 16.215,
+      "confidence": 0.99902344,
+      "punctuated_word": "in"
+    },
+    {
+      "word": "the",
+      "start": 16.215,
+      "end": 16.375,
+      "confidence": 0.99121094,
+      "punctuated_word": "the"
+    },
+    {
+      "word": "mena",
+      "start": 16.375,
+      "end": 16.615,
+      "confidence": 0.99853516,
+      "punctuated_word": "MENA"
+    },
+    {
+      "word": "region",
+      "start": 16.615,
+      "end": 17.255,
+      "confidence": 0.84375,
+      "punctuated_word": "region,"
+    },
+    {
+      "word": "guided",
+      "start": 17.335,
+      "end": 17.814999,
+      "confidence": 0.99902344,
+      "punctuated_word": "guided"
+    },
+    {
+      "word": "by",
+      "start": 17.814999,
+      "end": 17.974998,
+      "confidence": 1.0,
+      "punctuated_word": "by"
+    },
+    {
+      "word": "quality",
+      "start": 17.974998,
+      "end": 18.775,
+      "confidence": 0.9189453,
+      "punctuated_word": "quality,"
+    },
+    {
+      "word": "innovation",
+      "start": 18.775,
+      "end": 19.414999,
+      "confidence": 0.99902344,
+      "punctuated_word": "innovation"
+    },
+    {
+      "word": "and",
+      "start": 19.414999,
+      "end": 19.735,
+      "confidence": 0.64404297,
+      "punctuated_word": "and"
+    },
+    {
+      "word": "our",
+      "start": 19.735,
+      "end": 20.215,
+      "confidence": 0.99902344,
+      "punctuated_word": "our"
+    },
+    {
+      "word": "commitment",
+      "start": 20.215,
+      "end": 20.775,
+      "confidence": 1.0,
+      "punctuated_word": "commitment"
+    },
+    {
+      "word": "to",
+      "start": 20.775,
+      "end": 21.095,
+      "confidence": 0.99902344,
+      "punctuated_word": "to"
+    },
+    {
+      "word": "improving",
+      "start": 21.095,
+      "end": 21.654999,
+      "confidence": 0.99902344,
+      "punctuated_word": "improving"
+    },
+    {
+      "word": "lives",
+      "start": 21.654999,
+      "end": 22.215,
+      "confidence": 0.9873047,
+      "punctuated_word": "lives"
+    },
+    {
+      "word": "through",
+      "start": 22.215,
+      "end": 22.535,
+      "confidence": 0.8881836,
+      "punctuated_word": "through"
+    },
+    {
+      "word": "healthcare",
+      "start": 22.535,
+      "end": 23.255,
+      "confidence": 0.85180664,
+      "punctuated_word": "healthcare."
+    },
+    {
+      "word": "as",
+      "start": 23.895,
+      "end": 24.134998,
+      "confidence": 0.9980469,
+      "punctuated_word": "As"
+    },
+    {
+      "word": "healthcare",
+      "start": 24.134998,
+      "end": 24.615,
+      "confidence": 0.9716797,
+      "punctuated_word": "healthcare"
+    },
+    {
+      "word": "evolves",
+      "start": 24.615,
+      "end": 25.175,
+      "confidence": 0.93969727,
+      "punctuated_word": "evolves,"
+    },
+    {
+      "word": "we",
+      "start": 25.63,
+      "end": 25.949999,
+      "confidence": 0.99902344,
+      "punctuated_word": "we"
+    },
+    {
+      "word": "see",
+      "start": 25.949999,
+      "end": 26.189999,
+      "confidence": 0.9941406,
+      "punctuated_word": "see"
+    },
+    {
+      "word": "new",
+      "start": 26.189999,
+      "end": 26.59,
+      "confidence": 0.9980469,
+      "punctuated_word": "new"
+    },
+    {
+      "word": "opportunities",
+      "start": 26.59,
+      "end": 27.31,
+      "confidence": 1.0,
+      "punctuated_word": "opportunities"
+    },
+    {
+      "word": "to",
+      "start": 27.31,
+      "end": 27.63,
+      "confidence": 0.99316406,
+      "punctuated_word": "to"
+    },
+    {
+      "word": "lead",
+      "start": 27.63,
+      "end": 28.269999,
+      "confidence": 0.9914551,
+      "punctuated_word": "lead,"
+    },
+    {
+      "word": "innovate",
+      "start": 28.269999,
+      "end": 28.91,
+      "confidence": 1.0,
+      "punctuated_word": "innovate"
+    },
+    {
+      "word": "and",
+      "start": 28.91,
+      "end": 29.23,
+      "confidence": 0.57714844,
+      "punctuated_word": "and"
+    },
+    {
+      "word": "create",
+      "start": 29.23,
+      "end": 29.71,
+      "confidence": 0.7475586,
+      "punctuated_word": "create"
+    },
+    {
+      "word": "lasting",
+      "start": 29.71,
+      "end": 30.189999,
+      "confidence": 0.99609375,
+      "punctuated_word": "lasting"
+    },
+    {
+      "word": "impact",
+      "start": 30.189999,
+      "end": 31.07,
+      "confidence": 0.9499512,
+      "punctuated_word": "impact."
+    },
+    {
+      "word": "aligned",
+      "start": 31.39,
+      "end": 31.789999,
+      "confidence": 0.9902344,
+      "punctuated_word": "Aligned"
+    },
+    {
+      "word": "with",
+      "start": 31.789999,
+      "end": 31.949999,
+      "confidence": 0.99902344,
+      "punctuated_word": "with"
+    },
+    {
+      "word": "the",
+      "start": 31.949999,
+      "end": 32.11,
+      "confidence": 0.9819336,
+      "punctuated_word": "the"
+    },
+    {
+      "word": "saudi",
+      "start": 32.11,
+      "end": 32.43,
+      "confidence": 0.98828125,
+      "punctuated_word": "Saudi"
+    },
+    {
+      "word": "vision",
+      "start": 32.43,
+      "end": 32.75,
+      "confidence": 0.5366211,
+      "punctuated_word": "Vision"
+    },
+    {
+      "word": "in",
+      "start": 32.75,
+      "end": 32.91,
+      "confidence": 0.80566406,
+      "punctuated_word": "in"
+    },
+    {
+      "word": "2030",
+      "start": 32.91,
+      "end": 33.79,
+      "confidence": 0.98323566,
+      "punctuated_word": "2030,"
+    },
+    {
+      "word": "we",
+      "start": 34.03,
+      "end": 34.11,
+      "confidence": 0.86279297,
+      "punctuated_word": "we"
+    },
+    {
+      "word": "are",
+      "start": 34.11,
+      "end": 34.27,
+      "confidence": 0.7763672,
+      "punctuated_word": "are"
+    },
+    {
+      "word": "building",
+      "start": 34.27,
+      "end": 34.75,
+      "confidence": 0.9980469,
+      "punctuated_word": "building"
+    },
+    {
+      "word": "a",
+      "start": 34.75,
+      "end": 35.07,
+      "confidence": 0.9980469,
+      "punctuated_word": "a"
+    },
+    {
+      "word": "more",
+      "start": 35.07,
+      "end": 35.47,
+      "confidence": 0.9980469,
+      "punctuated_word": "more"
+    },
+    {
+      "word": "agile",
+      "start": 35.47,
+      "end": 36.269997,
+      "confidence": 0.9711914,
+      "punctuated_word": "agile,"
+    },
+    {
+      "word": "future",
+      "start": 36.43,
+      "end": 36.91,
+      "confidence": 0.9667969,
+      "punctuated_word": "future"
+    },
+    {
+      "word": "ready",
+      "start": 36.91,
+      "end": 37.47,
+      "confidence": 0.9970703,
+      "punctuated_word": "ready"
+    },
+    {
+      "word": "and",
+      "start": 37.655003,
+      "end": 37.975002,
+      "confidence": 0.6821289,
+      "punctuated_word": "and"
+    },
+    {
+      "word": "innovation",
+      "start": 37.975002,
+      "end": 38.535,
+      "confidence": 0.9716797,
+      "punctuated_word": "innovation"
+    },
+    {
+      "word": "driven",
+      "start": 38.535,
+      "end": 39.095,
+      "confidence": 0.9951172,
+      "punctuated_word": "driven"
+    },
+    {
+      "word": "company",
+      "start": 39.095,
+      "end": 39.815002,
+      "confidence": 0.9892578,
+      "punctuated_word": "company"
+    },
+    {
+      "word": "to",
+      "start": 39.815002,
+      "end": 40.135002,
+      "confidence": 0.9838867,
+      "punctuated_word": "to"
+    },
+    {
+      "word": "better",
+      "start": 40.135002,
+      "end": 40.455,
+      "confidence": 1.0,
+      "punctuated_word": "better"
+    },
+    {
+      "word": "serve",
+      "start": 40.455,
+      "end": 40.855,
+      "confidence": 1.0,
+      "punctuated_word": "serve"
+    },
+    {
+      "word": "patients",
+      "start": 40.855,
+      "end": 41.495,
+      "confidence": 0.91845703,
+      "punctuated_word": "patients"
+    },
+    {
+      "word": "and",
+      "start": 41.495,
+      "end": 41.895,
+      "confidence": 0.9980469,
+      "punctuated_word": "and"
+    },
+    {
+      "word": "communities",
+      "start": 41.895,
+      "end": 42.775,
+      "confidence": 0.98657227,
+      "punctuated_word": "communities."
+    },
+    {
+      "word": "as",
+      "start": 43.095,
+      "end": 43.335,
+      "confidence": 0.9980469,
+      "punctuated_word": "As"
+    },
+    {
+      "word": "you",
+      "start": 43.335,
+      "end": 43.495003,
+      "confidence": 0.99902344,
+      "punctuated_word": "you"
+    },
+    {
+      "word": "begin",
+      "start": 43.495003,
+      "end": 43.975,
+      "confidence": 0.9580078,
+      "punctuated_word": "begin"
+    },
+    {
+      "word": "your",
+      "start": 43.975,
+      "end": 44.375,
+      "confidence": 0.9970703,
+      "punctuated_word": "your"
+    },
+    {
+      "word": "journey",
+      "start": 44.375,
+      "end": 44.775,
+      "confidence": 1.0,
+      "punctuated_word": "journey"
+    },
+    {
+      "word": "with",
+      "start": 44.775,
+      "end": 45.015,
+      "confidence": 1.0,
+      "punctuated_word": "with"
+    },
+    {
+      "word": "us",
+      "start": 45.015,
+      "end": 45.575,
+      "confidence": 0.92944336,
+      "punctuated_word": "us,"
+    },
+    {
+      "word": "remember",
+      "start": 45.655,
+      "end": 46.215,
+      "confidence": 0.9951172,
+      "punctuated_word": "remember"
+    },
+    {
+      "word": "that",
+      "start": 46.535,
+      "end": 46.935,
+      "confidence": 0.96240234,
+      "punctuated_word": "that"
+    },
+    {
+      "word": "every",
+      "start": 46.935,
+      "end": 47.335,
+      "confidence": 0.97509766,
+      "punctuated_word": "every"
+    },
+    {
+      "word": "contribution",
+      "start": 47.335,
+      "end": 48.135002,
+      "confidence": 0.99902344,
+      "punctuated_word": "contribution"
+    },
+    {
+      "word": "matters",
+      "start": 48.135002,
+      "end": 48.935,
+      "confidence": 1.0,
+      "punctuated_word": "matters"
+    },
+    {
+      "word": "and",
+      "start": 49.127625,
+      "end": 49.607624,
+      "confidence": 0.6254883,
+      "punctuated_word": "and"
+    },
+    {
+      "word": "every",
+      "start": 49.607624,
+      "end": 50.007626,
+      "confidence": 0.9970703,
+      "punctuated_word": "every"
+    },
+    {
+      "word": "idea",
+      "start": 50.007626,
+      "end": 50.487625,
+      "confidence": 0.9951172,
+      "punctuated_word": "idea"
+    },
+    {
+      "word": "has",
+      "start": 50.487625,
+      "end": 50.887623,
+      "confidence": 0.99902344,
+      "punctuated_word": "has"
+    },
+    {
+      "word": "the",
+      "start": 50.887623,
+      "end": 51.127625,
+      "confidence": 0.99902344,
+      "punctuated_word": "the"
+    },
+    {
+      "word": "power",
+      "start": 51.127625,
+      "end": 51.527626,
+      "confidence": 1.0,
+      "punctuated_word": "power"
+    },
+    {
+      "word": "to",
+      "start": 51.527626,
+      "end": 51.927624,
+      "confidence": 1.0,
+      "punctuated_word": "to"
+    },
+    {
+      "word": "create",
+      "start": 51.927624,
+      "end": 52.247623,
+      "confidence": 1.0,
+      "punctuated_word": "create"
+    },
+    {
+      "word": "value",
+      "start": 52.247623,
+      "end": 52.967625,
+      "confidence": 0.9675293,
+      "punctuated_word": "value."
+    },
+    {
+      "word": "together",
+      "start": 53.047623,
+      "end": 53.687626,
+      "confidence": 0.8166504,
+      "punctuated_word": "Together,"
+    },
+    {
+      "word": "we",
+      "start": 54.167625,
+      "end": 54.247623,
+      "confidence": 0.99609375,
+      "punctuated_word": "we"
+    },
+    {
+      "word": "are",
+      "start": 54.247623,
+      "end": 54.567623,
+      "confidence": 0.9970703,
+      "punctuated_word": "are"
+    },
+    {
+      "word": "shaping",
+      "start": 54.567623,
+      "end": 54.967625,
+      "confidence": 0.984375,
+      "punctuated_word": "shaping"
+    },
+    {
+      "word": "the",
+      "start": 54.967625,
+      "end": 55.207626,
+      "confidence": 0.99902344,
+      "punctuated_word": "the"
+    },
+    {
+      "word": "future",
+      "start": 55.207626,
+      "end": 55.527626,
+      "confidence": 0.99902344,
+      "punctuated_word": "future"
+    },
+    {
+      "word": "of",
+      "start": 55.527626,
+      "end": 55.687626,
+      "confidence": 0.99902344,
+      "punctuated_word": "of"
+    },
+    {
+      "word": "the",
+      "start": 55.687626,
+      "end": 55.847626,
+      "confidence": 0.6113281,
+      "punctuated_word": "the"
+    },
+    {
+      "word": "healthcare",
+      "start": 55.847626,
+      "end": 56.567623,
+      "confidence": 0.86743164,
+      "punctuated_word": "healthcare."
+    },
+    {
+      "word": "welcome",
+      "start": 56.967625,
+      "end": 57.367622,
+      "confidence": 0.99121094,
+      "punctuated_word": "Welcome"
+    },
+    {
+      "word": "to",
+      "start": 57.367622,
+      "end": 57.687626,
+      "confidence": 0.99902344,
+      "punctuated_word": "to"
+    },
+    {
+      "word": "tabooq",
+      "start": 57.687626,
+      "end": 58.167625,
+      "confidence": 0.7128906,
+      "punctuated_word": "Tabooq"
+    },
+    {
+      "word": "pharma",
+      "start": 58.167625,
+      "end": 58.487625,
+      "confidence": 0.80908203,
+      "punctuated_word": "Pharma."
+    }
+  ],
+  "metadata": {
+    "model": "deepgram-nova-3",
+    "language": "en",
+    "confidence": 0
+  }
+}

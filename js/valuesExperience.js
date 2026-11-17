@@ -296,15 +296,19 @@
         }
 
         goToLift() {
+            this.goToLevel2Reception();
+        }
+
+        /** Level 2 CTA — send to reception portal (Tariq + name only) */
+        goToLevel2Reception() {
             this.close({ restore: false });
             this._setSceneChromeHidden(false);
-            const scene = window.COURSE_DATA && window.COURSE_DATA.scenes.reception;
-            const hotspot = scene && (scene.hotspots || []).find((item) => item.id === 'next_destination');
-            if (!this.app || !hotspot || typeof this.app.playPortalTransitionVideo !== 'function') return;
-            if (!this.app.currentSceneId) this.app.currentSceneId = 'reception';
-            if (typeof this.app.unlockLiftHotspot === 'function') this.app.unlockLiftHotspot();
-            else this.app.receptionLiftUnlocked = true;
-            this.app.playPortalTransitionVideo(hotspot);
+            if (!this.app) return;
+            if (typeof this.app.enterLevel2Reception === 'function') {
+                this.app.enterLevel2Reception();
+            } else if (typeof this.app.goToScene === 'function') {
+                this.app.goToScene('reception');
+            }
         }
 
         _showVision(step) {
@@ -735,8 +739,8 @@
                             </article>`).join('')}
                     </div>
                     <p class="vmv-dots" aria-hidden="true">\u25CF \u25CF \u25CF \u25CF</p>
-                    <p class="vmv-level2-cue">Follow the arrows back to the reception area to begin Level 2.</p>
-                    <button type="button" class="vmv-lift" data-action="lift">Lift</button>
+                    <p class="vmv-level2-cue">Continue to the reception area to begin Level 2.</p>
+                    <button type="button" class="vmv-lift vmv-level2-btn" data-action="level2">Level 2</button>
                 </div>`;
         }
 
@@ -751,7 +755,7 @@
             else if (action === 'vault') this._showVaultIntro();
             else if (action === 'begin') this._beginScenario(0);
             else if (action === 'continue') this._continueAfterCorrect();
-            else if (action === 'lift') this.goToLift();
+            else if (action === 'level2' || action === 'lift') this.goToLevel2Reception();
         }
 
         _bindWindowDrag() {
@@ -865,6 +869,10 @@
             const hud = document.getElementById('hud-layer');
             if (hotspotsLayer) hotspotsLayer.style.visibility = hidden ? 'hidden' : '';
             if (hud) hud.style.visibility = hidden ? 'hidden' : '';
+            // 3D Tariq lives in the sphere — hide him while VMV is open
+            if (this.app && typeof this.app.hideGuideCharacter === 'function') {
+                this.app.hideGuideCharacter(!!hidden);
+            }
             if (!hidden && this.app && this.app.hotspots && this.app.currentSceneId && window.COURSE_DATA) {
                 const scene = window.COURSE_DATA.scenes[this.app.currentSceneId];
                 if (scene && typeof this.app._buildHotspotList === 'function') {
