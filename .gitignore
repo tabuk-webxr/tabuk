@@ -79,3 +79,4 @@ crashlytics-build.properties
 *.ppt
 implementation_plan.md
 .cursor/
+storyboard_export/
