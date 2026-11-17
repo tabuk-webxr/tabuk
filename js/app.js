@@ -16,7 +16,41 @@ class WebXRApp {
         this.receptionChroUnlocked = false;
         this.receptionRightUnlocked = false;
         this.receptionRightArrived = false;
+        this.receptionVmvEntryUnlocked = false;
         this.receptionLiftUnlocked = false;
+        this._devSlideIndex = -1;
+        // Full induction scrubber — start → end (Level 1 + Level 2 scenes)
+        this._devSlides = [
+            { id: 'approach', label: '01 Approach', kind: 'scene', scene: 'approach' },
+            { id: 'welcome', label: '02 Welcome ENTER', kind: 'scene', scene: 'welcome', gates: { welcomeModal: true, welcomePortal: false } },
+            { id: 'welcome_portal', label: '03 Welcome → Reception', kind: 'scene', scene: 'welcome', gates: { welcomeModal: false, welcomePortal: true } },
+            { id: 'reception_ceo', label: '04 Reception CEO', kind: 'scene', scene: 'reception', gates: { chro: false, right: false, rightArrived: false, vmv: false, lift: false, tip: 'ceo' } },
+            { id: 'reception_chro', label: '05 Reception CHRO', kind: 'scene', scene: 'reception', gates: { chro: true, right: false, rightArrived: false, vmv: false, lift: false, tip: 'chro' } },
+            { id: 'reception_who_arrow', label: '06 Who We Are arrow', kind: 'scene', scene: 'reception', gates: { chro: true, right: true, rightArrived: false, vmv: false, lift: false } },
+            { id: 'reception_tv', label: '07 TV Play Who We Are', kind: 'scene', scene: 'reception', gates: { chro: true, right: true, rightArrived: true, vmv: false, lift: false } },
+            { id: 'timeline', label: '08 Timeline', kind: 'cinematic', mode: 'timeline' },
+            { id: 'people', label: '09 People', kind: 'cinematic', mode: 'people' },
+            { id: 'footprint', label: '10 Footprint', kind: 'cinematic', mode: 'footprint' },
+            { id: 'scale', label: '11 Scale', kind: 'cinematic', mode: 'scale' },
+            { id: 'reception_guides', label: '12 Discover guides arrow', kind: 'scene', scene: 'reception', gates: { chro: true, right: true, rightArrived: true, vmv: true, lift: false } },
+            { id: 'vision', label: '13 Vision', kind: 'values', mode: 'vision' },
+            { id: 'mission', label: '14 Mission', kind: 'values', mode: 'mission' },
+            { id: 'values', label: '15 Values intro', kind: 'values', mode: 'values' },
+            { id: 'vault', label: '16 Vault intro', kind: 'values', mode: 'vault' },
+            { id: 'scenario1', label: '17 Vault scenario 1', kind: 'values', mode: 'scenario:0' },
+            { id: 'scenario2', label: '18 Vault scenario 2', kind: 'values', mode: 'scenario:1' },
+            { id: 'scenario3', label: '19 Vault scenario 3', kind: 'values', mode: 'scenario:2' },
+            { id: 'scenario4', label: '20 Vault scenario 4', kind: 'values', mode: 'scenario:3' },
+            { id: 'summary', label: '21 Summary → Level 2', kind: 'values', mode: 'summary' },
+            { id: 'reception_lift', label: '22 Lift unlocked', kind: 'scene', scene: 'reception', gates: { chro: true, right: true, rightArrived: true, vmv: true, lift: true } },
+            { id: 'elevator', label: '23 Elevator Level 2', kind: 'scene', scene: 'riyadh_elevator' },
+            { id: 'dammam', label: '24 Dammam plant', kind: 'scene', scene: 'dammam_reception' },
+            { id: 'lab', label: '25 QC Lab', kind: 'scene', scene: 'dammam_lab' },
+            { id: 'campus', label: '26 Tabuk campus', kind: 'scene', scene: 'tabuk_plant' },
+            { id: 'boardroom', label: '27 Boardroom', kind: 'scene', scene: 'tabuk_boardroom' },
+            { id: 'assessment', label: '28 Assessment', kind: 'scene', scene: 'assessment_hub' },
+            { id: 'completion', label: '29 Completion', kind: 'scene', scene: 'completion' }
+        ];
         this.welcomePortalUnlocked = false;
         this._receptionTipTimer = null;
         this._chroIntroAudio = null;
@@ -79,7 +113,13 @@ class WebXRApp {
         this.assets = new window.AssetLoader();
         this.bindAssetLoadingUI();
         const cinematicMode = new URLSearchParams(window.location.search).get('cinematic');
-        if (cinematicMode === 'timeline' || cinematicMode === 'people' || cinematicMode === 'footprint') {
+        if (
+            cinematicMode === 'timeline'
+            || cinematicMode === 'people'
+            || cinematicMode === 'footprint'
+            || cinematicMode === 'scale'
+            || cinematicMode === 'closing'
+        ) {
             this.hideAssetLoadingScreen();
             this._openCinematicPreview(cinematicMode);
             return;
@@ -93,27 +133,16 @@ class WebXRApp {
     }
 
     _openCinematicPreview(mode) {
-        this.showTimelineCinematic();
-        this._clearTimelineBeats();
-        this._stopCinematicSpeech();
-        const overlay = document.getElementById('timeline-cinematic-overlay');
-        if (!overlay) return;
-        overlay.classList.add(
-            'is-open',
-            'is-beat-1', 'is-beat-2', 'is-beat-3', 'is-beat-4',
-            'is-node-1', 'is-node-2', 'is-node-3', 'is-node-4',
-            'is-draw-4'
-        );
-        this._alignTimelineLineSoon();
-        if (mode === 'people') {
-            overlay.classList.add('is-people', 'is-people-beat-1', 'is-people-beat-2');
+        if (mode === 'closing') {
+            this._returnToWhoWeAreForVmvEntry();
+            return;
         }
-        if (mode === 'footprint') {
-            overlay.classList.add('is-people', 'is-footprint', 'is-foot-out');
-            this.applyFootprintPins();
-            this._syncDevFootprintClass();
-            this._offerValuesExperience();
+        const idx = this._devSlides.findIndex((s) => s.mode === mode || s.id === mode);
+        if (idx >= 0) {
+            this.devGotoSlide(idx);
+            return;
         }
+        this._devShowCinematicSlide(mode || 'timeline');
     }
 
     bindAssetLoadingUI() {
@@ -610,7 +639,7 @@ class WebXRApp {
             tipShowBtn.addEventListener('click', () => {
                 this.showReceptionTip(
                     'Welcome to Tabuk Pharmaceuticals!<br><em>Your journey starts here.</em>',
-                    { animate: false, showAvatar: true }
+                    { animate: false, showAvatar: false }
                 );
                 this.applyTipPlacementStyles();
             });
@@ -632,13 +661,19 @@ class WebXRApp {
             });
         }
 
-        // Space toggles DEV panel on every scene
+        // Space toggles DEV panel; ← → change slides when DEV is open
         window.addEventListener('keydown', (e) => {
-            if (e.code !== 'Space' && e.key !== ' ') return;
             const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
             if (tag === 'input' || tag === 'textarea' || tag === 'select' || (e.target && e.target.isContentEditable)) {
                 return;
             }
+            if (this.devPanelOpen && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+                e.preventDefault();
+                if (e.key === 'ArrowLeft') this.devSlidePrev();
+                else this.devSlideNext();
+                return;
+            }
+            if (e.code !== 'Space' && e.key !== ' ') return;
             e.preventDefault();
             this.toggleDevOrientationPanel();
         });
@@ -666,7 +701,241 @@ class WebXRApp {
 
         this.syncDevTipPlacementSliders();
         this.applyTipPlacementStyles();
+        this.bindDevSlideNav();
         this.bindDevFootprintPins();
+    }
+
+    bindDevSlideNav() {
+        const prev = document.getElementById('dev-slide-prev');
+        const next = document.getElementById('dev-slide-next');
+        const prevFab = document.getElementById('dev-slide-prev-fab');
+        const nextFab = document.getElementById('dev-slide-next-fab');
+        const select = document.getElementById('dev-slide-select');
+        if (prev) prev.addEventListener('click', () => this.devSlidePrev());
+        if (next) next.addEventListener('click', () => this.devSlideNext());
+        if (prevFab) prevFab.addEventListener('click', () => this.devSlidePrev());
+        if (nextFab) nextFab.addEventListener('click', () => this.devSlideNext());
+        if (select) {
+            select.innerHTML = this._devSlides
+                .map((s, i) => `<option value="${i}">${i + 1}. ${s.label.replace(/^\d+\s*/, '')}</option>`)
+                .join('');
+            select.addEventListener('change', () => {
+                const idx = parseInt(select.value, 10);
+                if (!Number.isNaN(idx)) this.devGotoSlide(idx);
+            });
+        }
+        this._updateDevSlideLabel();
+    }
+
+    _updateDevSlideLabel() {
+        const total = this._devSlides.length;
+        const slide = this._devSlides[this._devSlideIndex];
+        const text = slide
+            ? `${this._devSlideIndex + 1}/${total} · ${slide.label}`
+            : `—/${total} · press Next`;
+        const panelLabel = document.getElementById('dev-slide-label');
+        const fabLabel = document.getElementById('dev-slide-nav-label');
+        const select = document.getElementById('dev-slide-select');
+        if (panelLabel) panelLabel.textContent = text;
+        if (fabLabel) fabLabel.textContent = text;
+        if (select && this._devSlideIndex >= 0) select.value = String(this._devSlideIndex);
+
+        const prevDisabled = this._devSlideIndex <= 0;
+        const nextDisabled = this._devSlideIndex >= total - 1 && this._devSlideIndex >= 0;
+        ['dev-slide-prev', 'dev-slide-prev-fab'].forEach((id) => {
+            const el = document.getElementById(id);
+            if (el) el.disabled = prevDisabled;
+        });
+        ['dev-slide-next', 'dev-slide-next-fab'].forEach((id) => {
+            const el = document.getElementById(id);
+            if (el) el.disabled = nextDisabled;
+        });
+    }
+
+    _syncDevSlideNavVisibility() {
+        const nav = document.getElementById('dev-slide-nav');
+        if (!nav) return;
+        nav.hidden = !this.devPanelOpen;
+    }
+
+    _devCloseExperiences() {
+        this._clearTimelineBeats();
+        this._stopCinematicSpeech();
+        this._sceneTransitioning = false;
+        if (this.valuesExperience && this.valuesExperience.isOpen) {
+            this.valuesExperience.close({ restore: false });
+        }
+        this.hideTimelineCinematic({ restoreScene: false });
+        if (window.modalManager && typeof window.modalManager.close === 'function') {
+            window.modalManager.close();
+        }
+        const welcomeOverlay = document.getElementById('welcome-modal-overlay');
+        const assessmentOverlay = document.getElementById('assessment-modal-overlay');
+        const completionOverlay = document.getElementById('completion-modal-overlay');
+        if (welcomeOverlay) welcomeOverlay.classList.remove('active');
+        if (assessmentOverlay) assessmentOverlay.classList.remove('active');
+        if (completionOverlay) completionOverlay.classList.remove('active');
+        this.hideReceptionTip();
+        this.stopCeoIntroAudio();
+        this.stopChroIntroAudio();
+        this.stopWelcomeEnterAudio();
+        this.stopTipAvatar();
+    }
+
+    _devApplyGates(gates = {}) {
+        if (typeof gates.welcomePortal === 'boolean') {
+            this.welcomePortalUnlocked = gates.welcomePortal;
+        }
+        if (typeof gates.chro === 'boolean') this.receptionChroUnlocked = gates.chro;
+        if (typeof gates.right === 'boolean') this.receptionRightUnlocked = gates.right;
+        if (typeof gates.rightArrived === 'boolean') this.receptionRightArrived = gates.rightArrived;
+        if (typeof gates.vmv === 'boolean') this.receptionVmvEntryUnlocked = gates.vmv;
+        if (typeof gates.lift === 'boolean') this.receptionLiftUnlocked = gates.lift;
+
+        const welcomeOverlay = document.getElementById('welcome-modal-overlay');
+        if (welcomeOverlay && typeof gates.welcomeModal === 'boolean') {
+            welcomeOverlay.classList.toggle('active', !!gates.welcomeModal);
+            if (gates.welcomeModal) this.playWelcomeEnterAudio();
+            else this.stopWelcomeEnterAudio();
+        }
+
+        const scene = window.COURSE_DATA && window.COURSE_DATA.scenes[this.currentSceneId];
+        if (scene && this.hotspots) {
+            this.hotspots.setHotspots(this._buildHotspotList(scene));
+            if (this.viewer && typeof this.viewer.syncScreenOverlays === 'function') {
+                this.viewer.syncScreenOverlays(this._visibleScreenOverlays(scene));
+            }
+        }
+        if (this.devPanelOpen) this.refreshDevHotspotList();
+
+        if (gates.tip === 'ceo') {
+            this.showReceptionTip(
+                'Welcome to Tabuk Pharmaceuticals!<br><em>Your journey starts here.</em>',
+                { showAvatar: false }
+            );
+        } else if (gates.tip === 'chro') {
+            this.showReceptionTip(
+                'And now, a personal welcome from our CHRO.',
+                { animate: true, showAvatar: false }
+            );
+        } else if (this.currentSceneId === 'reception') {
+            this.hideReceptionTip();
+            this.stopCeoIntroAudio();
+            this.stopChroIntroAudio();
+        }
+    }
+
+    _devGotoScene(sceneId, gates = {}) {
+        this._devCloseExperiences();
+        // Pre-set gates so _finishSceneUI tip logic sees them when landing on reception
+        if (gates.chro !== undefined || gates.right !== undefined || gates.lift !== undefined) {
+            this._devApplyGates({
+                chro: !!gates.chro,
+                right: !!gates.right,
+                rightArrived: !!gates.rightArrived,
+                vmv: !!gates.vmv,
+                lift: !!gates.lift
+            });
+        }
+        const alreadyThere = this.currentSceneId === sceneId;
+        if (!alreadyThere) {
+            this.goToScene(sceneId);
+        }
+        // Re-apply after HUD defaults so DEV gates win
+        requestAnimationFrame(() => {
+            this._devApplyGates(gates);
+            setTimeout(() => this._devApplyGates(gates), 80);
+        });
+    }
+
+    devSlideNext() {
+        const max = this._devSlides.length - 1;
+        const next = this._devSlideIndex < 0 ? 0 : Math.min(max, this._devSlideIndex + 1);
+        this.devGotoSlide(next);
+    }
+
+    devSlidePrev() {
+        if (this._devSlideIndex < 0) {
+            this.devGotoSlide(0);
+            return;
+        }
+        this.devGotoSlide(Math.max(0, this._devSlideIndex - 1));
+    }
+
+    devGotoSlide(index) {
+        const slide = this._devSlides[index];
+        if (!slide) return;
+        this._devSlideIndex = index;
+        this._updateDevSlideLabel();
+
+        if (slide.kind === 'scene') {
+            this._devGotoScene(slide.scene, slide.gates || {});
+            return;
+        }
+
+        if (slide.kind === 'cinematic') {
+            this._devCloseExperiences();
+            this._devShowCinematicSlide(slide.mode);
+            return;
+        }
+
+        if (slide.kind === 'values') {
+            this._devCloseExperiences();
+            if (this.valuesExperience) {
+                if (!this.valuesExperience.isOpen) {
+                    this.valuesExperience.open({ devJump: slide.mode });
+                } else {
+                    this.valuesExperience.devJump(slide.mode, { silent: true });
+                }
+            }
+        }
+    }
+
+    _devShowCinematicSlide(mode) {
+        const overlay = document.getElementById('timeline-cinematic-overlay');
+        if (!overlay) return;
+
+        const hotspotsLayer = document.getElementById('hotspots-layer');
+        const hud = document.getElementById('hud-layer');
+        if (hotspotsLayer) hotspotsLayer.style.visibility = 'hidden';
+        if (hud) hud.style.visibility = 'hidden';
+        if (this.hotspots) this.hotspots.setHotspots([]);
+        if (this.viewer && typeof this.viewer.syncScreenOverlays === 'function') {
+            this.viewer.syncScreenOverlays([]);
+        }
+
+        const valuesEntry = document.getElementById('values-entry-arrow');
+        if (valuesEntry) valuesEntry.hidden = true;
+        const posterHotspot = document.getElementById('vmv-poster-hotspot');
+        if (posterHotspot) posterHotspot.hidden = true;
+
+        overlay.hidden = false;
+        overlay.className = 'timeline-cinematic is-open';
+        overlay.querySelectorAll('.people-purpose-photo, .footprint-map').forEach((photo) => {
+            const path = photo.getAttribute('src') || '';
+            const bare = path.split('?')[0];
+            if (bare) photo.src = this.resolveMediaUrl(bare);
+        });
+        this.applyFootprintPins();
+
+        // Full timeline beats unlocked for static preview
+        overlay.classList.add(
+            'is-beat-1', 'is-beat-2', 'is-beat-3', 'is-beat-4',
+            'is-node-1', 'is-node-2', 'is-node-3', 'is-node-4',
+            'is-draw-4'
+        );
+        this._alignTimelineLineSoon();
+
+        if (mode === 'people') {
+            overlay.classList.add('is-people', 'is-people-beat-1', 'is-people-beat-2');
+        } else if (mode === 'footprint') {
+            overlay.classList.add('is-people', 'is-footprint', 'is-foot-out');
+            this._syncDevFootprintClass();
+        } else if (mode === 'scale') {
+            overlay.classList.add('is-people', 'is-footprint', 'is-scale');
+            this._runScaleImpactCounts();
+        }
+        // mode === 'timeline' keeps timeline stage only
     }
 
     syncDevTipPlacementSliders() {
@@ -1224,7 +1493,9 @@ class WebXRApp {
             this.syncDevFootprintSliders();
             this.applyFootprintPins();
             this.applyDevPanelSide();
+            this._updateDevSlideLabel();
         }
+        this._syncDevSlideNavVisibility();
         this._syncDevFootprintClass();
     }
 
@@ -1714,7 +1985,11 @@ class WebXRApp {
                     return { ...h, hidden: this.receptionRightArrived, locked: true };
                 }
                 if (h.id === 'reception_right_video') {
-                    return { ...h, hidden: !this.receptionRightArrived };
+                    // Hide TV play once Who We Are cinematic is done (VMV entry arrow takes over)
+                    return {
+                        ...h,
+                        hidden: !this.receptionRightArrived || this.receptionVmvEntryUnlocked
+                    };
                 }
                 // Right-reception arrow after CHRO close, before the lift
                 if (h.id === 'next_reception_right') {
@@ -1722,6 +1997,14 @@ class WebXRApp {
                         ...h,
                         hidden: !this.receptionRightUnlocked || this.receptionRightArrived,
                         locked: !this.receptionRightUnlocked
+                    };
+                }
+                // After Who We Are cinematic — arrow in 360 to open Vision / Mission / Values
+                if (h.id === 'discover_what_guides') {
+                    return {
+                        ...h,
+                        hidden: !this.receptionVmvEntryUnlocked || this.receptionLiftUnlocked,
+                        locked: !this.receptionVmvEntryUnlocked
                     };
                 }
                 // Lift arrow only after the right-reception click
@@ -1928,12 +2211,19 @@ class WebXRApp {
         if (this.devPanelOpen) {
             this.refreshDevHotspotList();
         }
+        // Slide 8 — post-CHRO bridge tip before Who We Are
+        this.showReceptionTip(
+            'Discover our story and our presence across the region.<br><em>Follow the arrow to discover who we are.</em>',
+            { showAvatar: false }
+        );
+        this._speakCinematicLine(
+            'Now that you have heard from our leaders, let\'s take a closer look at Tabuk. Follow the arrow to discover our story and our presence across the region.'
+        );
     }
 
     revealReceptionRightArrival() {
         this.receptionRightArrived = true;
         // Lift stays locked until Vision/Mission/Values completes (slide 35).
-        this.hideReceptionTip();
         const scene = window.COURSE_DATA.scenes.reception;
         if (!scene || this.currentSceneId !== 'reception' || !this.hotspots) return;
 
@@ -1946,6 +2236,8 @@ class WebXRApp {
             this.refreshDevScreenOverlayList();
         }
         this.syncDevOrientationPanel();
+        // Slide 9 — prompt to play Who We Are on the TV
+        this.showReceptionTip('Click Play to discover who we are.', { showAvatar: false });
     }
 
     openValuesExperienceFromPoster() {
@@ -2351,6 +2643,7 @@ class WebXRApp {
             this.receptionChroUnlocked = false;
             this.receptionRightUnlocked = false;
             this.receptionRightArrived = false;
+            this.receptionVmvEntryUnlocked = false;
             this.receptionLiftUnlocked = false;
         }
 
@@ -2543,13 +2836,82 @@ class WebXRApp {
             this._playFootprintTone(index);
             this._speakCinematicLine(step.text, () => {
                 if (index < lines.length - 1) speakStep(index + 1);
-                else this._offerValuesExperience();
+                else this._revealScaleImpactScreen(overlay);
             });
         };
         speakStep(0);
     }
 
+    _revealScaleImpactScreen(overlay) {
+        if (!overlay || overlay.hidden) return;
+        overlay.classList.remove('is-foot-ksa', 'is-foot-gulf', 'is-foot-nafrica', 'is-foot-out');
+        overlay.classList.add('is-scale');
+        this._runScaleImpactCounts();
+        this._speakCinematicLine(
+            'Tabuk now operates across 17 plus countries, helping improve access to trusted medicines across the Middle East and North Africa. With 280 plus registered products, Tabuk addresses diverse therapeutic needs that support patients across multiple health conditions. A team of 2,400 plus employees works across functions and locations, ensuring every product meets the highest standards of quality and care.',
+            () => this._revealWhoClosingScreen(overlay)
+        );
+    }
+
+    _runScaleImpactCounts() {
+        const cards = [
+            { sel: '[data-scale-card="countries"] [data-scale-count]', target: 17, duration: 1200 },
+            { sel: '[data-scale-card="products"] [data-scale-count]', target: 280, duration: 1400 },
+            { sel: '[data-scale-card="employees"] [data-scale-count]', target: 2400, duration: 1600 }
+        ];
+        cards.forEach((card, index) => {
+            const el = document.querySelector(card.sel);
+            if (!el) return;
+            el.textContent = '0';
+            const startAt = 180 + index * 420;
+            const id = setTimeout(() => this._animateScaleCount(el, card.target, card.duration), startAt);
+            this._timelineBeatTimers.push(id);
+        });
+    }
+
+    _animateScaleCount(el, target, duration) {
+        const started = performance.now();
+        const format = (value) => {
+            if (target >= 1000) return value.toLocaleString('en-US');
+            return String(value);
+        };
+        const tick = (now) => {
+            const overlay = document.getElementById('timeline-cinematic-overlay');
+            if (!overlay || overlay.hidden || !overlay.classList.contains('is-scale')) return;
+            const t = Math.min(1, (now - started) / duration);
+            const eased = 1 - Math.pow(1 - t, 3);
+            el.textContent = format(Math.round(target * eased));
+            if (t < 1) requestAnimationFrame(tick);
+            else el.textContent = format(target);
+        };
+        requestAnimationFrame(tick);
+    }
+
+    _revealWhoClosingScreen(overlay) {
+        // Slide 14 OST capsule removed — keep bridge VO, then return to Who We Are 360 hotspot
+        if (!overlay || overlay.hidden) return;
+        this._speakCinematicLine(
+            'You have now had a glimpse of who we are, where we operate, and the difference we strive to make. However, what guides us as we continue to grow? What is the purpose that brings us together and shapes the work we do? Let\'s explore our Vision and Mission to discover what we stand for and where we are headed. Look around and follow the directional arrows to continue your learning journey!',
+            () => this._returnToWhoWeAreForVmvEntry()
+        );
+    }
+
+    _returnToWhoWeAreForVmvEntry() {
+        this.receptionVmvEntryUnlocked = true;
+        // Keep right-side Who We Are context (TV + guide) when returning to 360
+        this.receptionRightArrived = true;
+        this.hideTimelineCinematic({ restoreScene: true });
+        if (this.currentSceneId !== 'reception') {
+            this.goToScene('reception');
+        } else if (this.hotspots && window.COURSE_DATA) {
+            const scene = window.COURSE_DATA.scenes.reception;
+            if (scene) this.hotspots.setHotspots(this._buildHotspotList(scene));
+        }
+        this.hideReceptionTip();
+    }
+
     _offerValuesExperience() {
+        // Dev / cinematic preview fallback — live flow uses the 360 discover arrow
         const overlay = document.getElementById('timeline-cinematic-overlay');
         const arrow = document.getElementById('values-entry-arrow');
         const poster = document.getElementById('vmv-poster-hotspot');
@@ -2676,6 +3038,12 @@ class WebXRApp {
                     this.stopTipAvatar();
                 }
                 window.modalManager.showComplexModal(hotspot.modalId);
+                return;
+            }
+            // Who We Are 360 — arrow opens Vision / Mission / Values experience
+            if (hotspot.id === 'discover_what_guides' || hotspot.openValuesExperience) {
+                this.hideReceptionTip();
+                if (this.valuesExperience) this.valuesExperience.open({ start: 'vision' });
                 return;
             }
             if (hotspot.transitionVideo) {

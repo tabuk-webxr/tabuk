@@ -2619,6 +2619,68 @@ html, body {
     flex: 1;
 }
 
+.dev-slide-label {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: #93C5FD;
+    margin: 0 0 8px;
+}
+
+.dev-slide-nav {
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    z-index: 45;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.92);
+    border: 1px solid rgba(251, 191, 36, 0.55);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+    pointer-events: auto;
+}
+
+.dev-slide-nav[hidden] {
+    display: none !important;
+}
+
+.dev-slide-nav-btn {
+    border: 1px solid rgba(251, 191, 36, 0.45);
+    background: rgba(251, 191, 36, 0.12);
+    color: #FDE68A;
+    font-family: var(--font-heading);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 8px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+}
+
+.dev-slide-nav-btn:hover {
+    background: rgba(251, 191, 36, 0.22);
+}
+
+.dev-slide-nav-btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+    pointer-events: none;
+}
+
+.dev-slide-nav-label {
+    min-width: 160px;
+    max-width: 42vw;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: #93C5FD;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .dev-orientation-header {
     font-family: var(--font-heading);
     font-size: 12px;
@@ -2703,6 +2765,12 @@ html, body {
     cursor: pointer;
     color: #FDE68A;
     background: rgba(251, 191, 36, 0.12);
+}
+
+.dev-secondary-btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+    pointer-events: none;
 }
 
 .dev-secondary-btn:hover {
@@ -6782,4 +6850,169 @@ html, body {
     left: 1.8%;
     top: 58.7%;
     width: 29.175%;
+}
+
+/* ==========================================================================
+   Who We Are — Scale & Impact (Slide 13) + Closing bridge (Slide 14)
+   Inserted after footprint; keeps current dark glass language.
+   ========================================================================== */
+.timeline-cinematic.is-scale,
+.timeline-cinematic.is-closing {
+    background:
+        radial-gradient(ellipse 70% 55% at 50% 40%, rgba(0, 120, 190, 0.22), transparent 70%),
+        linear-gradient(165deg, rgba(7, 18, 37, 0.82), rgba(6, 15, 31, 0.9)),
+        url("../assets/images/vmv_lobby.png") center / cover no-repeat;
+    padding: 0;
+}
+
+.timeline-cinematic.is-scale .footprint-screen,
+.timeline-cinematic.is-closing .footprint-screen,
+.timeline-cinematic.is-scale .people-purpose-screen,
+.timeline-cinematic.is-closing .people-purpose-screen,
+.timeline-cinematic.is-scale .timeline-cinematic-stage,
+.timeline-cinematic.is-closing .timeline-cinematic-stage {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.scale-impact-screen,
+.who-closing-screen {
+    position: absolute;
+    top: 38px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.7s ease;
+    z-index: 4;
+}
+
+.timeline-cinematic.is-scale .scale-impact-screen {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.timeline-cinematic.is-closing .scale-impact-screen {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.timeline-cinematic.is-closing .who-closing-screen {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.scale-impact-dim {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(6, 16, 34, 0.2), rgba(6, 16, 34, 0.55));
+    pointer-events: none;
+}
+
+.scale-impact-cards {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(14px, 2.2vw, 32px);
+    width: min(920px, 92%);
+    padding: 0 16px;
+    box-sizing: border-box;
+}
+
+.scale-impact-card {
+    --sa: #34C79A;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: clamp(120px, 18vh, 180px);
+    padding: clamp(18px, 2.4vw, 34px) clamp(14px, 1.8vw, 24px);
+    border-radius: 18px;
+    border: 2px solid var(--sa);
+    background:
+        radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--sa) 22%, transparent), transparent 70%),
+        linear-gradient(150deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.4), 0 0 28px color-mix(in srgb, var(--sa) 28%, transparent);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    text-align: center;
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+    animation: scaleImpactRise 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.scale-impact-card.is-countries { --sa: #34C79A; animation-delay: 0.08s; }
+.scale-impact-card.is-products { --sa: #E2B84A; animation-delay: 0.28s; }
+.scale-impact-card.is-employees { --sa: #5BA4D9; animation-delay: 0.48s; }
+
+.scale-impact-value {
+    margin: 0;
+    font-family: var(--font-heading), "Helvetica Neue", Arial, sans-serif;
+    font-size: clamp(34px, 5vw, 64px);
+    font-weight: 800;
+    line-height: 1;
+    color: var(--sa);
+    letter-spacing: 0.01em;
+}
+
+.scale-impact-label {
+    margin: 0;
+    font-size: clamp(13px, 1.5vw, 20px);
+    font-weight: 600;
+    color: #ffffff;
+    letter-spacing: 0.02em;
+}
+
+@keyframes scaleImpactRise {
+    to { opacity: 1; transform: none; }
+}
+
+.who-closing-ost {
+    margin: 0;
+    max-width: min(760px, 88%);
+    padding: clamp(16px, 2vw, 28px) clamp(22px, 3vw, 42px);
+    border-radius: 999px;
+    border: 1px solid rgba(226, 184, 74, 0.7);
+    background: linear-gradient(90deg, rgba(226, 184, 74, 0.22), rgba(226, 184, 74, 0.08));
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.35), 0 0 28px rgba(226, 184, 74, 0.2);
+    color: #ffffff;
+    font-family: var(--font-heading), "Helvetica Neue", Arial, sans-serif;
+    font-size: clamp(16px, 2vw, 28px);
+    font-weight: 650;
+    text-align: center;
+    line-height: 1.35;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    animation: scaleImpactRise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Summary Level 2 cue (Slide 34) — keep Lift button */
+.vmv-summary .vmv-level2-cue {
+    position: relative;
+    z-index: 3;
+    margin: 0;
+    max-width: 40em;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.88);
+    font-size: clamp(13px, 1.45vw, 20px);
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .scale-impact-card,
+    .who-closing-ost { animation: none; opacity: 1; transform: none; }
+}
+
+@media (max-width: 700px) {
+    .scale-impact-cards {
+        grid-template-columns: 1fr;
+        width: min(360px, 90%);
+    }
 }

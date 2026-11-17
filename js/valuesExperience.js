@@ -12,7 +12,7 @@
     const MISSION_VO = 'Our mission comes to life through how we work every day — combining expertise, collaboration, and a commitment to delivering quality medicines that make a difference.';
     const VALUES_VO = 'What guides these actions? Our values. Now let\'s see them in action.';
     const VAULT_VO = 'Four values guide everything we do at Tabuk. In this activity, you\'ll meet real-world situations and match each one to the value it reflects, unlocking each panel as you go. Let\'s see if you can open all four.';
-    const SUMMARY_VO = 'You\'ve unlocked all four values. Integrity. Respect for People. Stakeholder Centric. Results. These aren\'t just words, guide how we work at Tabuk. As you begin your journey here, which value will guide the way you work?';
+    const SUMMARY_VO = 'You have now explored all four of Tabuk\'s values: Integrity, Respect for People, Stakeholder Centricity, and Results. These values go beyond words. They guide how we work, how we interact with one another, and how we contribute to Tabuk\'s success. You have completed Level 1 of your learning journey. Now, it\'s time to take the next step. In Level 2, we will explore the Dammam plant and get a closer look at our operations. Follow the arrows back to the reception area, where you will find the digital kiosk to begin your next journey.';
 
     const SUPPORTS = [
         { id: 'office', label: 'Office / facility', image: 'assets/images/vmv_office.png' },
@@ -193,12 +193,90 @@
                 setTimeout(() => this.root && this.root.classList.remove('is-expanding'), 700);
             });
 
+            if (options.devJump) {
+                this.devJump(options.devJump, { silent: true });
+                return;
+            }
+
             if (options.start === 'vault') {
                 this._showVaultIntro();
             } else {
                 this._showVision(0);
                 this._later(2600, () => this._showVision(1));
                 this._later(5200, () => this._showVision(2));
+            }
+        }
+
+        /** DEV — jump to a Values phase without auto-advance timers. */
+        devJump(target, { silent = true } = {}) {
+            if (!this.root || !this.stage) return;
+            this._clearTimers();
+            if (!this.isOpen) {
+                this.open({ devJump: target });
+                return;
+            }
+            if (this.app && typeof this.app._stopCinematicSpeech === 'function') {
+                this.app._stopCinematicSpeech();
+            }
+            this.vo = '';
+            if (target === 'vision') {
+                this.phase = 'vision';
+                this.visionStep = 2;
+                if (!silent) this.vo = VISION_VO;
+                this._render();
+                return;
+            }
+            if (target === 'mission') {
+                this.phase = 'mission';
+                this.missionRevealed = 3;
+                if (!silent) this.vo = MISSION_VO;
+                this._render();
+                return;
+            }
+            if (target === 'values') {
+                this.phase = 'values';
+                if (!silent) {
+                    this.vo = VALUES_VO;
+                    this._speak(VALUES_VO);
+                } else {
+                    this._render();
+                }
+                return;
+            }
+            if (target === 'vault') {
+                this.unlocked = new Set();
+                this.scenarioIndex = 0;
+                this.scenarioPhase = 'ask';
+                this.phase = 'vault-intro';
+                if (!silent) {
+                    this.vo = VAULT_VO;
+                    this._speak(VAULT_VO);
+                }
+                this._render();
+                return;
+            }
+            if (target === 'summary') {
+                this.unlocked = new Set(['integrity', 'respect', 'stakeholder', 'results']);
+                this.phase = 'summary';
+                if (!silent) {
+                    this.vo = SUMMARY_VO;
+                    this._speak(SUMMARY_VO);
+                }
+                this._render();
+                return;
+            }
+            if (typeof target === 'string' && target.startsWith('scenario:')) {
+                const idx = Math.max(0, Math.min(SCENARIOS.length - 1, parseInt(target.split(':')[1], 10) || 0));
+                const prior = ['integrity', 'respect', 'stakeholder', 'results'].slice(0, idx);
+                this.unlocked = new Set(prior);
+                this.phase = 'scenario';
+                this.scenarioIndex = idx;
+                this.scenarioPhase = 'ask';
+                if (!silent) {
+                    this.vo = SCENARIOS[idx].askVo;
+                    this._speak(SCENARIOS[idx].askVo);
+                }
+                this._render();
             }
         }
 
@@ -657,6 +735,7 @@
                             </article>`).join('')}
                     </div>
                     <p class="vmv-dots" aria-hidden="true">\u25CF \u25CF \u25CF \u25CF</p>
+                    <p class="vmv-level2-cue">Follow the arrows back to the reception area to begin Level 2.</p>
                     <button type="button" class="vmv-lift" data-action="lift">Lift</button>
                 </div>`;
         }

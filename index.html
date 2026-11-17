@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TABUK PHARMACEUTICALS · INDUCTION</title>
     <meta name="description" content="Interactive WebXR Employee Induction Experience for Tabuk Pharmaceuticals covering Riyadh HQ, Dammam Plant, Tabuk Campus, and Final Assessment.">
-    <link rel="stylesheet" href="css/style.css?v=21.41">
+    <link rel="stylesheet" href="css/style.css?v=21.45">
 </head>
 <body>
 
@@ -207,6 +207,24 @@
                 </div>
             </div>
         </section>
+        <!-- E1-S2 Slide 13 — Scale & Impact -->
+        <section class="scale-impact-screen" aria-label="Scale and Impact">
+            <div class="scale-impact-dim" aria-hidden="true"></div>
+            <div class="scale-impact-cards">
+                <article class="scale-impact-card is-countries" data-scale-card="countries">
+                    <p class="scale-impact-value"><span data-scale-count="17">0</span>+</p>
+                    <p class="scale-impact-label">countries</p>
+                </article>
+                <article class="scale-impact-card is-products" data-scale-card="products">
+                    <p class="scale-impact-value"><span data-scale-count="280">0</span>+</p>
+                    <p class="scale-impact-label">registered products</p>
+                </article>
+                <article class="scale-impact-card is-employees" data-scale-card="employees">
+                    <p class="scale-impact-value"><span data-scale-count="2400">0</span>+</p>
+                    <p class="scale-impact-label">employees</p>
+                </article>
+            </div>
+        </section>
         <button type="button" id="values-entry-arrow" class="values-entry-arrow" hidden>
             <span class="values-entry-mark" aria-hidden="true"></span>
             Vision, Mission &amp; Values
@@ -287,6 +305,13 @@
             <button id="btn-toggle-audio" class="drawer-action-btn">🔊 Audio On</button>
             <button id="btn-toggle-scorm-logs" class="drawer-action-btn">📊 SCORM 1.2 Logs</button>
         </div>
+    </div>
+
+    <!-- DEV ONLY: cinematic / values slide scrubber (visible when DEV panel open) -->
+    <div id="dev-slide-nav" class="dev-slide-nav" hidden>
+        <button type="button" id="dev-slide-prev-fab" class="dev-slide-nav-btn" aria-label="Previous slide">← Prev</button>
+        <span id="dev-slide-nav-label" class="dev-slide-nav-label">Slide: —</span>
+        <button type="button" id="dev-slide-next-fab" class="dev-slide-nav-btn" aria-label="Next slide">Next →</button>
     </div>
 
     <!-- DEV ONLY: 360 alignment + hotspot placement (Space to toggle) -->
@@ -444,6 +469,18 @@
         <button type="button" id="dev-tip-show" class="dev-secondary-btn">Show tip + avatar</button>
         <button type="button" id="dev-tip-reset" class="dev-secondary-btn">Reset tip placement</button>
 
+        <div class="dev-section-title">Full flow · Prev / Next</div>
+        <p class="dev-space-hint" style="margin:0 0 8px;opacity:0.75;">01 Approach → 29 Completion · ← → when DEV open</p>
+        <div class="dev-slide-label" id="dev-slide-label">Slide: —</div>
+        <label class="dev-orientation-label">
+            Jump to
+            <select id="dev-slide-select" class="dev-select"></select>
+        </label>
+        <div class="dev-foot-dock">
+            <button type="button" id="dev-slide-prev" class="dev-secondary-btn">← Previous</button>
+            <button type="button" id="dev-slide-next" class="dev-secondary-btn">Next →</button>
+        </div>
+
         <div class="dev-section-title">Footprint Map Pins</div>
         <p class="dev-space-hint" style="margin:0 0 8px;opacity:0.75;">Click the map or drag a handle. Positions are % of the image and stay stuck when it resizes.</p>
         <label class="dev-orientation-label">
@@ -509,14 +546,14 @@ tipAvatar: —</pre>
     <!-- Application Scripts -->
     <script src="assets/lib/three.min.js"></script>
     <script src="js/scorm.js?v=12.6"></script>
-    <script src="js/courseData.js?v=20.30"></script>
+    <script src="js/courseData.js?v=20.36"></script>
     <script src="js/assetLoader.js?v=20.10"></script>
     <script src="js/viewer.js?v=20.25"></script>
     <script src="js/hotspots.js?v=20.20"></script>
-    <script src="js/modal.js?v=14.3"></script>
+    <script src="js/modal.js?v=14.4"></script>
     <script src="js/assessment.js?v=12.6"></script>
-    <script src="js/valuesExperience.js?v=31"></script>
-    <script src="js/app.js?v=20.61"></script>
+    <script src="js/valuesExperience.js?v=34"></script>
+    <script src="js/app.js?v=20.70"></script>
 
 </body>
 </html>

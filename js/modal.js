@@ -45,7 +45,7 @@ class ModalManager {
             modal_video_welcome: {
                 id: 'ceo',
                 label: 'CEO Welcome — tap to play',
-                speakerTitle: 'Ismail Shehada · Chief Executive Officer',
+                speakerTitle: 'Ismail Shehada · Chief Executive Officer · Tabuk Pharmaceuticals',
                 image: 'assets/images/video_chro_welcome.png',
                 audio: 'Audios/Welcome Notes.mp3',
                 duration: 43.47,

@@ -152,8 +152,9 @@ window.COURSE_DATA = {
                     type: "portal",
                     icon: "arrow",
                     label: "Next to reception on right",
-                    pitch: -17,
-                    yaw: 216,
+                    prompt: "Follow the arrow to discover who we are",
+                    pitch: -11,
+                    yaw: 217,
                     arrowYaw: 0,
                     promptOffsetY: 6,
                     arrowScale: 0.7,
@@ -162,14 +163,31 @@ window.COURSE_DATA = {
                     transitionIs360: true
                 },
                 {
-                    // Play control on the reception TV — no device art, no label
+                    // Play control on the reception TV — Slide 9 Who We Are entry
                     id: "reception_right_video",
                     type: "modal",
                     icon: "monitor",
                     hideLabel: true,
+                    label: "Who We Are",
+                    prompt: "Click Play to discover who we are.",
                     pitch: -1,
                     yaw: 212,
                     playOffsetY: 0
+                },
+                {
+                    // After Who We Are cinematic — 360 arrow near TV + guide opens Vision / Mission / Values
+                    id: "discover_what_guides",
+                    type: "portal",
+                    icon: "arrow",
+                    label: "Discover what guides us",
+                    prompt: "Follow the arrow to discover what guides us.",
+                    pitch: -11,
+                    yaw: 217,
+                    arrowYaw: 0,
+                    promptOffsetY: 6,
+                    arrowScale: 0.7,
+                    stayInScene: true,
+                    openValuesExperience: true
                 },
                 {
                     // Lift arrow (previous enter_hq stays locked)
@@ -267,8 +285,22 @@ window.COURSE_DATA = {
             initialYaw: 76,
             sphereYaw: 0,
             cardText: "Next stop: The Dammam Plant.\nLet’s see where Tabuk’s medicines are made.",
-            // Lift 360 stay — no hotspots for now
-            hotspots: []
+            // Slide 35 — marked location to begin Level 2 (Dammam)
+            hotspots: [
+                {
+                    id: "level2_dammam",
+                    type: "portal",
+                    icon: "arrow",
+                    label: "Level 2 — Dammam Plant",
+                    prompt: "Select the marked location to move to Level 2.",
+                    pitch: -8,
+                    yaw: 76,
+                    arrowYaw: 0,
+                    promptOffsetY: 6,
+                    arrowScale: 0.85,
+                    targetScene: "dammam_reception"
+                }
+            ]
         },
         "dammam_reception": {
             id: "dammam_reception",
