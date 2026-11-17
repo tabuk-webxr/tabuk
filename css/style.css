@@ -4798,8 +4798,10 @@ html, body {
     margin: 0;
     padding: 0;
     max-width: 100%;
-    font-size: clamp(12px, 1.2vw, 15px);
-    font-weight: 800;
+    font-family: var(--font-heading), "Helvetica Neue", Arial, sans-serif;
+    font-size: clamp(14px, 1.45vw, 18px);
+    font-weight: 700;
+    font-style: normal;
     color: #004B87;
     letter-spacing: 0.03em;
     line-height: 1.2;
@@ -4839,22 +4841,26 @@ html, body {
 }
 
 .vmv-vault.is-scenario .vmv-hint {
-    top: 52%;
-    left: 18%;
-    width: 64%;
+    left: 10%;
+    width: 80%;
+    top: auto;
+    bottom: 2.5%;
 }
 
 .vmv-vault.is-wrong .vmv-instruction-bar {
-    top: 51%;
+    top: 52%;
 }
 
 .vmv-vault.is-wrong .vmv-hint {
-    top: 56%;
+    left: 10%;
+    width: 80%;
+    top: auto;
+    bottom: 2.5%;
 }
 
 .vmv-vault.is-wrong .vmv-panels {
-    top: 62%;
-    height: 24%;
+    top: 60%;
+    height: 26%;
 }
 
 .vmv-vault.is-scenario .vmv-panels {
@@ -5019,12 +5025,13 @@ html, body {
     color: #111111;
 }
 
-/* Wrong feedback sits under drag instruction, above the 4 options */
+/* Wrong feedback sits at bottom, below the 4 value panels */
 .vmv-hint {
     position: absolute;
-    left: 18%;
-    width: 64%;
-    top: 51.5%;
+    left: 10%;
+    width: 80%;
+    top: auto;
+    bottom: 2.5%;
     z-index: 6;
     box-sizing: border-box;
     margin: 0;

@@ -606,9 +606,9 @@
                     ${statusLabel}
                     ${scenarioCard}
                     ${dragBar}
-                    ${errorBar}
                     ${extra}
                     ${this._htmlPanels()}
+                    ${errorBar}
                 </div>`;
         }
 
