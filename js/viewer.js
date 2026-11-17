@@ -1335,9 +1335,11 @@ class PanoramaViewer {
         this.textureLoader.load(
             this._resolveMediaUrl(data.image),
             (texture) => {
-                texture.minFilter = THREE.LinearFilter;
+                // Large posters shown small need mipmaps + anisotropy to stay crisp
+                texture.generateMipmaps = true;
+                texture.minFilter = THREE.LinearMipmapLinearFilter;
                 texture.magFilter = THREE.LinearFilter;
-                texture.generateMipmaps = false;
+                texture.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
                 if (THREE.LinearEncoding !== undefined) {
                     texture.encoding = THREE.LinearEncoding;
                 }
